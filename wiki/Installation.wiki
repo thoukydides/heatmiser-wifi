@@ -1,0 +1,253 @@
+#summary Installation instructions
+#labels Phase-Deploy,Featured
+
+= Introduction =
+
+This page provides step-by-step instructions for how to install and use this software under Linux. They have been tested under Ubuntu 10.04.3 LTS, but should work on other versions.
+
+= Basic Operation =
+
+== Download the Software ==
+
+Start by downloading the current version of the software using [http://svnbook.red-bean.com/ Subversion (SVN)]:
+<code language="sh">
+svn checkout http://heatmiser-wifi.googlecode.com/svn/trunk/ /home/user/heatmiser-wifi-read-only</code>
+
+The example commands in these instructions assume that the files are checked out to `/home/user/heatmiser-wifi-read-only`. Replace the path as appropriate.
+
+For more details see the instructions on the [http://code.google.com/p/heatmiser-wifi/source/checkout Source Checkout] page.
+
+== Install Perl ==
+
+Check that Perl version 5 is installed using:
+<code language=sh>
+perl -v</code>
+If it is already installed then it should output something like:
+<blockquote><pre>
+This is perl, v5.10.1 (*) built for x86_64-linux-gnu-thread-multi
+
+ Copyright 1987-2009, Larry Wall
+
+ Perl may be copied only under the terms of either the Artistic License or the
+GNU General Public License, which may be found in the Perl 5 source kit.
+
+ Complete documentation for Perl, including FAQ lists, should be found on
+this system using "man perl" or "perldoc perl".  If you have access to the
+Internet, point your browser at http://www.perl.org/, the Perl Home Page.</pre></blockquote>
+
+Otherwise install it using:
+<code language=sh>
+sudo apt-get update
+sudo apt-get install perl5</code>
+
+Ensure that essential Perl packages are installed using:
+<code language=sh>
+sudo cpan CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON Proc::Daemon Proc::PID::File Time::HiRes</code>
+
+== Test Basic Operation ==
+
+That should be all that's necessary for basic operation. Test the connection to the thermostat by running:
+<code language="sh">
+/home/user/heatmiser-wifi-read-only/bin/heatmiser.pl -h heatmiser -p 1234</code>
+where `heatmiser` should be changed to the IP address or hostname of the thermostat, and `1234` should be changed to the PIN code selected for the thermostat's iPhone interface.
+
+This should display the current status of the thermostat:
+<blockquote><pre>
+Heatmiser PRT version 1.2
+Thermostat is ON (heating mode)
+Time 2011-12-12 10:36:18
+Temperature 20.6 deg C (internal)
+Target 21 deg C
+Heating is ON
+Feature 01: Temperature format        C
+Feature 02: Switching differential  0.5 deg C
+Feature 03: Frost protect             1
+Feature 04: Frost temperature        12 deg C
+Feature 05: Output delay              0 minutes
+Feature 06: Comms #                 n/a
+Feature 07: Temperature limit         0 deg C
+Feature 08: Sensor selection        internal
+Feature 09: Floor limit             n/a
+Feature 10: Optimum start             3 hours
+Feature 11: Rate of change           38 minutes / deg C
+Feature 12: Program mode            5/2 day
+Weekday   1: 07:00 21 deg C
+          2: 20:00 15 deg C
+Weekend   1: 07:00 21 deg C
+          2: 20:00 15 deg C</pre></blockquote>
+
+The error `Unable to create socket: Invalid argument` indicates that the hostname is wrong. The error `Incorrect PIN used` should be self explanatory.
+
+== Configuration File ==
+
+Once basic operation has been confirmed the hostname and PIN number should be placed in a text file called `/etc/heatmiser.conf`. This avoids the need to keep typing these settings, and also allows operation of the daemon that logs data from the thermostat. The file should contain:
+<code language="nocode">
+HOST        heatmiser
+PIN         1234</code>
+where `heatmiser` and `1234` should be replaced by the hostname and PIN used above. Lines beginning with a hash character (#) are ignored, so can be used for comments.
+
+Check correct operation again by running the script, but without the hostname and PIN on the command line:
+<code language="sh">
+/home/user/heatmiser-wifi-read-only/bin/heatmiser.pl</code>
+
+= Logging to a Database =
+
+Once basic communication with the thermostat has been confirmed, the next step is to configure the daemon that periodically logs the thermostat's status to a database for later charting.
+
+== Install MySQL ==
+
+Check that MySQL is installed using:
+<code language=sh>
+mysql -V</code>
+If it is already installed then it should output something like:
+<blockquote><pre>
+mysql  Ver 14.14 Distrib 5.1.41, for debian-linux-gnu (x86_64) using readline 6.1</pre></blockquote>
+
+If this is not shown then install it using:
+<code language=sh>
+sudo apt-get update
+sudo apt-get install mysql-server</code>
+
+== Create a MySQL User ==
+
+By default the daemon connects to a MySQL database called `heatmiser` as a local user also called `heatmiser`. These both needs to be created. Connect to the MySQL server using:
+<code language="sh>
+mysql -u root -p</code>
+Enter the MySQL `root` password when prompted. Then create the database and user:
+<code language="sql">
+CREATE DATABASE heatmiser;
+CREATE USER 'heatmiser'@'localhost';
+GRANT ALL ON heatmiser.* TO 'heatmiser'@'localhost';
+QUIT;</code>
+This can be tested by reconnecting to the MySQL server as the new user:
+<code language="sh>
+mysql -u heatmiser heatmiser</code>
+It should not be necessary to enter a password. The databases can be listed using:
+<code language="sql">
+SHOW DATABASES;</code>
+<blockquote><pre>
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| heatmiser          |
++--------------------+
+2 rows in set (0.00 sec)</pre></blockquote>
+The access permissions for the `heatmiser` user can be checked using:
+<code language="sql">
+SHOW GRANTS FOR 'heatmiser'@'localhost';</code>
+<blockquote><pre>
++------------------------------------------------------------------+
+| Grants for heatmiser@localhost                                   |
++------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO 'heatmiser'@'localhost'                    |
+| GRANT ALL PRIVILEGES ON `heatmiser`.* TO 'heatmiser'@'localhost' |
++------------------------------------------------------------------+
+2 rows in set (0.00 sec)</pre></blockquote>
+Finally, disconnect from the MySQL server:
+<code language="sql">
+QUIT;</code>
+
+== Install the Daemon ==
+
+Create symbolic links to the daemon script and the `init` script used to control it:
+<code language="sh">
+sudo ln -s /home/user/heatmiser-wifi-read-only/bin/init /etc/init.d/heatmiser_daemon
+sudo ln -s /home/user/heatmiser-wifi-read-only/bin/heatmiser_daemon.pl /usr/local/bin/heatmiser_daemon</code>
+
+Start the daemon manually using:
+
+<code language="sh">
+sudo /etc/init.d/heatmiser_daemon start</code>
+
+If this worked successfully then the `/var/log/heatmiser` file should contain:
+<blockquote><pre>
+>>>> heatmiser_daemon started >>>></pre></blockquote>
+
+If any errors are displayed either in the terminal or in the log file then they need to be resolved before continuing.
+
+The daemon should automatically create the database tables that it requires. These can be checked by reconnecting to MySQL:
+<code language="sh>
+mysql -u heatmiser heatmiser</code>
+It should not be necessary to enter a password. The databases can be listed using:
+<code language="sql">
+SHOW TABLES;</code>
+This should list four tables:
+<blockquote><pre>
++---------------------+
+| Tables_in_heatmiser |
++---------------------+
+| comfort             |
+| events              |
+| settings            |
+| temperatures        |
++---------------------+
+4 rows in set (0.02 sec)</pre></blockquote>
+The contents of these tables can be checked using commands similar to:<code language="sql">
+SELECT * FROM settings;</code>
+<blockquote><pre>
++----------+-----------+
+| name     | value     |
++----------+-----------+
+| holiday  |           |
+| mode     | heating   |
+| version  | 1.2       |
+| model    | PRT       |
+| progmode | 5/2       |
+| units    | C         |
+| vendor   | Heatmiser |
+| host     | prt-ts    |
++----------+-----------+
+8 rows in set (0.00 sec)</pre></blockquote>
+
+As before, when done disconnect from the MySQL server:
+<code language="sql">
+QUIT;</code>
+
+By default the daemon logs the temperature every 60 seconds. This can be changed by adding a `LOGSECONDS` entry to the `/etc/heatmiser.conf` file specifying the interval in seconds between successive values.
+
+Configure the daemon to start automatically when the computer is booted using:
+<code language="sh">
+sudo insserv /etc/init.d/heatmiser_daemon</code>
+
+= Plot Charts =
+
+The final step of the installation is to set up a web page to plot charts of the temperature.
+
+== Install Apache ==
+
+If Apache is not already running then install it using:
+<code language=sh>
+sudo apt-get update
+sudo apt-get install apache2</code>
+
+== Install Web Page ==
+
+Create a `cgi-bin` directory for the AJAX back-end script, and create a symbolic link from it to the location of the script:
+<code language=sh>
+sudo mkdir /usr/lib/cgi-bin/heatmiser
+sudo ln -s /home/user/heatmiser-wifi-read-only/bin/heatmiser_cgi.pl /usr/lib/cgi-bin/heatmiser/ajax.pl</code>
+
+Create a directory for the web page, and create a symbolic link to the HTML file:
+<code language=sh>
+mkdir /home/user/public_html/heatmiser-wifi
+ln -s /home/user/heatmiser-wifi-read-only/html/index.html /home/user/public_html/heatmiser-wifi/index.html</code>
+
+If a different `cgi-bin` directory was used then it will probably be necessary to modify `index.html` with the correct URL to access it.
+
+Download the jQuery !JavaScript library to the same directory as the `index.html` file:
+<code language="sh">
+wget http://code.jquery.com/jquery-1.6.1.min.js -O /home/user/public_html/heatmiser-wifi/jquery-1.6.1.min.js</code>
+
+Also download the Highcharts Highstock !JavaScript library to the same directory:
+<code language="sh">
+wget http://www.highcharts.com/downloads/zips/Highstock-1.0.2.zip -O /tmp/highstock.zip
+unzip -j /tmp/highstock.zip js/highstock.js -d /home/user/public_html/heatmiser-wifi</code>
+
+== View Web Page ==
+
+Open the new web page in a web browser such as Chrome, Firefox, Internet Explorer or Safari. If Apache is running on a host called `webserver` then the URL should be something like `http://webserver/~user/heatmiser-wifi/`.
+
+If everything has been installed correctly then this should draw a chart with the recent temperatures:
+
+<div align=center> http://heatmiser-wifi.googlecode.com/svn/wiki/chart-temperatures.png </div>
