@@ -1,0 +1,239 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
+This is a web page to display the data logged from the iPhone interface of
+Heatmiser's range of Wi-Fi enabled thermostats. A symbolic link to this file
+should be created from a suitable public_html directory or subdirectory.
+
+The jQuery JavaScript library from <http://code.jquery.com/jquery-1.6.1.min.js>
+should be placed in the same directory,
+as should the "highstock.js" file from the "js" subdirectory of
+<http://www.highcharts.com/downloads/zips/Highstock-1.0.2.zip>.
+
+Copyright © 2011 Alexander Thoukydides
+
+This file is part of the Heatmiser Wi-Fi project.
+<http://code.google.com/p/heatmiser-wifi/>
+
+Heatmiser Wi-Fi is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option)
+any later version.
+
+Heatmiser Wi-Fi is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License
+along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+
+    <title>Heatmiser Wi-Fi Thermostat</title>
+
+    <style type="text/css">
+    </style>
+
+    <script src="jquery-1.6.1.min.js" type="text/javascript"></script>
+    <script src="highstock.js" type="text/javascript"></script>
+    <script type="text/javascript">
+    <!--
+      // URL for server side script
+      var url = "/cgi-bin/heatmiser/ajax.pl";
+
+      var chart;
+
+      // Don't do anything until the page has finshed loading
+      $(document).ready(function() {
+
+        // Create an empty chart
+        chart = new Highcharts.StockChart({
+          chart: {
+            renderTo: 'chart',
+            zoomType: 'x',
+            type: 'line'
+          },
+          credits: {
+            enabled: false
+          },
+          rangeSelector : {
+            buttons: [{ type: 'all',             text: 'All' },
+                      { type: 'month', count: 1, text: 'Mon' },
+                      { type: 'week',  count: 1, text: 'Wk' },
+                      { type: 'day',   count: 2, text: '2Dy' },
+                      { type: 'day',   count: 1, text: 'Day' },
+                      { type: 'hour',  count: 12, text: '½Dy' }],
+            inputDateFormat: '%e %b %Y'
+          },
+          xAxis: {
+            minorTickInterval: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+            maxZoom: 8 * 60 * 60 * 1000 // 8 hours in milliseconds
+          },
+          yAxis: {
+            labels: {
+              align: 'right',
+              x: -2,
+              y: 3
+            },
+            tickInterval: 1,
+            title: { text: 'Temperature' }
+          },
+          title: { text: 'Wi-Fi Thermostat Temperature Log' },
+          plotOptions: {
+            marker: {
+              enabled: false
+            },
+          },
+          series: [
+            {
+              name: 'Current temperature',
+              type: 'areaspline',
+              threshold: null,
+              zIndex: 2,
+              color: 'rgba(255, 0, 0, 1)',
+              fillColor: {
+                linearGradient: [0, 0, 0, 400],
+                stops: [[0,   'rgba(255, 0, 0, 0.5)'],
+                        [0.5, 'rgba(255, 255, 255, 0.3)'],
+                        [1,   'rgba(100, 100, 255, 0.3)']]
+              },
+              lineWidth: 1,
+              states: { hover: { lineWidth: 1 } },
+              tooltip : {
+                yDecimals : 1,
+              },
+              data: []
+            },{
+              name: 'Target temperature',
+              id: 'target',
+              color: 'rgba(0, 0, 255, 1)',
+              dashStyle: 'ShortDot',
+              step: true,
+              dataGrouping: { approximation: 'high' },
+              data: []
+            },{
+              name: 'Comfort level',
+              color: 'rgba(0, 0, 255, 1)',
+              step: true,
+              dataGrouping: { approximation: 'high' },
+              data: []
+            },{
+              name: 'Flags',
+              type: 'flags',
+              onSeries: 'target',
+              shape: 'circlepin',
+              shadow:true,
+              width: 16,
+              zIndex: 3,
+              dataGrouping: { groupPixelWidth: 2 },
+              data: []
+            }
+          ]
+        });
+
+        // Show a message while waiting for the data to be fetched
+        chart.showLoading();
+
+        // Fetch the recent temperature data
+        $.getJSON(url, function(data) {
+
+          // Extract interesting settings
+          var units = '°' + data.settings.units;
+          var name = data.settings.vendor + ' ' + data.settings.model
+                     + ' (' + data.settings.host + ')';
+
+          // Unpack the data
+          var seriesData = [[], [], []];
+          $.each(data.temperatures, function(i, row) {
+            seriesData[0].push([row[0], row[1]]);
+            seriesData[1].push([row[0], row[2]]);
+            seriesData[2].push([row[0], row[3]]);
+          });
+
+          // Convert heating periods to plot bands
+          var plotBands = [];
+          var currentBand = null;
+          $.each(data.heating, function(i, row) {
+            if (row[1]) {
+              if (currentBand == null)
+                currentBand = {
+                  color: {
+                    linearGradient: [0, 0, 0, 400],
+                    stops: [[0, 'rgba(255,255,0,0.3)'],
+                            [1, 'rgba(255,0,0,0.3)']]
+                  },
+                  zIndex: 0,
+                  from: row[0]
+                };
+            } else if (currentBand != null) {
+              currentBand.to = row[0];
+              plotBands.push(currentBand);
+              currentBand = null;
+            }
+          });
+          if (currentBand != null)
+          {
+            currentBand.to = data.temperatures[data.temperatures.length - 1][0];
+            plotBands.push(currentBand);
+          }
+
+          // Create flags for changes to the target temperature
+          var flagTypes = {
+            // Thermostat off
+            off:          ['-', 'Thermostat off',   'rgba(0, 0, 0, 1)'],
+            // Frost protection
+            holiday:      ['H*', 'Holiday (frost)', 'rgba(0, 255, 255, 1)'],
+            away:         ['A*', 'Away (frost)',    'rgba(0, 255, 255, 1)'],
+            // Normal (suppress normal programmed comfort levels)
+            hold:         ['H', 'Hold',             'rgba(0, 255, 0, 1)'],
+            manual:       ['M', 'Manual',           'rgba(0, 255, 0, 1)'],
+            //comfortlevel: ['C', 'Comfort level',    'rgba(0, 0, 255, 1)'],
+            //optimumstart: ['P', 'Optimum start',    'rgba(0, 0, 255, 1)']
+          };
+          seriesData[3] = [];
+          $.each(data.target, function(i, row) {
+            var type = flagTypes[row[1]];
+            if (type != null)
+            {
+              seriesData[3].push({
+                x: row[0],
+                title: type[0],
+                text: type[1] + " " + row[2] + units,
+                color: type[2],
+                states: { hover: { fillColor: type[2] } }
+              });
+            }
+          });
+
+          // Update the chart's details
+          chart.hideLoading();
+          chart.setTitle({}, { text: name });
+          // HERE - Add units to yAxis title
+
+          // Add the data
+          $.each(seriesData, function(i, data) {
+            chart.series[i].setData(data, false);
+            chart.series[i].tooltipOptions.ySuffix = units;
+          });
+          $.each(plotBands, function(i, plotBand) {
+            chart.xAxis[0].addPlotBand(plotBand);
+          });
+
+          // Default to showing the last two day
+          var xMax = data.temperatures[data.temperatures.length - 1][0];
+          var xMin = Math.max(data.temperatures[0][0], xMax - 1000*60*60*24*2);
+          chart.xAxis[0].setExtremes(xMin, xMax);
+        });
+      });
+    -->
+    </script>
+  </head>
+  <body>
+
+    <!-- This is where the chart will appear -->
+    <div id="chart" style="width: 100%; height: 500px"></div>
+
+  </body>
+</html>
