@@ -30,6 +30,8 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+    <meta content="yes" name="apple-mobile-web-app-capable" />
+    <meta content="user-scalable=no" name="viewport" />
 
     <title>Heatmiser Wi-Fi Thermostat</title>
 
@@ -47,6 +49,9 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
 
       // Don't do anything until the page has finshed loading
       $(document).ready(function() {
+
+        // Hide the URL bar when the page is first loaded
+        updateOrientation();
 
         // Create an empty chart
         chart = new Highcharts.StockChart({
@@ -144,7 +149,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           var name = data.settings.vendor + ' ' + data.settings.model
                      + ' (' + data.settings.host + ')';
 
-          // Unpack the data
+          // Unpack the temperature data
           var seriesData = [[], [], []];
           $.each(data.temperatures, function(i, row) {
             seriesData[0].push([row[0], row[1]]);
@@ -189,8 +194,8 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
             // Normal (suppress normal programmed comfort levels)
             hold:         ['H', 'Hold',             'rgba(0, 255, 0, 1)'],
             manual:       ['M', 'Manual',           'rgba(0, 255, 0, 1)'],
-            //comfortlevel: ['C', 'Comfort level',    'rgba(0, 0, 255, 1)'],
-            //optimumstart: ['P', 'Optimum start',    'rgba(0, 0, 255, 1)']
+            comfortlevel: ['C', 'Comfort level',    'rgba(0, 0, 255, 1)'],
+            optimumstart: ['P', 'Optimum start',    'rgba(0, 0, 255, 1)']
           };
           seriesData[3] = [];
           $.each(data.target, function(i, row) {
@@ -227,13 +232,19 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           chart.xAxis[0].setExtremes(xMin, xMax);
         });
       });
+
+      // Hide the URL bar when iOS devices are rotated
+      function updateOrientation()
+      {
+        window.scrollTo(0, 1);
+      }
     -->
     </script>
   </head>
-  <body>
+  <body onorientationchange="updateOrientation();">
 
     <!-- This is where the chart will appear -->
-    <div id="chart" style="width: 100%; height: 500px"></div>
+    <div id="chart" style="width: 100%; height: 540px"></div>
 
   </body>
 </html>
