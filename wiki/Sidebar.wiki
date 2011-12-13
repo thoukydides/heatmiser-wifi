@@ -2,7 +2,7 @@
 
 = Heatmiser-!WiFi =
  * [http://code.google.com/p/heatmiser-wifi/ Project Home]
- *[Installation Installation Instructions]
+ * [Installation Installation Instructions]
  * [HeatmiserProtocol Heatmiser Protocol]
  * [Acknowledgements]
  * [http://code.google.com/p/heatmiser-wifi/source/checkout Download]
