@@ -13,7 +13,6 @@
   * [http://www.facebook.com/pages/Heatmiser/254790094531348 Heatmiser on Facebook]
   * [http://twitter.com/#!/heatmiseruk Heatmiser on Twitter]
   * [http://www.heatmiser.co.uk/web/index.php/docs/viewcategory/14-custom-integration Heatmiser V3 Protocol]
-----
  * Related Projects
   * [http://code.google.com/p/heatmiser-control/ heatmiser-control]
   * [http://code.google.com/p/heatmiser-monitor-control/ heatmiser-monitor-control]
