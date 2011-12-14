@@ -9,6 +9,7 @@
  * *Heatmiser Websites*
    * [http://www.heatmiser.co.uk/web/index.php/wifi-thermostats WiFi Thermostats]
    * [http://www.heatmisershop.co.uk/ Shop]
+   * [http://itunes.apple.com/app/heatmiser-wifi-thermostat/id461728950 iPhone App]
    * [http://www.facebook.com/pages/Heatmiser/254790094531348 Facebook]
    * [http://twitter.com/#!/heatmiseruk Twitter]
    * [http://www.heatmiser.co.uk/web/index.php/docs/viewcategory/14-custom-integration V3 Protocol]
