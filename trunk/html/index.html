@@ -161,9 +161,9 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         $.getJSON(url, { type: 'log', days: thermostatDays }, function(data) {
 
           // Extract interesting settings
-          var thermostatName = data.settings.vendor + ' ' + data.settings.model
-                               + ' (' + data.settings.host + ')';
-          var thermostatUnits = '°' + data.settings.units;
+          thermostatName = data.settings.vendor + ' ' + data.settings.model
+                           + ' (' + data.settings.host + ')';
+          thermostatUnits = '°' + data.settings.units;
 
           // Update the chart's details
           chart.hideLoading();
