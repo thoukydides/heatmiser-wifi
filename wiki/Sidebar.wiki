@@ -1,24 +1,17 @@
 #summary Links between Wiki pages
 
- * [http://code.google.com/p/heatmiser-wifi/ Project Home]
- * [Installation Installation Instructions]
- * [HeatmiserProtocol Heatmiser Protocol]
- * [Acknowledgements]
- * [http://code.google.com/p/heatmiser-wifi/source/checkout Download]
- * [http://code.google.com/p/heatmiser-wifi/w/list List & Search Wiki Pages]
-
-----
-
- * Heatmiser Websites
+ * *This Project*
+   * [http://code.google.com/p/heatmiser-wifi/ Project Home]
+   * [Installation Installation Instructions]
+   * [HeatmiserProtocol Heatmiser Protocol]
+   * [Acknowledgements]
+   * [http://code.google.com/p/heatmiser-wifi/source/checkout Download]
+   * [http://code.google.com/p/heatmiser-wifi/w/list List & Search Wiki Pages]
+ * *Heatmiser Websites*
    * [http://www.heatmiser.co.uk/web/index.php/wifi-thermostats WiFi Thermostats]
    * [http://www.facebook.com/pages/Heatmiser/254790094531348 Heatmiser on Facebook]
    * [http://twitter.com/#!/heatmiseruk Heatmiser on Twitter]
    * [http://www.heatmiser.co.uk/web/index.php/docs/viewcategory/14-custom-integration Heatmiser V3 Protocol]
- * Related Projects
+ * *Related Projects*
    * [http://code.google.com/p/heatmiser-control/ heatmiser-control]
    * [http://code.google.com/p/heatmiser-monitor-control/ heatmiser-monitor-control]
-----
-
-,,© Copyright 2011 Alexander Thoukydides,,
-
-<g:plusone size="medium"></g:plusone>
