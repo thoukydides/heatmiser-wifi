@@ -20,4 +20,4 @@
 
 ,,© Copyright 2011 Alexander Thoukydides,,
 
-<g:plusone size="medium"></g:plusone>
+<g:plusone size="medium" href="http://code.google.com/p/heatmiser-wifi"></g:plusone>
