@@ -49,6 +49,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       var fetchInitDays = 7;
       var fetchExtraDays = 30;
       var fetchFinalDays = 365 * 2;
+      var fetchPollDelaySeconds = 60;
       var showInitDays = 2;
 
       // Thermostat data
@@ -173,7 +174,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           });
 
           // Add the data to the chart
-          updateChartData(data);
+          prefixChartData(data);
 
           // Default to showing the recent data
           var xMax = data.temperatures[data.temperatures.length - 1][0];
@@ -183,8 +184,8 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         });
       });
 
-      // Update the chart with the latest data
-      function updateChartData(data)
+      // Update the chart with older data
+      function prefixChartData(data)
       {
         // Prefix the new data to that already fetched
         thermostatTemperatures = data.temperatures.concat(thermostatTemperatures);
@@ -268,13 +269,33 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         {
           // Retrieve older data
           thermostatDays += fetchExtraDays;
-          $.getJSON(url, { type: 'log', days: thermostatDays, to: thermostatTemperatures[0][0] }, updateChartData);
+          $.getJSON(url, { type: 'log', days: thermostatDays, to: thermostatTemperatures[0][0] }, prefixChartData);
         }
         else
         {
-          // Redraw the chart once all data has been received
-          chart.redraw();
+          // Start checking for new readings once all data has been received
+          $.getJSON(url, { type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData);
         }
+      }
+
+      // Update the chart with newer data
+      function postfixChartData(data)
+      {
+        // Add the new temperature data to the chart
+        $.each(data.temperatures, function(i, row) {
+          if (thermostatTemperatures[thermostatTemperatures.length - 1][0]
+              < row[0]) {
+            thermostatTemperatures.push(row);
+            chart.series[0].addPoint([row[0], row[1]]);
+            chart.series[1].addPoint([row[0], row[2]]);
+            chart.series[2].addPoint([row[0], row[3]]);
+          }
+        });
+
+        // HERE - Also rebuild the heating bands and flags if appropriate
+
+        // Check for new readings after a delay
+        setTimeout("$.getJSON(url, { type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData)", fetchPollDelaySeconds * 1000);
       }
 
       // Hide the URL bar when iOS devices are rotated
