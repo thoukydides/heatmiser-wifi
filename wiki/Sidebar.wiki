@@ -15,3 +15,9 @@
  * *Related Projects*
    * [http://code.google.com/p/heatmiser-control/ heatmiser-control]
    * [http://code.google.com/p/heatmiser-monitor-control/ heatmiser-monitor-control]
+
+----
+
+,,© Copyright 2011 Alexander Thoukydides,,
+
+<g:plusone size="medium"></g:plusone>
