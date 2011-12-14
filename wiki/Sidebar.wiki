@@ -1,12 +1,11 @@
 #summary Links between Wiki pages
 
- * *This Project*
-   * [http://code.google.com/p/heatmiser-wifi/ Project Home]
-   * [Installation Installation Instructions]
-   * [HeatmiserProtocol Heatmiser Protocol]
-   * [Acknowledgements]
-   * [http://code.google.com/p/heatmiser-wifi/source/checkout Download]
-   * [http://code.google.com/p/heatmiser-wifi/w/list List & Search Wiki Pages]
+ * [http://code.google.com/p/heatmiser-wifi/ Project Home]
+ * [Installation Installation Instructions]
+ * [HeatmiserProtocol Heatmiser Protocol]
+ * [Acknowledgements]
+ * [http://code.google.com/p/heatmiser-wifi/source/checkout Download]
+ * [http://code.google.com/p/heatmiser-wifi/w/list List & Search Wiki Pages]
  * *Heatmiser Websites*
    * [http://www.heatmiser.co.uk/web/index.php/wifi-thermostats WiFi Thermostats]
    * [http://www.heatmisershop.co.uk/ Shop]
