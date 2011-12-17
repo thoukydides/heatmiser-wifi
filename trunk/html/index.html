@@ -286,9 +286,9 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           if (thermostatTemperatures[thermostatTemperatures.length - 1][0]
               < row[0]) {
             thermostatTemperatures.push(row);
-            chart.series[0].addPoint([row[0], row[1]]);
-            chart.series[1].addPoint([row[0], row[2]]);
-            chart.series[2].addPoint([row[0], row[3]]);
+            chart.series[0].addPoint([row[0], row[1]], false);
+            chart.series[1].addPoint([row[0], row[2]], false);
+            chart.series[2].addPoint([row[0], row[3]], false);
           }
         });
 
