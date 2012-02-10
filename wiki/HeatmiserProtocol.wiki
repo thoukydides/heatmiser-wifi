@@ -9,10 +9,10 @@ Heatmiser !WiFi thermostats expose two interfaces accessible via TCP/IP: an embe
 
 == Documentation Errors ==
 
-There are a few errors and ambiguities in Heatmiser's documentation, mainly in the details of the "DCB structure" that provides the thermostat's configuration and status. The correct details were determined by analysing the data returned by a PRT-TS !WiFi thermostat. There are presumably similar errors in the documentation for other models.
+There are a few errors and ambiguities in Heatmiser's documentation, mainly in the details of the "DCB structure" that provides the thermostat's configuration and status. The correct details were determined by analysing the data returned by PRT-TS and PRT/HW-TS !WiFi thermostats. There are presumably similar errors in the documentation for other models.
  * When multi-octet values are read (notably the length and temperature measurements) the less significant octet appears first. For all such values, except the DCB length field, the more significant octet appears at the address stated in the documentation with the less significant octet at the preceding address.
  * The switching differential is specified as being in the range 1-3, but is actually in the range 1-6 in units of 0.5°C.
  * The holiday field is shown as a two-octet value in hours at address 24, but is actually 6 octets long (year, month, day of month, hour, minute, and an enabled flag) starting at address 25.
- * The addresses specified for all fields after the holiday return date are incorrect. The error code is at address 39, current heating state at address 40, the current date and time starts at address 41, and the program starts at address 48.
+ * The addresses specified for all fields after the holiday return date are incorrect. The error code is at address 39, current heating state at address 40, the current date and time starts at address 41 (PRT-TS) or 44 (PRT/HW-TS), and the program starts at address 48 (PRT-TS) or 51 (PRT/HW-TS).
 
-Corrections for other models (DT-TS !WiFi, PRT/HW-TS !WiFi and TM1-TS !WiFi) will be gratefully received.
+Corrections for other models (DT-TS !WiFi and TM1-TS !WiFi) will be gratefully received.
