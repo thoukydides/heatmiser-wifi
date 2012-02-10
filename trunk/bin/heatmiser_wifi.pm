@@ -1,17 +1,18 @@
 # This is a Perl library for accessing the iPhone interface of Heatmiser's
 # range of Wi-Fi enabled thermostats. This has only been tested with the
-# PRT-TS WiFi model, but it should be relatively easy to support the other
-# models in the range (DT-TS WiFi, PRT/HW-TS WiFi and TM1-TS WiFi).
+# PRT-TS WiFi and PRT/HW-TS WiFi models, but it should be relatively easy to
+# support the other models in the range (DT-TS WiFi and TM1-TS WiFi).
 #
 # This software is based on the Heatmiser V3 System Protocol documentation
 # (version V3.1). However, it is apparent that there are several errors in
-# the DCB description in that documentat:
+# the DCB description in that document:
 # - Switching differential is actually in the range 1-6 in units of 0.5C
 # - The holiday/away field is 6 octets (return date/time and away flag)
+# - There is no boost field for hot water thermostats
 # - Multi-byte values (length and temperatures) have LSB at the preceding index
 # - Indexes for fields after these values are all incorrect
 
-# Copyright © 2011 Alexander Thoukydides
+# Copyright © 2011, 2012 Alexander Thoukydides
 
 # This file is part of the Heatmiser Wi-Fi project.
 # <http://code.google.com/p/heatmiser-wifi/>
@@ -84,9 +85,7 @@ sub dcb_to_status
 {
     my ($self, @dcb) = @_;
 
-    # HERE - This is almost certainly not correct for PRTHW or TM1 models
-    #        For PRTHW missing fields: boost, current hot water state
-    #        For TM1 missing fields: countdown timer, timer state
+    # Sanity check the DCB length field
     my $status;
     $status->{dcblength} = b2w(@dcb[0, 1]);
     die "DCB length mismatch\n" unless $status->{dcblength} == @dcb;
@@ -101,8 +100,9 @@ sub dcb_to_status
                                                     4 => 'PRTHW', 5 => 'TM1') };
 
     # Current date and time
-    my (@time) = @dcb[41 .. 47];
-    $status->{time} = sqldatetime(@time[0 .. 2, 4 .. 6]);
+    my $timebase = $status->{product}->{model} =~ /^(PRTHW|TM1)$/ ? 44 : 41;
+    $status->{time} = sqldatetime(@dcb[$timebase .. $timebase + 2,
+                                       $timebase + 4 .. $timebase + 6]);
 
     # General operating status
     $status->{enabled} = $dcb[21];
@@ -158,20 +158,31 @@ sub dcb_to_status
         $status->{errorcode} = lookup($dcb[39], 0 => undef, 0xE0 => 'internal', 0xE1 => 'floor', 0xE2 => 'remote');
     }
 
+    # Fields that only apply to models with hot water control
+    if ($status->{product}->{model} =~ /(HW|TM1)$/)
+    {
+        # Status of hot water
+        $status->{hotwater} = { on => $dcb[43] };
+    }
+
     # Program mode
     $status->{config}->{progmode} = lookup($dcb[16], 0 => '5/2', 1 => '7');
 
     # Program entries, does not apply to non-programmable thermostats
     if ($status->{product}->{model} !~ /^DT/)
     {
-        # Number of days programmed
+        # Find the start of the program data
         # Weekday/Weekend or Mon/Tue/Wed/Thu/Fri/Sat/Sun
         my $days = $status->{config}->{progmode} eq '5/2' ? 2 : 7;
-        # HERE - Also need to skip hot water timer for PRTHW and TM1
-        my $offset = $status->{config}->{progmode} eq '5/2' ? 0 : 24;
+        my $progbase = $status->{product}->{model} =~ /^(PRTHW|TM1)$/ ? 51 : 48;
+        if ($days == 7)
+        {
+            $progbase += 24 if $status->{product}->{model} =~ /^PRT/;
+            $progbase += 32 if $status->{product}->{model} =~ /^(PRTHW|TM1)$/;
+        }
 
         # Heating comfort levels program
-        my (@prog) = @dcb[48 + $offset .. $#dcb];
+        my (@prog) = @dcb[$progbase .. $#dcb];
         if ($status->{product}->{model} =~ /^PRT/)
         {
             foreach my $day (0 .. $days - 1)
@@ -197,7 +208,7 @@ sub dcb_to_status
                 {
                     push @day, { on => sqltime(@prog[0, 1]),
                                  off => sqltime(@prog[2, 3]) } if $prog[0] < 24;
-                    @prog = @prog[3 .. $#prog];
+                    @prog = @prog[4 .. $#prog];
                 }
                 push @{$status->{timer}}, [@day];
             }
@@ -242,6 +253,10 @@ sub status_to_text
     push @text, "Target $status->{heating}->{target} $units" if $status->{heating}->{target};
     $text[-1] .= " hold for $status->{heating}->{hold} minutes" if $status->{heating}->{hold};
     push @text, 'Heating is ' . ($status->{heating}->{on} ? 'ON' : 'OFF') if defined $status->{heating}->{on};
+
+    # Status of hot water
+    push @text, "Hot water boost for $status->{hotwater}->{hold} minutes" if $status->{hotwater}->{hold};
+    push @text, 'Hot water is ' . ($status->{hotwater}->{on} ? 'ON' : 'OFF') if defined $status->{hotwater}->{on};
 
     # Feature table
     my @features =
