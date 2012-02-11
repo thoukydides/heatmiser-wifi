@@ -8,7 +8,7 @@
 # '/var/run/heatmiser_daemon.pl.pid'. On most systems this probably means that
 # it needs to be run as root.
 
-# Copyright © 2011 Alexander Thoukydides
+# Copyright © 2011, 2012 Alexander Thoukydides
 #
 # This file is part of the Heatmiser Wi-Fi project.
 # <http://code.google.com/p/heatmiser-wifi/>
