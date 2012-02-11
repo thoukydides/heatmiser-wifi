@@ -2,6 +2,7 @@
 
  * [http://code.google.com/p/heatmiser-wifi/ Project Home]
  * [Installation Installation Instructions]
+ * [DatabaseSchema Database Schema]
  * [HeatmiserProtocol Heatmiser Protocol]
  * [Acknowledgements]
  * [http://code.google.com/p/heatmiser-wifi/source/checkout Download]
