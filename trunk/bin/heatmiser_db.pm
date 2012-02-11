@@ -90,6 +90,7 @@ sub initialise
     # Create any missing tables
     $self->{db}->do('CREATE TABLE IF NOT EXISTS settings (name VARCHAR(20), value VARCHAR(255), PRIMARY KEY (name))');
     $self->{db}->do('CREATE TABLE IF NOT EXISTS comfort (day TINYINT(1), entry TINYINT(1), time TIME, target TINYINT(2), PRIMARY KEY (day, entry))');
+    $self->{db}->do('CREATE TABLE IF NOT EXISTS timer (day TINYINT(1), entry TINYINT(1), timeon TIME, timeoff TIME, PRIMARY KEY (day, entry))');
     $self->{db}->do('CREATE TABLE IF NOT EXISTS temperatures (time DATETIME, air DECIMAL(3,1), target TINYINT(2), comfort TINYINT(2), PRIMARY KEY (time))');
     $self->{db}->do("CREATE TABLE IF NOT EXISTS events (time DATETIME NOT NULL, class VARCHAR(20) NOT NULL, state VARCHAR(20), temperature TINYINT(2))");
 }
@@ -219,11 +220,50 @@ sub comfort_update
     }
 }
 
+# Replace the timer program
+sub timer_update
+{
+    my ($self, $timer) = @_;
+
+    # Perform the update as a single transaction
+    eval
+    {
+        # Prepare the SQL statements to modify timer table entries
+        my $replace = $self->{db}->prepare_cached('REPLACE timer (day, entry, timeon, timeoff) VALUES (?,?,?,?)');
+        my $delete = $self->{db}->prepare_cached('DELETE FROM timer WHERE (day=?) AND (entry=?)');
+
+        # Update all possible table entries (7 days, 4 entries per day)
+        foreach my $day (0 .. 6)
+        {
+            foreach my $entry (0 .. 3)
+            {
+                my $detail = $timer->[$day]->[$entry];
+                if ($detail)
+                {
+                    $replace->execute($day, $entry, $detail->{on}, $detail->{off});
+                }
+                else
+                {
+                    $delete->execute($day, $entry);
+                }
+            }
+        }
+
+        # Commit the changes
+        $self->{db}->commit();
+    };
+    if ($@)
+    {
+        # Rollback the incomplete changes
+        eval { $self->{db}->rollback };
+        die "Timer program update transaction aborted: $@\n";
+    }
+}
+
 
 # DATABASE TABLE QUERIES
 
 # HERE - Add options to retrieve weekdate/weekend or mon/tue/wed/...
-# HERE - Add options to group by hour, 5 minutes, etc...
 
 # Retrieve specified log entries
 sub log_retrieve
@@ -344,6 +384,28 @@ sub comfort_retrieve
 
     # Return the result
     return $comfort;
+}
+
+# Retrieve the timer program
+sub timer_retrieve
+{
+    my ($self) = @_;
+
+    # Prepare the SQL statement to retrieve the timer program
+    my $sql = 'SELECT * FROM timer';
+
+    # Fetch all rows and convert back to a multi-dimensional table
+    my $statement = $self->{db}->prepare_cached($sql);
+    $statement->execute();
+    my $timer;
+    while (my $row = $statement->fetchrow_hashref())
+    {
+        $timer->[$row->{day}]->[$row->{entry}] = { on => $row->{timeon},
+                                                   off => $row->{timeoff} };
+    }
+
+    # Return the result
+    return $timer;
 }
 
 

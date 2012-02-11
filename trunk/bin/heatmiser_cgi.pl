@@ -94,6 +94,12 @@ eval
                                           'target', \%range);
         $results{target} = fixup($target, sub { ($_[0]+0, $_[1], $_[2]+0) } );
         time_log('Database target query');
+
+        # Retrieve the hot water log
+        my $target = $db->events_retrieve([qw(time state temperature)],
+                                          'hotwater', \%range);
+        $results{hotwater} = fixup($target, sub { ($_[0]+0, $_[1], $_[2]+0) } );
+        time_log('Database hot water query');
     }
     elsif ($type eq 'minmax')
     {

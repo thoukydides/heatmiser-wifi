@@ -83,6 +83,7 @@ $SIG{INT}  = sub { quit('SIGINT'); };
 $SIG{QUIT}  = sub { quit('SIGQUIT'); };
 $SIG{TERM}  = sub { quit('SIGTERM'); };
 my ($last_heat, $last_heat_cause, $last_target) = (-1, '', -1);
+my ($last_hotwater_cause, $last_hotwater_state) = ('', 0);
 while (not $signal)
 {
     # Trap errors while reading the status and updating the database
@@ -96,10 +97,17 @@ while (not $signal)
         # Decode the status
         $status = $heatmiser->dcb_to_status(@dcb);
         my ($comfort, $next_comfort) = $heatmiser->lookup_comfort($status);
+        my ($timer) = $heatmiser->lookup_timer($status);
 
         # Determine the target temperature and its cause
         my ($heat_target, $heat_cause);
-        unless ($status->{enabled})
+        unless (defined $status->{heating})
+        {
+            # Thermostat does not control heating
+            $heat_target = 0;
+            $heat_cause = '';
+        }
+        elsif (not $status->{enabled})
         {
             # Thermostat switched off
             $heat_target = 0;
@@ -123,7 +131,29 @@ while (not $signal)
                              : (($status->{heating}->{target} == $next_comfort
                                 and $comfort < $next_comfort)
                                 ? 'optimumstart' : 'manual'));
-       }
+        }
+
+        # Determine the hot water state and its cause
+        my ($hotwater_state, $hotwater_cause);
+        unless (defined $status->{hotwater})
+        {
+            # Thermostat does not control hot water
+            $hotwater_state = 0;
+            $hotwater_cause = '';
+        }
+        elsif (not $status->{enabled})
+        {
+            # Thermostat switched off
+            $hotwater_state = 0;
+            $hotwater_cause = 'off';
+        }
+        else
+        {
+            # Normal control mode (includes manual override)
+            $hotwater_state = $status->{hotwater}->{on};
+            $hotwater_cause = $status->{hotwater}->{on} == $timer
+                              ? 'timer' : 'override';
+        }
 
         # Update the stored the configuration
         $db->settings_update(host => heatmiser_config::get_item('host'),
@@ -137,6 +167,7 @@ while (not $signal)
                                         ? $status->{holiday}->{time} : '',
                              progmode => $status->{config}->{progmode});
         $db->comfort_update($status->{comfort});
+        $db->timer_update($status->{timer});
 
         # Log the current details
         $db->log_insert(time => $status->{time},
@@ -144,13 +175,16 @@ while (not $signal)
                         target => $heat_target,
                         comfort => $comfort);
         my $u = $status->{config}->{units};
-        printf "%s Air=%.1f$u Target=%i$u Cause=%s Comfort=%i$u Heating=%s\n",
+        printf "%s Air=%.1f$u Target=%i$u Cause=%s Comfort=%i$u Heating=%s HotWater=%s Cause=%s Timer=%s\n",
                $status->{time},
                $status->{temperature}->{internal},
                $heat_target,
                $heat_cause,
                $comfort,
-               $status->{heating}->{on} ? 'ON' : 'OFF'
+               $status->{heating}->{on} ? 'ON' : 'OFF',
+               $hotwater_state ? 'ON' : 'OFF',
+               $hotwater_cause,
+               $timer ? 'ON' : 'OFF'
                    if heatmiser_config::get_item('verbose');
 
         # Log interesting events (record current state on first pass)
@@ -168,6 +202,16 @@ while (not $signal)
                               state => $heat_cause,
                               temperature => $heat_target);
             ($last_heat_cause, $last_target) = ($heat_cause, $heat_target);
+        }
+        if ($hotwater_cause ne $last_hotwater_cause
+            or $hotwater_state ne $last_hotwater_state)
+        {
+            $db->event_insert(time => $status->{time},
+                              class => 'hotwater',
+                              state => $hotwater_cause,
+                              temperature => $hotwater_state);
+            ($last_hotwater_cause, $last_hotwater_state) =
+                ($hotwater_cause, $hotwater_state);
         }
     };
     print "Error while logging: $@\n" if $@;
