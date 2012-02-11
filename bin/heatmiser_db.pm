@@ -9,7 +9,7 @@
 #   CREATE USER 'heatmiser'@'localhost';
 #   GRANT ALL ON heatmiser.* TO 'heatmiser'@'localhost';
 
-# Copyright © 2011 Alexander Thoukydides
+# Copyright © 2011, 2012 Alexander Thoukydides
 
 # This file is part of the Heatmiser Wi-Fi project.
 # <http://code.google.com/p/heatmiser-wifi/>
