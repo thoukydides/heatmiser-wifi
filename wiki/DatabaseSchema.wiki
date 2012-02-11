@@ -5,13 +5,13 @@
 
 Four tables are used to record the thermostat's settings, programmed comfort levels, temperature history, and interesting events.
 
-== settings ==
+== Table `settings` ==
 
 The `settings` table records basic information about the thermostat and its configuration:
 
 || *Field* || *Type* || *Description* ||
 || `name` || `varchar(20)` || Key used to identify the setting ||
-|| `value` || `varchar(255)` || The value of the setting as text ||
+|| `value` || `varchar(255)` || Value of the setting as text ||
 
 The following settings are currently stored:
 
@@ -22,35 +22,44 @@ The following settings are currently stored:
 || `model` || Thermostat model (`DT`, `DT-E`, `PRT`, `PRT-E`, `PRTHW`, or `TM1`) ||
 || `mode` || Thermostat operating mode (`off`, `on`, `frost` or `heating`) ||
 || `units` || Temperature units (`C` or `F`) ||
-|| `holiday` || End of holiday (SQL `DATETIME`) or zero length string if not enabled ||
+|| `holiday` || End of holiday (`YYYY-MM-DD hh:mm:ss`) or zero length string if not enabled ||
 || `progmode` || Thermostat program mode (`5/2` or `7`) ||
 
-== comfort ==
+== Table `comfort` ==
 
 The `comfort` table records the programmed comfort levels used to control heating:
 
 || *Field* || *Type* || *Description* ||
-|| `day` || `tinyint(1)` || ||
-|| `entry` || `tinyint(1)` || ||
-|| `time` || `time` || ||
-|| `target` || `tinyint(2)` || ||
+|| `day` || `tinyint(1)` || Day number (`0`/`1` for Weekday/Weekend or `0`...`6` for Monday...Sunday) ||
+|| `entry` || `tinyint(1)` || Program index within the day (`0`...`3`) ||
+|| `time` || `time` || Start time for the comfort level (`hh:mm:00`) ||
+|| `target` || `tinyint(2)` || Comfort level temperature (`##`) ||
 
-== temperatures ==
+Only valid entries are stored, so there may be fewer than four indexes specified for each day.
+
+== Table `temperatures` ==
 
 The `temperatures` table logs the current and target temperatures:
 
 || *Field* || *Type* || *Description* ||
-|| `time` || `datetime` || ||
-|| `air` || `decimal(3,1)` || ||
-|| `target` || `tinyint(2)` || ||
-|| `comfort` || `tinyint(2)` || ||
+|| `time` || `datetime` || The date and time (`YYYY-MM-DD hh:mm:ss`) ||
+|| `air` || `decimal(3,1)` || The current air temperature (`##.#`) ||
+|| `target` || `tinyint(2)` || The target temperature (`##`) or `0` if heating is disabled ||
+|| `comfort` || `tinyint(2)` || The current comfort level (`##`)  ||
 
-== events ==
+== Table `events` ==
 
-The `events` table records interesting events, such as the heating or hot water switching on or off, or the target temperature being changed:
+The `events` table logs interesting events, such as the heating or hot water switching on or off, or the target temperature being changed:
 
 || *Field* || *Type* || *Description* ||
-|| `time` || `datetime` || ||
-|| `class` || `varchar(20)` || ||
-|| `state` || `varchar(20)` || ||
-|| `temperature` || `tinyint(2)` || ||
+|| `time` || `datetime` || The date and time (`YYYY-MM-DD hh:mm:ss`) ||
+|| `class` || `varchar(20)` || The class of event (`heating`, `target` or `hotwater`) ||
+|| `state` || `varchar(20)` || Textual description of the status ||
+|| `temperature` || `tinyint(2)` || Target heating temperature (`##`) or hot water status (`0` or `1`) ||
+
+The details of the information recorded for each event depend on the `class`:
+
+|| *Class* || *State* || *Temperature* ||
+|| `heating` || Heating off (`0`) or on (`1`) || n/a (`NULL`) ||
+|| `target` || Cause (`off`, `holiday`, `away`, `comfortlevel`, `optimumstart`, `hold` or `manual`) || Target heating temperature (`##`) ||
+|| `hotwater` || Cause (`off`, `timer` or `override`) || Hot water off (`0`) or on (`1`) ||
