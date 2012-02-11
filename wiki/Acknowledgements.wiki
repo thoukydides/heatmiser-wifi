@@ -18,3 +18,7 @@ http://www.highcharts.com/
 The web page also makes use of the jQuery !JavaScript library.
 
 http://jquery.org/
+
+== Testers ==
+
+Thank you to [http://www.richpyke.info/ Rich Pyke] for helping to discover and test the changes required to support the PRT/HW-TS !WiFi thermostat.
