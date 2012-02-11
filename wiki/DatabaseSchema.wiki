@@ -3,7 +3,7 @@
 
 = Database Schema =
 
-Four tables are used to record the thermostat's settings, programmed comfort levels, temperature history, and interesting events.
+Five tables are used to record the thermostat's settings, comfort levels program, hot water timer program, temperature history, and interesting events.
 
 == Table `settings` ==
 
@@ -34,6 +34,18 @@ The `comfort` table records the programmed comfort levels used to control heatin
 || `entry` || `tinyint(1)` || Program index within the day (`0`...`3`) ||
 || `time` || `time` || Start time for the comfort level (`hh:mm:00`) ||
 || `target` || `tinyint(2)` || Comfort level temperature (`##`) ||
+
+Only valid entries are stored, so there may be fewer than four indexes specified for each day.
+
+== Table `timer` ==
+
+The `timer` table records the timer program used to control hot water:
+
+|| *Field* || *Type* || *Description* ||
+|| `day` || `tinyint(1)` || Day number (`0`/`1` for Weekday/Weekend or `0`...`6` for Monday...Sunday) ||
+|| `entry` || `tinyint(1)` || Program index within the day (`0`...`3`) ||
+|| `timeon` || `time` || Start time for the hot water (`hh:mm:00`) ||
+|| `timeoff` || `time` || End time for the hot water (`hh:mm:00`) ||
 
 Only valid entries are stored, so there may be fewer than four indexes specified for each day.
 
