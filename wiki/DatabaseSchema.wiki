@@ -1,0 +1,56 @@
+#summary Acknowledgements
+#labels Phase-Design,Phase-Implementation,Featured
+
+= Database Schema =
+
+Four tables are used to record the thermostat's settings, programmed comfort levels, temperature history, and interesting events.
+
+== settings ==
+
+The `settings` table records basic information about the thermostat and its configuration:
+
+|| *Field* || *Type* || *Description* ||
+|| `name` || `varchar(20)` || Key used to identify the setting ||
+|| `value` || `varchar(255)` || The value of the setting as text ||
+
+The following settings are currently stored:
+
+|| *Name* || *Description* ||
+|| `host` || IP address or hostname used to communicate with the thermostat ||
+|| `vendor` || Thermostat manufacturer (`Heatmiser` or `OEM`) ||
+|| `version` || Thermostat version number (`#.#`) ||
+|| `model` || Thermostat model (`DT`, `DT-E`, `PRT`, `PRT-E`, `PRTHW`, or `TM1`) ||
+|| `mode` || Thermostat operating mode (`off`, `on`, `frost` or `heating`) ||
+|| `units` || Temperature units (`C` or `F`) ||
+|| `holiday` || End of holiday (SQL `DATETIME`) or zero length string if not enabled ||
+|| `progmode` || Thermostat program mode (`5/2` or `7`) ||
+
+== comfort ==
+
+The `comfort` table records the programmed comfort levels used to control heating:
+
+|| *Field* || *Type* || *Description* ||
+|| `day` || `tinyint(1)` || ||
+|| `entry` || `tinyint(1)` || ||
+|| `time` || `time` || ||
+|| `target` || `tinyint(2)` || ||
+
+== temperatures ==
+
+The `temperatures` table logs the current and target temperatures:
+
+|| *Field* || *Type* || *Description* ||
+|| `time` || `datetime` || ||
+|| `air` || `decimal(3,1)` || ||
+|| `target` || `tinyint(2)` || ||
+|| `comfort` || `tinyint(2)` || ||
+
+== events ==
+
+The `events` table records interesting events, such as the heating or hot water switching on or off, or the target temperature being changed:
+
+|| *Field* || *Type* || *Description* ||
+|| `time` || `datetime` || ||
+|| `class` || `varchar(20)` || ||
+|| `state` || `varchar(20)` || ||
+|| `temperature` || `tinyint(2)` || ||
