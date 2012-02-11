@@ -9,7 +9,7 @@ should be placed in the same directory,
 as should the "highstock.js" file from the "js" subdirectory of
 <http://www.highcharts.com/downloads/zips/Highstock-1.0.2.zip>.
 
-Copyright © 2011 Alexander Thoukydides
+Copyright © 2011, 2012 Alexander Thoukydides
 
 This file is part of the Heatmiser Wi-Fi project.
 <http://code.google.com/p/heatmiser-wifi/>
@@ -58,6 +58,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       var thermostatTemperatures = [];
       var thermostatHeating = [];
       var thermostatTarget = [];
+      var thermostatHotWater = [];
       var thermostatDays = 0;
 
       // Global chart
@@ -142,7 +143,16 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
               type: 'flags',
               onSeries: 'target',
               shape: 'circlepin',
-              shadow:true,
+              shadow: true,
+              width: 16,
+              zIndex: 3,
+              dataGrouping: { groupPixelWidth: 2 },
+              data: []
+            },{
+              name: 'Hot Water',
+              type: 'flags',
+              shape: 'squarepin',
+              shadow: true,
               width: 16,
               zIndex: 3,
               dataGrouping: { groupPixelWidth: 2 },
@@ -191,9 +201,10 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         thermostatTemperatures = data.temperatures.concat(thermostatTemperatures);
         thermostatHeating = data.heating.concat(thermostatHeating);
         thermostatTarget = data.target.concat(thermostatTarget);
+        thermostatHotWater = data.hotwater.concat(thermostatHotWater);
 
         // Unpack the temperature data
-        var seriesData = [[], [], [], []];
+        var seriesData = [[], [], [], [], []];
         $.each(thermostatTemperatures, function(i, row) {
           seriesData[0].push([row[0], row[1]]);
           seriesData[1].push([row[0], row[2]]);
@@ -251,6 +262,29 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
               text: type[1] + " " + row[2] + thermostatUnits,
               color: type[2],
               states: { hover: { fillColor: type[2] } }
+            });
+          }
+        });
+
+        // Create flags for changes to the hot water
+        var flagTypes = {
+          off:      ['-', '-', 'thermostat off'],
+          timer:    ['T', 't', 'timer program'],
+          override: ['M', 'm', 'manual override']
+        };
+        $.each(thermostatHotWater, function(i, row) {
+          var type = flagTypes[row[1]];
+          if (type != null)
+          {
+            var colour = row[2] ? 'rgba(255, 0, 0, 1)' : 'rgba(0, 0, 0, 1)';
+            seriesData[4].push({
+              x: row[0],
+              title: type[row[2] ? 0 : 1],
+              text: "Hot water " + (row[2] ? 'ON' : 'OFF') + " (" + type[2] + ")",
+              color: colour,
+              fillColor: colour,
+              style: { color: 'white' },
+              states: { hover: { color: 'white', fillColor: colour } }
             });
           }
         });
