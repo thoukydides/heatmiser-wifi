@@ -318,6 +318,8 @@ sub lookup_comfort
 
     # Default to the time in the status unless explicitly specified
     $datetime = $status->{time} unless $datetime;
+    die "Badly formatted time" unless $datetime =~ / (\d\d:\d\d:\d\d)$/;
+    my $time = $1;
 
     # Start with the final temperature for the previous day
     my $mode = $status->{config}->{progmode};
@@ -329,8 +331,6 @@ sub lookup_comfort
     my $next_target = $status->{comfort}->[$nextdayindex]->[0]->{target};
 
     # Search the levels for the current day for the specified time
-    die "Badly formatted time" unless $datetime =~ / (\d\d:\d\d:\d\d)$/;
-    my $time = $1;
     my $dayindex = dateindex($mode, $datetime);
     my $entries = $status->{comfort}->[$dayindex];
     foreach my $entry (@$entries)
@@ -345,6 +345,29 @@ sub lookup_comfort
 
     # Return the target temperature(s)
     return wantarray ? ($target, $next_target) : $target;
+}
+
+# Predict the hot water state for a particular date and time
+sub lookup_timer
+{
+    my ($self, $status, $datetime) = @_;
+
+    # Default to the time in the status unless explicitly specified
+    $datetime = $status->{time} unless $datetime;
+    die "Badly formatted time" unless $datetime =~ / (\d\d:\d\d:\d\d)$/;
+    my $time = $1;
+
+    # Search the timers for the current day for the specified time
+    my $state = 0;
+    my $dayindex = dateindex($status->{config}->{progmode}, $datetime);
+    my $entries = $status->{timer}->[$dayindex];
+    foreach my $entry (@$entries)
+    {
+        $state = 1 if $entry->{on} le $time and $time lt $entry->{off};
+    }
+
+    # Return the hot water state
+    return $state;
 }
 
 
