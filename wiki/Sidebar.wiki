@@ -16,6 +16,9 @@
  * *Related Projects*
    * [http://code.google.com/p/heatmiser-control/ heatmiser-control]
    * [http://code.google.com/p/heatmiser-monitor-control/ heatmiser-monitor-control]
+ * *Other Resources*
+   * [http://www.highcharts.com/ Highcharts]
+   * [http://jquery.org/ jQuery]
 
 ----
 
