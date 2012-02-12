@@ -169,7 +169,7 @@ If any errors are displayed either in the terminal or in the log file then they 
 The daemon should automatically create the database tables that it requires. These can be checked by reconnecting to MySQL:
 <code language="sh>
 mysql -u heatmiser heatmiser</code>
-It should not be necessary to enter a password. The databases can be listed using:
+It should not be necessary to enter a password. The database tables can be listed using:
 <code language="sql">
 SHOW TABLES;</code>
 This should list four tables:
