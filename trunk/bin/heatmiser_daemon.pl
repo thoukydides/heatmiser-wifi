@@ -70,10 +70,13 @@ $| = 1, select $_ for select STDOUT;
 print ">>>> $prog started >>>>\n";
 
 # Connect to the database
-my $db = new heatmiser_db(heatmiser_config::get(qw(dbsource dbuser dbpassword)));
+my $db = new heatmiser_db(heatmiser_config::get(qw(dbsource dbuser dbpassword host)));
 
 # Instantiate an object for connecting to the thermostat
-my $heatmiser = new heatmiser_wifi(heatmiser_config::get(qw(host pin)));
+# HERE - Support multiple thermostats
+my $host = heatmiser_config::get_item('host')->[0];
+my $heatmiser = new heatmiser_wifi(host => $host,
+                                   heatmiser_config::get(qw(pin)));
 
 # Loop until a signal is caught
 my $signal;
@@ -156,7 +159,8 @@ while (not $signal)
         }
 
         # Update the stored the configuration
-        $db->settings_update(host => heatmiser_config::get_item('host'),
+        $db->settings_update($host,
+                             host => $host,
                              vendor => $status->{product}->{vendor},
                              version => $status->{product}->{version},
                              model => $status->{product}->{model},
@@ -166,11 +170,12 @@ while (not $signal)
                              holiday => $status->{holiday}->{enabled}
                                         ? $status->{holiday}->{time} : '',
                              progmode => $status->{config}->{progmode});
-        $db->comfort_update($status->{comfort});
-        $db->timer_update($status->{timer});
+        $db->comfort_update($host, $status->{comfort});
+        $db->timer_update($host, $status->{timer});
 
         # Log the current details
-        $db->log_insert(time => $status->{time},
+        $db->log_insert($host,
+                        time => $status->{time},
                         air => $status->{temperature}->{internal},
                         target => $heat_target,
                         comfort => $comfort);
@@ -190,14 +195,16 @@ while (not $signal)
         # Log interesting events (record current state on first pass)
         if ($status->{heating}->{on} != $last_heat)
         {
-            $db->event_insert(time => $status->{time},
+            $db->event_insert($host,
+                              time => $status->{time},
                               class => 'heating',
                               state => $status->{heating}->{on});
             $last_heat = $status->{heating}->{on};
         }
         if ($heat_cause ne $last_heat_cause or $heat_target != $last_target)
         {
-            $db->event_insert(time => $status->{time},
+            $db->event_insert($host,
+                              time => $status->{time},
                               class => 'target',
                               state => $heat_cause,
                               temperature => $heat_target);
@@ -206,7 +213,8 @@ while (not $signal)
         if ($hotwater_cause ne $last_hotwater_cause
             or $hotwater_state ne $last_hotwater_state)
         {
-            $db->event_insert(time => $status->{time},
+            $db->event_insert($host,
+                              time => $status->{time},
                               class => 'hotwater',
                               state => $hotwater_cause,
                               temperature => $hotwater_state);
