@@ -53,6 +53,7 @@ where `heatmiser` should be changed to the IP address or hostname of the thermos
 
 This should display the current status of the thermostat:
 <blockquote><pre>
+### heatmiser ###
 Heatmiser PRT version 1.2
 Thermostat is ON (heating mode)
 Time 2011-12-12 10:36:18
@@ -85,6 +86,8 @@ Once basic operation has been confirmed the hostname and PIN number should be pl
 HOST        heatmiser
 PIN         1234</code>
 where `heatmiser` and `1234` should be replaced by the hostname and PIN used above. Lines beginning with a hash character (#) are ignored, so can be used for comments.
+
+(A space-separated list of hostnames can be used to support multiple thermostats.)
 
 Check correct operation again by running the script, but without the hostname and PIN on the command line:
 <code language="sh">
@@ -186,18 +189,18 @@ This should list four tables:
 The contents of these tables can be checked using commands similar to:<code language="sql">
 SELECT * FROM settings;</code>
 <blockquote><pre>
-+----------+-----------+
-| name     | value     |
-+----------+-----------+
-| holiday  |           |
-| mode     | heating   |
-| version  | 1.2       |
-| model    | PRT       |
-| progmode | 5/2       |
-| units    | C         |
-| vendor   | Heatmiser |
-| host     | prt-ts    |
-+----------+-----------+
++------------+----------+-----------+
+| thermostat | name     | value     |
++------------+----------+-----------+
+| heatmiser  | holiday  |           |
+| heatmiser  | mode     | heating   |
+| heatmiser  | version  | 1.2       |
+| heatmiser  | model    | PRT       |
+| heatmiser  | progmode | 5/2       |
+| heatmiser  | units    | C         |
+| heatmiser  | vendor   | Heatmiser |
+| heatmiser  | host     | heatmiser |
++------------+----------+-----------+
 8 rows in set (0.00 sec)</pre></blockquote>
 
 As before, when done disconnect from the MySQL server:
