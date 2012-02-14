@@ -6,7 +6,7 @@
 #     ~/.heatmiser
 #
 # The file should contain lines like:
-#     HOST        heatmiser
+#     HOST        heatmiser1 heatmiser2 heatmiser3
 #     PIN         1234
 #     LOGSECONDS  1
 #     DBSOURCE    dbi:mysql:heatmiser
@@ -14,7 +14,7 @@
 #     DBPASSWORD
 #     LOGFILE     /var/log/heatmiser
 
-# Copyright © 2011 Alexander Thoukydides
+# Copyright © 2011, 2012 Alexander Thoukydides
 
 # This file is part of the Heatmiser Wi-Fi project.
 # <http://code.google.com/p/heatmiser-wifi/>
@@ -120,9 +120,13 @@ sub get
     {
         # Report an error if there is no value for the requested key
         error($key) unless exists $config{$key};
+        my $value = $config{$key};
+
+        # Treat the host field as a space-separated list
+        $value = [ split(/\s+/, $value) ] if $key eq 'host';
 
         # Add this value to the result
-        $requested{$key} = $config{$key};
+        $requested{$key} = $value;
     }
 
     # Return the requested configuration items

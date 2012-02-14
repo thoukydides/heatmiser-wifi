@@ -4,7 +4,7 @@
 # library for accessing the iPhone interface of Heatmiser's range of Wi-Fi
 # enabled thermostats.
 
-# Copyright © 2011 Alexander Thoukydides
+# Copyright © 2011, 2012 Alexander Thoukydides
 #
 # This file is part of the Heatmiser Wi-Fi project.
 # <http://code.google.com/p/heatmiser-wifi/>
@@ -47,30 +47,36 @@ getopts('h:p:d');
 heatmiser_config::set(host => [h => $opt_h], pin => [p => $opt_p],
                       debug => $opt_d);
 
-# Read the current status of the thermostat
-my $heatmiser = new heatmiser_wifi(heatmiser_config::get(qw(host pin)));
-my @dcb = $heatmiser->read_dcb();
+# Loop through all configured hosts
+foreach my $host (@{heatmiser_config::get_item('host')})
+{
+    # Read the current status of the thermostat
+    print "### $host ###\n";
+    my $heatmiser = new heatmiser_wifi(host => $host,
+                                       heatmiser_config::get(qw(pin)));
+    my @dcb = $heatmiser->read_dcb();
 
-# Display the thermostat's status
-if (heatmiser_config::get_item('debug'))
-{
-    # Dump the raw DCB data for debugging purposes
-    for (my $index = 0; $index < @dcb; $index += 8)
+    # Display the thermostat's status
+    if (heatmiser_config::get_item('debug'))
     {
-        my $values = scalar @dcb - $index < 8 ? scalar @dcb - $index : 8;
-        printf "%11s%-48s # (index %3i - %3i)\n",
-               $index ? '' : 'my @dcb = (',
-               join(', ', map { sprintf '0x%02x', $_ }
-                              @dcb[$index .. $index + $values - 1])
-               . ($index + $values < @dcb ? ',' : ');'),
-               $index, $index + $values - 1;
+        # Dump the raw DCB data for debugging purposes
+        for (my $index = 0; $index < @dcb; $index += 8)
+        {
+            my $values = scalar @dcb - $index < 8 ? scalar @dcb - $index : 8;
+            printf "%11s%-48s # (index %3i - %3i)\n",
+                   $index ? '' : 'my @dcb = (',
+                   join(', ', map { sprintf '0x%02x', $_ }
+                                  @dcb[$index .. $index + $values - 1])
+                   . ($index + $values < @dcb ? ',' : ');'),
+                   $index, $index + $values - 1;
+        }
     }
-}
-else
-{
-    # Convert the DCB to readable text
-    my $status = $heatmiser->dcb_to_status(@dcb);
-    print $heatmiser->status_to_text($status);
+    else
+    {
+        # Convert the DCB to readable text
+        my $status = $heatmiser->dcb_to_status(@dcb);
+        print $heatmiser->status_to_text($status);
+    }
 }
 
 # That's all folks
