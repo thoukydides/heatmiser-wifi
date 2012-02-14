@@ -3,13 +3,14 @@
 
 = Database Schema =
 
-Five tables are used to record the thermostat's settings, comfort levels program, hot water timer program, temperature history, and interesting events.
+Five tables are used to record the thermostats' settings, comfort levels, hot water timers, temperature history, and interesting events.
 
 == Table `settings` ==
 
-The `settings` table records basic information about the thermostat and its configuration:
+The `settings` table records basic information about the thermostats and their configuration:
 
 || *Field* || *Type* || *Description* ||
+|| `thermostat` || `varchar(255)` || Identifier for the thermostat (currently the IP address or hostname) ||
 || `name` || `varchar(20)` || Key used to identify the setting ||
 || `value` || `varchar(255)` || Value of the setting as text ||
 
@@ -30,6 +31,7 @@ The following settings are currently stored:
 The `comfort` table records the programmed comfort levels used to control heating:
 
 || *Field* || *Type* || *Description* ||
+|| `thermostat` || `varchar(255)` || Identifier for the thermostat (currently the IP address or hostname) ||
 || `day` || `tinyint(1)` || Day number (`0`/`1` for Weekday/Weekend or `0`...`6` for Monday...Sunday) ||
 || `entry` || `tinyint(1)` || Program index within the day (`0`...`3`) ||
 || `time` || `time` || Start time for the comfort level (`hh:mm:00`) ||
@@ -39,9 +41,10 @@ Only valid entries are stored, so there may be fewer than four indexes specified
 
 == Table `timer` ==
 
-The `timer` table records the timer program used to control hot water:
+The `timer` table records the timer programs used to control hot water:
 
 || *Field* || *Type* || *Description* ||
+|| `thermostat` || `varchar(255)` || Identifier for the thermostat (currently the IP address or hostname) ||
 || `day` || `tinyint(1)` || Day number (`0`/`1` for Weekday/Weekend or `0`...`6` for Monday...Sunday) ||
 || `entry` || `tinyint(1)` || Program index within the day (`0`...`3`) ||
 || `timeon` || `time` || Start time for the hot water (`hh:mm:00`) ||
@@ -54,6 +57,7 @@ Only valid entries are stored, so there may be fewer than four indexes specified
 The `temperatures` table logs the current and target temperatures:
 
 || *Field* || *Type* || *Description* ||
+|| `thermostat` || `varchar(255)` || Identifier for the thermostat (currently the IP address or hostname) ||
 || `time` || `datetime` || The date and time (`YYYY-MM-DD hh:mm:ss`) ||
 || `air` || `decimal(3,1)` || The current air temperature (`##.#`) ||
 || `target` || `tinyint(2)` || The target temperature (`##`) or `0` if heating is disabled ||
@@ -64,6 +68,7 @@ The `temperatures` table logs the current and target temperatures:
 The `events` table logs interesting events, such as the heating or hot water switching on or off, or the target temperature being changed:
 
 || *Field* || *Type* || *Description* ||
+|| `thermostat` || `varchar(255)` || Identifier for the thermostat (currently the IP address or hostname) ||
 || `time` || `datetime` || The date and time (`YYYY-MM-DD hh:mm:ss`) ||
 || `class` || `varchar(20)` || The class of event (`heating`, `target` or `hotwater`) ||
 || `state` || `varchar(20)` || Textual description of the status ||
