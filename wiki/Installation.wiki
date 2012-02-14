@@ -175,7 +175,7 @@ mysql -u heatmiser heatmiser</code>
 It should not be necessary to enter a password. The database tables can be listed using:
 <code language="sql">
 SHOW TABLES;</code>
-This should list four tables:
+This should list five tables:
 <blockquote><pre>
 +---------------------+
 | Tables_in_heatmiser |
@@ -184,8 +184,9 @@ This should list four tables:
 | events              |
 | settings            |
 | temperatures        |
+| timer               |
 +---------------------+
-4 rows in set (0.02 sec)</pre></blockquote>
+5 rows in set (0.00 sec)</pre></blockquote>
 The contents of these tables can be checked using commands similar to:<code language="sql">
 SELECT * FROM settings;</code>
 <blockquote><pre>
