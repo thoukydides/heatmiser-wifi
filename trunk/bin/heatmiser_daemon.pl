@@ -72,11 +72,21 @@ print ">>>> $prog started >>>>\n";
 # Connect to the database
 my $db = new heatmiser_db(heatmiser_config::get(qw(dbsource dbuser dbpassword host)));
 
-# Instantiate an object for connecting to the thermostat
-# HERE - Support multiple thermostats
-my $host = heatmiser_config::get_item('host')->[0];
-my $heatmiser = new heatmiser_wifi(host => $host,
-                                   heatmiser_config::get(qw(pin)));
+# Prepare each thermostat being logged
+my %thermostats;
+foreach my $thermostat (@{heatmiser_config::get_item('host')})
+{
+    $thermostats{$thermostat} =
+    {
+        # Instantiate a object for connecting to this thermostat
+        hm => new heatmiser_wifi(host => $thermostat,
+                                 heatmiser_config::get(qw(pin))),
+
+        # Initial state for this thermostat for tracking interesting events
+        last_heat     => { cause => '', state => -1, target => -1 },
+        last_hotwater => { cause => '', state => 0 }
+    };
+}
 
 # Loop until a signal is caught
 my $signal;
@@ -85,149 +95,55 @@ $SIG{HUP}  = sub { quit('SIGHUP'); };
 $SIG{INT}  = sub { quit('SIGINT'); };
 $SIG{QUIT}  = sub { quit('SIGQUIT'); };
 $SIG{TERM}  = sub { quit('SIGTERM'); };
-my ($last_heat, $last_heat_cause, $last_target) = (-1, '', -1);
-my ($last_hotwater_cause, $last_hotwater_state) = ('', 0);
 while (not $signal)
 {
-    # Trap errors while reading the status and updating the database
-    my $status;
-    eval
+    # Read and log the status for each thermostat
+    my $last_time;
+    while (my ($thermostat, $self) = each %thermostats)
     {
-        # Read current status and disconnect to allow other clients to connect
-        my @dcb = $heatmiser->read_dcb();
-        $heatmiser->close();
+        # Trap errors while reading the status and updating the database
+        eval
+        {
+            # Read current status and disconnect so other clients can connect
+            my @dcb = $self->{hm}->read_dcb();
+            $self->{hm}->close();
 
-        # Decode the status
-        $status = $heatmiser->dcb_to_status(@dcb);
-        my ($comfort, $next_comfort) = $heatmiser->lookup_comfort($status);
-        my ($timer) = $heatmiser->lookup_timer($status);
+            # Decode the status
+            my $status = $self->{hm}->dcb_to_status(@dcb);
+            my ($comfort, $next_comfort) = $self->{hm}->lookup_comfort($status);
+            my $timer = $self->{hm}->lookup_timer($status);
+            $last_time = $status->{time} unless defined $last_time;
 
-        # Determine the target temperature and its cause
-        my ($heat_target, $heat_cause);
-        unless (defined $status->{heating})
-        {
-            # Thermostat does not control heating
-            $heat_target = 0;
-            $heat_cause = '';
-        }
-        elsif (not $status->{enabled})
-        {
-            # Thermostat switched off
-            $heat_target = 0;
-            $heat_cause = 'off';
-        }
-        elsif ($status->{runmode} eq 'frost')
-        {
-            # Frost protection mode (includes holiday)
-            $heat_target = $status->{frostprotect}->{enabled}
-                           ? $status->{frostprotect}->{target} : 0;
-            $heat_cause = $status->{holiday}->{enabled} ? 'holiday' : 'away';
-        }
-        else
-        {
-            # Normal heating mode (includes manual adjustment and comfort level)
-            $heat_target = $status->{heating}->{target};
-            $heat_cause = $status->{heating}->{hold}
-                          ? 'hold'
-                          : ($status->{heating}->{target} == $comfort
-                             ? 'comfortlevel'
-                             : (($status->{heating}->{target} == $next_comfort
-                                and $comfort < $next_comfort)
-                                ? 'optimumstart' : 'manual'));
-        }
+            # Determine the actions and their causes
+            my ($heat_target, $heat_cause) =
+                action_heat($status, $comfort, $next_comfort);
+            my ($hotwater_state, $hotwater_cause) =
+                action_hotwater($status, $timer);
 
-        # Determine the hot water state and its cause
-        my ($hotwater_state, $hotwater_cause);
-        unless (defined $status->{hotwater})
-        {
-            # Thermostat does not control hot water
-            $hotwater_state = 0;
-            $hotwater_cause = '';
-        }
-        elsif (not $status->{enabled})
-        {
-            # Thermostat switched off
-            $hotwater_state = 0;
-            $hotwater_cause = 'off';
-        }
-        else
-        {
-            # Normal control mode (includes manual override)
-            $hotwater_state = $status->{hotwater}->{on};
-            $hotwater_cause = $status->{hotwater}->{on} == $timer
-                              ? 'timer' : 'override';
-        }
+            # Update the stored configuration
+            log_config($db, $thermostat, $status);
 
-        # Update the stored the configuration
-        $db->settings_update($host,
-                             host => $host,
-                             vendor => $status->{product}->{vendor},
-                             version => $status->{product}->{version},
-                             model => $status->{product}->{model},
-                             mode => $status->{enabled}
-                                     ? ($status->{runmode} || 'on') : 'off',
-                             units => $status->{config}->{units},
-                             holiday => $status->{holiday}->{enabled}
-                                        ? $status->{holiday}->{time} : '',
-                             progmode => $status->{config}->{progmode});
-        $db->comfort_update($host, $status->{comfort});
-        $db->timer_update($host, $status->{timer});
+            # Log the current details
+            log_status($db, $thermostat, $status,
+                       $comfort, $heat_target, $heat_cause,
+                       $timer, $hotwater_state, $hotwater_cause);
 
-        # Log the current details
-        $db->log_insert($host,
-                        time => $status->{time},
-                        air => $status->{temperature}->{internal},
-                        target => $heat_target,
-                        comfort => $comfort);
-        my $u = $status->{config}->{units};
-        printf "%s Air=%.1f$u Target=%i$u Cause=%s Comfort=%i$u Heating=%s HotWater=%s Cause=%s Timer=%s\n",
-               $status->{time},
-               $status->{temperature}->{internal},
-               $heat_target,
-               $heat_cause,
-               $comfort,
-               $status->{heating}->{on} ? 'ON' : 'OFF',
-               $hotwater_state ? 'ON' : 'OFF',
-               $hotwater_cause,
-               $timer ? 'ON' : 'OFF'
-                   if heatmiser_config::get_item('verbose');
+            # Log interesting events
+            log_event_heat($db, $thermostat, $status,
+                           $heat_target, $heat_cause,
+                           $self->{last_heat});
+            log_event_hotwater($db, $thermostat, $status,
+                               $hotwater_state, $hotwater_cause,
+                               $self->{last_hotwater});
 
-        # Log interesting events (record current state on first pass)
-        if ($status->{heating}->{on} != $last_heat)
-        {
-            $db->event_insert($host,
-                              time => $status->{time},
-                              class => 'heating',
-                              state => $status->{heating}->{on});
-            $last_heat = $status->{heating}->{on};
-        }
-        if ($heat_cause ne $last_heat_cause or $heat_target != $last_target)
-        {
-            $db->event_insert($host,
-                              time => $status->{time},
-                              class => 'target',
-                              state => $heat_cause,
-                              temperature => $heat_target);
-            ($last_heat_cause, $last_target) = ($heat_cause, $heat_target);
-        }
-        if ($hotwater_cause ne $last_hotwater_cause
-            or $hotwater_state ne $last_hotwater_state)
-        {
-            $db->event_insert($host,
-                              time => $status->{time},
-                              class => 'hotwater',
-                              state => $hotwater_cause,
-                              temperature => $hotwater_state);
-            ($last_hotwater_cause, $last_hotwater_state) =
-                ($hotwater_cause, $hotwater_state);
-        }
-    };
-    print "Error while logging: $@\n" if $@;
+        };
+        print "Error while logging '$thermostat': $@\n" if $@;
+    }
 
     # Pause before reading the status again
     my $sleep = heatmiser_config::get_item('logseconds');
-    if ((24 * 60 * 60) % $sleep == 0 and exists $status->{time}
-        and $status->{time} =~ /(\d\d):(\d\d):(\d\d)$/)
+    if ((24 * 60 * 60) % $sleep == 0
+        and defined $last_time and $last_time =~ /(\d\d):(\d\d):(\d\d)$/)
     {
         # Attempt to align to a multiple of the log interval
         my $correction = (($1 * 60 + $2) * 60 + $3) % $sleep;
@@ -241,3 +157,183 @@ while (not $signal)
 
 # That's all folks!
 print "<<< $prog stopped ($signal) <<<<\n";
+exit;
+
+
+# Determine the target temperature and its cause
+sub action_heat
+{
+    my ($status, $comfort, $next_comfort) = @_;
+
+    # Consider influences in decreasing order of importance
+    my ($target, $cause);
+    unless (defined $status->{heating})
+    {
+        # Thermostat does not control heating
+        $target = 0;
+        $cause = '';
+    }
+    elsif (not $status->{enabled})
+    {
+        # Thermostat switched off
+        $target = 0;
+        $cause = 'off';
+    }
+    elsif ($status->{runmode} eq 'frost')
+    {
+        # Frost protection mode (includes holiday)
+        $target = $status->{frostprotect}->{enabled}
+                  ? $status->{frostprotect}->{target} : 0;
+        $cause = $status->{holiday}->{enabled} ? 'holiday' : 'away';
+    }
+    else
+    {
+        # Normal heating mode (includes manual adjustment and comfort level)
+        $target = $status->{heating}->{target};
+        $cause = $status->{heating}->{hold}
+                 ? 'hold'
+                 : ($status->{heating}->{target} == $comfort
+                    ? 'comfortlevel'
+                    : (($status->{heating}->{target} == $next_comfort
+                        and $comfort < $next_comfort)
+                       ? 'optimumstart' : 'manual'));
+    }
+
+    # Return the result
+    return ($target, $cause);
+}
+
+# Determine the hot water state and its cause
+sub action_hotwater
+{
+    my ($status, $timer) = @_;
+
+    # Consider influences in decreasing order of importance
+    my ($state, $cause);
+    unless (defined $status->{hotwater})
+    {
+        # Thermostat does not control hot water
+        $state = 0;
+        $cause = '';
+    }
+    elsif (not $status->{enabled})
+    {
+        # Thermostat switched off
+        $state = 0;
+        $cause = 'off';
+    }
+    else
+    {
+        # Normal control mode (includes manual override)
+        $state = $status->{hotwater}->{on};
+        $cause = $status->{hotwater}->{on} == $timer
+                 ? 'timer' : 'override';
+    }
+
+    # Return the result
+    return ($state, $cause);
+}
+
+# Update the stored the configuration
+sub log_config
+{
+    my ($db, $thermostat, $status) = @_;
+
+    # Store the main configuration of the thermostat
+    $db->settings_update($thermostat,
+                         host     => $thermostat,
+                         vendor   => $status->{product}->{vendor},
+                         version  => $status->{product}->{version},
+                         model    => $status->{product}->{model},
+                         mode     => $status->{enabled}
+                                     ? ($status->{runmode} || 'on') : 'off',
+                         units    => $status->{config}->{units},
+                         holiday  => $status->{holiday}->{enabled}
+                                     ? $status->{holiday}->{time} : '',
+                         progmode => $status->{config}->{progmode});
+
+    # Update the programmed comfort levels and hot water timers
+    $db->comfort_update($thermostat, $status->{comfort});
+    $db->timer_update($thermostat, $status->{timer});
+}
+
+# Log the current status and measurements
+sub log_status
+{
+    my ($db, $thermostat, $status,
+        $comfort, $heat_target, $heat_cause,
+        $timer, $hotwater_state, $hotwater_cause) = @_;
+
+    # Store the current status
+    $db->log_insert($thermostat,
+                    time    => $status->{time},
+                    air     => $status->{temperature}->{internal},
+                    target  => $heat_target,
+                    comfort => $comfort);
+
+    # Add a log file entry if enabled
+    if (heatmiser_config::get_item('verbose'))
+    {
+        my $u = $status->{config}->{units};
+        printf "%s: %s Air=%.1f$u Target=%i$u Cause=%s Comfort=%i$u Heating=%s HotWater=%s Cause=%s Timer=%s\n",
+               $thermostat,
+               $status->{time},
+               $status->{temperature}->{internal},
+               $heat_target,
+               $heat_cause,
+               $comfort,
+               $status->{heating}->{on} ? 'ON' : 'OFF',
+               $hotwater_state ? 'ON' : 'OFF',
+               $hotwater_cause,
+               $timer ? 'ON' : 'OFF';
+    }
+}
+
+# Log interesting heating events
+sub log_event_heat
+{
+    my ($db, $thermostat, $status, $target, $cause, $last) = @_;
+
+    # Only record changes of state (and initial state)
+    my $state = $status->{heating}->{on};
+    if ($state != $last->{state})
+    {
+        $db->event_insert($thermostat,
+                          time        => $status->{time},
+                          class       => 'heating',
+                          state       => $state);
+    }
+    if ($cause ne $last->{cause} or $target != $last->{target})
+    {
+        $db->event_insert($thermostat,
+                          time        => $status->{time},
+                          class       => 'target',
+                          state       => $cause,
+                          temperature => $target);
+    }
+
+    # Remember the current state
+    $last->{cause} = $cause;
+    $last->{state} = $state;
+    $last->{target} = $target;
+}
+
+# Log interesting hot water events
+sub log_event_hotwater
+{
+    my ($db, $thermostat, $status, $state, $cause, $last) = @_;
+
+    # Only record changes of state (and initial state, if hot water controlled)
+    if ($state ne $last->{state} or $cause ne $last->{cause})
+    {
+        $db->event_insert($thermostat,
+                          time        => $status->{time},
+                          class       => 'hotwater',
+                          state       => $cause,
+                          temperature => $state);
+    }
+
+    # Remember the current state
+    $last->{cause} = $cause;
+    $last->{state} = $state;
+}
