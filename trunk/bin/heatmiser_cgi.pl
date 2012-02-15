@@ -53,6 +53,7 @@ sub time_log { my $now = time(); push @time_log, [shift, $now - $time_last]; $ti
 my $cgi = CGI->new;
 
 # Decode the script's parameters
+my $thermostat = $cgi->param('thermostat');
 my $type = $cgi->param('type') || 'log';
 my %range = (from => scalar $cgi->param('from'),
              to => scalar $cgi->param('to'),
@@ -65,15 +66,16 @@ eval
     # Check range values are numeric (to guard against SQL injection attacks)
     die "Illegal range specified\n" if grep { defined $_ and !/^\d+(?:\.\d+)?$/ } values %range;
 
-    # HERE - Support multiple thermostats
-    my $host = heatmiser_config::get_item('host')->[0];
+    # Provide a list of thermostats, default to the first if none specified
+    $results{thermostats} = heatmiser_config::get_item('host');
+    $thermostat = $results{thermostats}->[0] unless $thermostat;
 
     # Connect to the database (requesting dates as milliseconds since epoch)
     $db = new heatmiser_db(heatmiser_config::get(qw(dbsource dbuser dbpassword)), dateformat => 'javascript');
     time_log('Database connection');
 
     # Always retrieve the thermostat's settings
-    $results{settings} = { $db->settings_retrieve($host) };
+    $results{settings} = { $db->settings_retrieve($thermostat) };
     time_log('Database settings query');
 
     # Retrieve the requested data
@@ -81,25 +83,27 @@ eval
     {
         # Retrieve temperature logs
         my @columns = qw(time air target comfort);
-        my $temperatures = $db->log_retrieve($host, \@columns, \%range);
+        my $temperatures = $db->log_retrieve($thermostat, \@columns, \%range);
         time_log('Database temperatures query');
         $results{temperatures} = fixup_uniq($temperatures);
         time_log('Data conversion');
 
         # Retrieve the heating activity log
-        my $heating = $db->events_retrieve($host, [qw(time state)],
+        my $heating = $db->events_retrieve($thermostat, [qw(time state)],
                                            'heating', \%range);
         $results{heating} = fixup($heating);
         time_log('Database heating query');
 
         # Retrieve the target temperature log
-        my $target = $db->events_retrieve($host, [qw(time state temperature)],
+        my $target = $db->events_retrieve($thermostat,
+                                          [qw(time state temperature)],
                                           'target', \%range);
         $results{target} = fixup($target, sub { ($_[0]+0, $_[1], $_[2]+0) } );
         time_log('Database target query');
 
         # Retrieve the hot water log
-        my $target = $db->events_retrieve($host, [qw(time state temperature)],
+        my $target = $db->events_retrieve($thermostat,
+                                          [qw(time state temperature)],
                                           'hotwater', \%range);
         $results{hotwater} = fixup($target, sub { ($_[0]+0, $_[1], $_[2]+0) } );
         time_log('Database hot water query');
@@ -108,7 +112,7 @@ eval
     {
         # Retrieve daily temperature range
         my @columns = qw(date min max);
-        my $data = $db->log_daily_min_max($host, \%range);
+        my $data = $db->log_daily_min_max($thermostat, \%range);
         time_log('Database temperatures query');
         $results{minmax} = fixup_uniq($data);
         time_log('Data conversion');
