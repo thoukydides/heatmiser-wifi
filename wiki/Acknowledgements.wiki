@@ -21,4 +21,4 @@ http://jquery.org/
 
 == Testers ==
 
-Thank you to [http://www.richpyke.info/ Rich Pyke] for helping to discover and test the changes required to support the PRT/HW-TS !WiFi thermostat.
+Thank you to [http://www.richpyke.info/ Rich Pyke] for helping to discover and test the changes required to support the PRT/HW-TS Wi-Fi thermostat.
