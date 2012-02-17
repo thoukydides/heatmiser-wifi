@@ -1,16 +1,13 @@
 # This is a Perl library for accessing the iPhone interface of Heatmiser's
 # range of Wi-Fi enabled thermostats. This has only been tested with the
-# PRT-TS WiFi and PRT/HW-TS WiFi models, but it should be relatively easy to
-# support the other models in the range (DT-TS WiFi and TM1-TS WiFi).
+# PRT-TS Wi-Fi and PRT/HW-TS Wi-Fi models, but it should be relatively easy to
+# support the other models in the range (DT-TS Wi-Fi and TM1-TS Wi-Fi).
 #
 # This software is based on the Heatmiser V3 System Protocol documentation
-# (version V3.1). However, it is apparent that there are several errors in
-# the DCB description in that document:
+# (version V3.7). However, it is apparent that there a couple of errors or
+# ambiguities in the DCB description in that document:
 # - Switching differential is actually in the range 1-6 in units of 0.5C
-# - The holiday/away field is 6 octets (return date/time and away flag)
-# - There is no boost field for hot water thermostats
 # - Multi-byte values (length and temperatures) have LSB at the preceding index
-# - Indexes for fields after these values are all incorrect
 
 # Copyright © 2011, 2012 Alexander Thoukydides
 
