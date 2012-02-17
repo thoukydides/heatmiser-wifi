@@ -5,7 +5,7 @@
 
 == Heatmiser ==
 
-This software is based on the [http://www.heatmiser.co.uk/web/index.php/docs/viewcategory/14-custom-integration Heatmiser V3 System Protocol documentation (version V3.1)].
+This software is based on the [http://www.heatmiser.co.uk/web/index.php/docs/viewcategory/14-custom-integration Heatmiser V3 System Protocol documentation].
 
 == Highstock ==
 
