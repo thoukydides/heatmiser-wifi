@@ -69,6 +69,8 @@ eval
     # Provide a list of thermostats, default to the first if none specified
     $results{thermostats} = heatmiser_config::get_item('host');
     $thermostat = $results{thermostats}->[0] unless $thermostat;
+    die "Unknown thermostat specified in request\n"
+        unless grep { $thermostat eq $_ } @{$results{thermostats}};
 
     # Connect to the database (requesting dates as milliseconds since epoch)
     $db = new heatmiser_db(heatmiser_config::get(qw(dbsource dbuser dbpassword)), dateformat => 'javascript');
@@ -102,10 +104,10 @@ eval
         time_log('Database target query');
 
         # Retrieve the hot water log
-        my $target = $db->events_retrieve($thermostat,
-                                          [qw(time state temperature)],
-                                          'hotwater', \%range);
-        $results{hotwater} = fixup($target, sub { ($_[0]+0, $_[1], $_[2]+0) } );
+        my $hotwater = $db->events_retrieve($thermostat,
+                                            [qw(time state temperature)],
+                                            'hotwater', \%range);
+        $results{hotwater} = fixup($hotwater, sub { ($_[0]+0, $_[1], $_[2]+0) } );
         time_log('Database hot water query');
     }
     elsif ($type eq 'minmax')
