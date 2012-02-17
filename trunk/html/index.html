@@ -36,6 +36,10 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
     <title>Heatmiser Wi-Fi Thermostat</title>
 
     <style type="text/css">
+      label {
+        font-family:"Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+        font-size:12px;
+      }
     </style>
 
     <script src="jquery-1.6.1.min.js" type="text/javascript"></script>
@@ -53,6 +57,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       var showInitDays = 2;
 
       // Thermostat data
+      var thermostatId = '';
       var thermostatName = '';
       var thermostatUnits = '';
       var thermostatTemperatures = [];
@@ -66,6 +71,12 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
 
       // Don't do anything until the page has finshed loading
       $(document).ready(function() {
+
+        // Decode any URL parameters
+        $.each(window.location.search.substring(1).split('&'), function(i, pair) {
+          var s = pair.split('=');
+          if (s[0] == 'thermostat') thermostatId = s[1];
+        });
 
         // Create an empty chart
         chart = new Highcharts.StockChart({
@@ -169,12 +180,25 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
 
         // Fetch the recent temperature data
         thermostatDays = fetchInitDays;
-        $.getJSON(url, { type: 'log', days: thermostatDays }, function(data) {
+        $.getJSON(url, { thermostat: thermostatId, type: 'log', days: thermostatDays }, function(data) {
+
+          // Handle any error returned
+          if (data.error) return alert('AJAX Error:\n    ' + data.error);
 
           // Extract interesting settings
           thermostatName = data.settings.vendor + ' ' + data.settings.model
                            + ' (' + data.settings.host + ')';
           thermostatUnits = '°' + data.settings.units;
+
+          // Construct a list of thermostats (when there is more than one)
+          if (thermostatId == '') thermostatId = data.settings.host;
+          $.each(data.thermostats, function(i, thermostat) {
+            $('#thermostats').append('<option' + (thermostat == thermostatId ? ' selected="selected"' : '') + '>' + thermostat + '</option>');
+          });
+          $('#thermostats').change(function() {
+            window.location.search = '?thermostat=' + $(this).find('option:selected').text();
+          });
+          if (data.thermostats.length == 1) $('#thermostats').parent().hide();
 
           // Update the chart's details
           chart.hideLoading();
@@ -197,6 +221,9 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       // Update the chart with older data
       function prefixChartData(data)
       {
+        // Handle any error returned
+        if (data.error) return alert('AJAX Error:\n    ' + data.error);
+
         // Prefix the new data to that already fetched
         thermostatTemperatures = data.temperatures.concat(thermostatTemperatures);
         thermostatHeating = data.heating.concat(thermostatHeating);
@@ -303,18 +330,21 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         {
           // Retrieve older data
           thermostatDays += fetchExtraDays;
-          $.getJSON(url, { type: 'log', days: thermostatDays, to: thermostatTemperatures[0][0] }, prefixChartData);
+          $.getJSON(url, { thermostat: thermostatId, type: 'log', days: thermostatDays, to: thermostatTemperatures[0][0] }, prefixChartData);
         }
         else
         {
           // Start checking for new readings once all data has been received
-          $.getJSON(url, { type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData);
+          $.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData);
         }
       }
 
       // Update the chart with newer data
       function postfixChartData(data)
       {
+        // Handle any error returned
+        if (data.error) return alert('AJAX Error:\n    ' + data.error);
+
         // Add the new temperature data to the chart
         $.each(data.temperatures, function(i, row) {
           if (thermostatTemperatures[thermostatTemperatures.length - 1][0]
@@ -329,7 +359,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         // HERE - Also rebuild the heating bands and flags if appropriate
 
         // Check for new readings after a delay
-        setTimeout("$.getJSON(url, { type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData)", fetchPollDelaySeconds * 1000);
+        setTimeout("$.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData)", fetchPollDelaySeconds * 1000);
       }
 
       // Hide the URL bar when iOS devices are rotated
@@ -344,6 +374,12 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
 
     <!-- This is where the chart will appear -->
     <div id="chart" style="width: 100%; height: 540px"></div>
+
+    <!-- This is where a list of thermostats may be created -->
+    <div style="text-align:center">
+      <label>Thermostat:</label>
+      <select id="thermostats" />
+    </div>
 
   </body>
 </html>
