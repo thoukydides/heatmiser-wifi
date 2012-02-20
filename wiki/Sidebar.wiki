@@ -24,6 +24,6 @@
 
 ----
 
-,,© Copyright 2011 Alexander Thoukydides,,
+,,© Copyright 2011, 2012 Alexander Thoukydides,,
 
 <g:plusone size="medium" href="http://code.google.com/p/heatmiser-wifi"></g:plusone>
