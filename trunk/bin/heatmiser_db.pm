@@ -74,32 +74,20 @@ sub initialise
     }
 
     # Connect to the database
-    $self->{db} = DBI->connect($self->{dbsource},
-                               $self->{dbuser}, $self->{dbpassword})
-        or die "Cannot connect to database: $DBI::errstr\n";
-
-    # Die if an error occurs
-    $self->{db}->{PrintError} = 0;
-    $self->{db}->{RaiseError} = 1;
-
-    # Use explicit transactions for updating the database
-    $self->{db}->{AutoCommit} = 0;
-
-    # Prevent timezone conversions for non-MySQL date formats
-    $self->{db}->do("SET time_zone='+00:00'");
+    my $db = db($self); # ($self has not been blessed yet)
 
     # Create any missing database tables
-    $self->{db}->do('CREATE TABLE IF NOT EXISTS settings (thermostat varchar(255), name VARCHAR(20), value VARCHAR(255), PRIMARY KEY (thermostat, name))');
-    $self->{db}->do('CREATE TABLE IF NOT EXISTS comfort (thermostat varchar(255), day TINYINT(1), entry TINYINT(1), time TIME, target TINYINT(2), PRIMARY KEY (thermostat, day, entry))');
-    $self->{db}->do('CREATE TABLE IF NOT EXISTS timer (thermostat varchar(255), day TINYINT(1), entry TINYINT(1), timeon TIME, timeoff TIME, PRIMARY KEY (thermostat, day, entry))');
-    $self->{db}->do('CREATE TABLE IF NOT EXISTS temperatures (thermostat varchar(255), time DATETIME, air DECIMAL(3,1), target TINYINT(2), comfort TINYINT(2), PRIMARY KEY (thermostat, time))');
-    $self->{db}->do('CREATE TABLE IF NOT EXISTS events (thermostat varchar(255), time DATETIME NOT NULL, class VARCHAR(20) NOT NULL, state VARCHAR(20), temperature TINYINT(2))');
+    $db->do('CREATE TABLE IF NOT EXISTS settings (thermostat varchar(255), name VARCHAR(20), value VARCHAR(255), PRIMARY KEY (thermostat, name))');
+    $db->do('CREATE TABLE IF NOT EXISTS comfort (thermostat varchar(255), day TINYINT(1), entry TINYINT(1), time TIME, target TINYINT(2), PRIMARY KEY (thermostat, day, entry))');
+    $db->do('CREATE TABLE IF NOT EXISTS timer (thermostat varchar(255), day TINYINT(1), entry TINYINT(1), timeon TIME, timeoff TIME, PRIMARY KEY (thermostat, day, entry))');
+    $db->do('CREATE TABLE IF NOT EXISTS temperatures (thermostat varchar(255), time DATETIME, air DECIMAL(3,1), target TINYINT(2), comfort TINYINT(2), PRIMARY KEY (thermostat, time))');
+    $db->do('CREATE TABLE IF NOT EXISTS events (thermostat varchar(255), time DATETIME NOT NULL, class VARCHAR(20) NOT NULL, state VARCHAR(20), temperature TINYINT(2))');
 
     # Upgrade all of the database tables to support multiple thermostats
     foreach my $table (qw(settings comfort timer temperatures events))
     {
         # List the table's current columns
-        my $fields = $self->{db}->selectall_hashref('SHOW COLUMNS FROM ' . $table, 'Field');
+        my $fields = $db->selectall_hashref('SHOW COLUMNS FROM ' . $table, 'Field');
 
         # Add a 'thermostat' column if it does not already exist
         unless (exists $fields->{thermostat})
@@ -115,19 +103,40 @@ sub initialise
 
             # Add the missing table column
             warn "Upgrading database table '$table'\n";
-            $self->{db}->do($sql);
-            $self->{db}->do('ALTER TABLE ' . $table . ' ALTER thermostat DROP DEFAULT');
+            $db->do($sql);
+            $db->do('ALTER TABLE ' . $table . ' ALTER thermostat DROP DEFAULT');
         }
     }
+}
+
+# Database connection
+sub db
+{
+    my ($self) = @_;
+
+    # Connect to the database
+    my $db = DBI->connect_cached($self->{dbsource},
+                                 $self->{dbuser}, $self->{dbpassword},
+                                 {
+                                     # Die if an error occurs
+                                     PrintError => 0,
+                                     RaiseError => 1,
+                                     # Use explicit transactions for updates
+                                     AutoCommit => 0
+                                 })
+        or die "Cannot connect to database: $DBI::errstr\n";
+
+    # Prevent timezone conversions for non-MySQL date formats
+    $db->do("SET time_zone='+00:00'");
+
+    # Return the handle
+    return $db;
 }
 
 # Destructor
 sub DESTROY
 {
     my ($self) = @_;
-
-    # Disconnect cleanly from the database
-    $self->{db}->disconnect() if $self->{db};
 }
 
 
@@ -138,6 +147,9 @@ sub x_insert
 {
     my ($self, $thermostat, $table, %entry) = @_;
 
+    # Connect to the database
+    my $db = $self->db();
+
     # Add the thermostat to the entry
     $entry{thermostat} = $thermostat;
 
@@ -146,11 +158,11 @@ sub x_insert
     my @values = @entry{@fields};
     my $sql = sprintf 'INSERT INTO %s (%s) VALUES (%s)',
                       $table, join(',', @fields), join(',', ('?') x @fields);
-    my $insert = $self->{db}->prepare_cached($sql);
+    my $insert = $db->prepare_cached($sql);
 
     # Insert this entry into the database
     $insert->execute(@values);
-    $self->{db}->commit();
+    $db->commit();
 }
 
 # Add a log entry
@@ -176,13 +188,16 @@ sub settings_update
 {
     my ($self, $thermostat, %settings) = @_;
 
+    # Connect to the database
+    my $db = $self->db();
+
     # Perform the update as a single transaction
     eval
     {
         # Prepare the SQL statements to modify settings table entries
-        my $replace = $self->{db}->prepare_cached('REPLACE settings (thermostat, name, value) VALUES (?,?,?)');
-        my $names = $self->{db}->prepare_cached("SELECT name FROM settings WHERE (thermostat='" . $thermostat . "')");
-        my $delete = $self->{db}->prepare_cached('DELETE FROM settings WHERE (htermostat=?) AND (name=?)');
+        my $replace = $db->prepare_cached('REPLACE settings (thermostat, name, value) VALUES (?,?,?)');
+        my $names = $db->prepare_cached("SELECT name FROM settings WHERE (thermostat='" . $thermostat . "')");
+        my $delete = $db->prepare_cached('DELETE FROM settings WHERE (htermostat=?) AND (name=?)');
 
         # Update all specified settings entries
         while (my ($name, $value) = each %settings)
@@ -199,12 +214,12 @@ sub settings_update
         }
 
         # Commit the changes
-        $self->{db}->commit();
+        $db->commit();
     };
     if ($@)
     {
         # Rollback the incomplete changes
-        eval { $self->{db}->rollback };
+        eval { $db->rollback };
         die "Settings update transaction aborted: $@\n";
     }
 }
@@ -214,12 +229,15 @@ sub comfort_update
 {
     my ($self, $thermostat, $comfort) = @_;
 
+    # Connect to the database
+    my $db = $self->db();
+
     # Perform the update as a single transaction
     eval
     {
         # Prepare the SQL statements to modify comfort table entries
-        my $replace = $self->{db}->prepare_cached('REPLACE comfort (thermostat, day, entry, time, target) VALUES (?,?,?,?,?)');
-        my $delete = $self->{db}->prepare_cached('DELETE FROM comfort WHERE (thermostat=?) AND (day=?) AND (entry=?)');
+        my $replace = $db->prepare_cached('REPLACE comfort (thermostat, day, entry, time, target) VALUES (?,?,?,?,?)');
+        my $delete = $db->prepare_cached('DELETE FROM comfort WHERE (thermostat=?) AND (day=?) AND (entry=?)');
 
         # Update all possible table entries (7 days, 4 entries per day)
         foreach my $day (0 .. 6)
@@ -239,12 +257,12 @@ sub comfort_update
         }
 
         # Commit the changes
-        $self->{db}->commit();
+        $db->commit();
     };
     if ($@)
     {
         # Rollback the incomplete changes
-        eval { $self->{db}->rollback };
+        eval { $db->rollback };
         die "Comfort levels update transaction aborted: $@\n";
     }
 }
@@ -254,12 +272,15 @@ sub timer_update
 {
     my ($self, $thermostat, $timer) = @_;
 
+    # Connect to the database
+    my $db = $self->db();
+
     # Perform the update as a single transaction
     eval
     {
         # Prepare the SQL statements to modify timer table entries
-        my $replace = $self->{db}->prepare_cached('REPLACE timer (thermostat, day, entry, timeon, timeoff) VALUES (?,?,?,?,?)');
-        my $delete = $self->{db}->prepare_cached('DELETE FROM timer WHERE (thermostat=?) AND (day=?) AND (entry=?)');
+        my $replace = $db->prepare_cached('REPLACE timer (thermostat, day, entry, timeon, timeoff) VALUES (?,?,?,?,?)');
+        my $delete = $db->prepare_cached('DELETE FROM timer WHERE (thermostat=?) AND (day=?) AND (entry=?)');
 
         # Update all possible table entries (7 days, 4 entries per day)
         foreach my $day (0 .. 6)
@@ -279,12 +300,12 @@ sub timer_update
         }
 
         # Commit the changes
-        $self->{db}->commit();
+        $db->commit();
     };
     if ($@)
     {
         # Rollback the incomplete changes
-        eval { $self->{db}->rollback };
+        eval { $db->rollback };
         die "Timer program update transaction aborted: $@\n";
     }
 }
@@ -298,6 +319,9 @@ sub timer_update
 sub log_retrieve
 {
     my ($self, $thermostat, $fields, $where, $groupby) = @_;
+
+    # Connect to the database
+    my $db = $self->db();
 
     # Construct columns to retrieve
     my @fields = @$fields;
@@ -326,7 +350,7 @@ sub log_retrieve
     $sql .= ' ORDER BY time' unless defined $groupby;
 
     # Fetch and return all matching rows
-    return $self->{db}->selectall_arrayref($sql);
+    return $db->selectall_arrayref($sql);
 }
 
 # Retrieve the most recent log entry
@@ -354,6 +378,9 @@ sub events_retrieve
 {
     my ($self, $thermostat, $fields, $class, $where) = @_;
 
+    # Connect to the database
+    my $db = $self->db();
+
     # Construct columns to retrieve
     my @fields = @$fields;
     foreach my $field (@fields)
@@ -373,7 +400,7 @@ sub events_retrieve
     $sql .= ' ORDER BY time';
 
     # Fetch and return all matching rows
-    return $self->{db}->selectall_arrayref($sql);
+    return $db->selectall_arrayref($sql);
 }
 
 # Retrieve the settings
@@ -381,12 +408,15 @@ sub settings_retrieve
 {
     my ($self, $thermostat) = @_;
 
+    # Connect to the database
+    my $db = $self->db();
+
     # Prepare the SQL statement to retrieve the settings
     my $sql = 'SELECT name, value FROM settings';
     $sql .= " WHERE (thermostat='" . $thermostat . "')";
 
     # Fetch and return all rows converted back to a hash
-    my $statement = $self->{db}->prepare_cached($sql);
+    my $statement = $db->prepare_cached($sql);
     $statement->execute();
     return map { @$_ } @{$statement->fetchall_arrayref()};
 }
@@ -396,12 +426,15 @@ sub comfort_retrieve
 {
     my ($self, $thermostat) = @_;
 
+    # Connect to the database
+    my $db = $self->db();
+
     # Prepare the SQL statement to retrieve the comfort levels
     my $sql = 'SELECT * FROM comfort';
     $sql .= " WHERE (thermostat='" . $thermostat . "')";
 
     # Fetch all rows and convert back to a multi-dimensional table
-    my $statement = $self->{db}->prepare_cached($sql);
+    my $statement = $db->prepare_cached($sql);
     $statement->execute();
     my $comfort;
     while (my $row = $statement->fetchrow_hashref())
@@ -419,12 +452,15 @@ sub timer_retrieve
 {
     my ($self, $thermostat) = @_;
 
+    # Connect to the database
+    my $db = $self->db();
+
     # Prepare the SQL statement to retrieve the timer program
     my $sql = 'SELECT * FROM timer';
     $sql .= " WHERE (thermostat='" . $thermostat . "')";
 
     # Fetch all rows and convert back to a multi-dimensional table
-    my $statement = $self->{db}->prepare_cached($sql);
+    my $statement = $db->prepare_cached($sql);
     $statement->execute();
     my $timer;
     while (my $row = $statement->fetchrow_hashref())
