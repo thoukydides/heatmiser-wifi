@@ -1,0 +1,90 @@
+#summary Basic installation instructions
+#labels Phase-Deploy
+
+= Basic Installation =
+
+== Download the Software ==
+
+Start by downloading the current version of the software using [http://svnbook.red-bean.com/ Subversion (SVN)]:
+<code language="sh">
+svn checkout http://heatmiser-wifi.googlecode.com/svn/trunk/ /home/user/heatmiser-wifi-read-only</code>
+
+The example commands in these instructions assume that the files are checked out to `/home/user/heatmiser-wifi-read-only`. Replace the path as appropriate.
+
+For more details see the instructions on the [http://code.google.com/p/heatmiser-wifi/source/checkout Source Checkout] page.
+
+== Install Perl ==
+
+Check that Perl version 5 is installed using:
+<code language=sh>
+perl -v</code>
+If it is already installed then it should output something like:
+<blockquote><pre>
+This is perl, v5.10.1 (*) built for x86_64-linux-gnu-thread-multi
+
+ Copyright 1987-2009, Larry Wall
+
+ Perl may be copied only under the terms of either the Artistic License or the
+GNU General Public License, which may be found in the Perl 5 source kit.
+
+ Complete documentation for Perl, including FAQ lists, should be found on
+this system using "man perl" or "perldoc perl".  If you have access to the
+Internet, point your browser at http://www.perl.org/, the Perl Home Page.</pre></blockquote>
+
+Otherwise install it using:
+<code language=sh>
+sudo apt-get update
+sudo apt-get install perl5</code>
+
+Ensure that essential Perl packages are installed using:
+<code language=sh>
+sudo cpan CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON Proc::Daemon Proc::PID::File Time::HiRes</code>
+
+== Test Basic Operation ==
+
+That should be all that's necessary for basic operation. Test the connection to the thermostat by running:
+<code language="sh">
+/home/user/heatmiser-wifi-read-only/bin/heatmiser.pl -h heatmiser -p 1234</code>
+where `heatmiser` should be changed to the IP address or hostname of the thermostat, and `1234` should be changed to the PIN code selected for the thermostat's iPhone interface.
+
+This should display the current status of the thermostat:
+<blockquote><pre>
+### heatmiser ###
+Heatmiser PRT version 1.2
+Thermostat is ON (heating mode)
+Time 2011-12-12 10:36:18
+Temperature 20.6 deg C (internal)
+Target 21 deg C
+Heating is ON
+Feature 01: Temperature format        C
+Feature 02: Switching differential  0.5 deg C
+Feature 03: Frost protect             1
+Feature 04: Frost temperature        12 deg C
+Feature 05: Output delay              0 minutes
+Feature 06: Comms #                 n/a
+Feature 07: Temperature limit         0 deg C
+Feature 08: Sensor selection        internal
+Feature 09: Floor limit             n/a
+Feature 10: Optimum start             3 hours
+Feature 11: Rate of change           38 minutes / deg C
+Feature 12: Program mode            5/2 day
+Weekday   1: 07:00 21 deg C
+          2: 20:00 15 deg C
+Weekend   1: 07:00 21 deg C
+          2: 20:00 15 deg C</pre></blockquote>
+
+The error `Unable to create socket: Invalid argument` indicates that the hostname is wrong. The error `Incorrect PIN used` should be self explanatory.
+
+== Configuration File ==
+
+Once basic operation has been confirmed the hostname and PIN number should be placed in a text file called `/etc/heatmiser.conf`. This avoids the need to keep typing these settings, and also allows operation of the daemon that logs data from the thermostat. The file should contain:
+<code language="nocode">
+HOST        heatmiser
+PIN         1234</code>
+where `heatmiser` and `1234` should be replaced by the hostname and PIN used above. Lines beginning with a hash character (#) are ignored, so can be used for comments.
+
+(A space-separated list of hostnames can be used to support multiple thermostats.)
+
+Check correct operation again by running the script, but without the hostname and PIN on the command line:
+<code language="sh">
+/home/user/heatmiser-wifi-read-only/bin/heatmiser.pl</code>
