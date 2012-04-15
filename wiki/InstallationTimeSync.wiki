@@ -26,6 +26,6 @@ Edit the crontab file:
 <code language=sh>
 crontab -e</code>
 
-This should start an editor with the current contents of the crontab file. Add a new line to synchronise the time automatically once a day (at 0:10am):
+This should start an editor with the current contents of the crontab file. Add a new line to synchronise the time automatically once a day (at 2:01am to correct quickly for the start and end of summer time):
 <code language=sh>
-10 00 * * * /home/alex/bin/heatmiser_time.pl</code>
+01 02 * * * /home/alex/bin/heatmiser_time.pl</code>
