@@ -1,7 +1,7 @@
 #summary Basic installation instructions
 #labels Phase-Deploy
 
-= Basic Installation =
+= Basic Setup =
 
 == Download the Software ==
 
