@@ -3,7 +3,7 @@
  * [http://code.google.com/p/heatmiser-wifi/ Project Home]
  * Installation Instructions
    * [Installation Introduction]
-   * [InstallationBasic Basic]
+   * [InstallationBasic Basic Setup]
    * [InstallationWebInterface Web Interface]
  * [DatabaseSchema Database Schema]
  * [HeatmiserProtocol Heatmiser Protocol]
