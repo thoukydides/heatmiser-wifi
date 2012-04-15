@@ -3,7 +3,7 @@
 
 = Logging to a Database =
 
-Once basic communication with the thermostat has been confirmed, the next step is to configure the daemon that periodically logs the thermostat's status to a database for later charting.
+Once rudimentary communication with the thermostat has been confirmed by following the [InstallationBasic Basic Setup] it is possible to setup the daemon that periodically logs the thermostat's status to a database for later charting.
 
 == Install MySQL ==
 
