@@ -5,6 +5,7 @@
    * [Installation Introduction]
    * [InstallationBasic Basic Setup]
    * [InstallationWebInterface Web Interface]
+   * [InstallationTimeSync Time Synchronisation]
  * [DatabaseSchema Database Schema]
  * [HeatmiserProtocol Heatmiser Protocol]
  * [Acknowledgements]
