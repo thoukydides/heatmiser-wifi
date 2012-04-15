@@ -1,0 +1,31 @@
+#summary Time synchronisation installation instructions
+#labels Phase-Deploy
+
+= Automatic Time Synchronisation =
+
+Once rudimentary communication with the thermostat has been confirmed by following the [InstallationBasic Basic Setup] it is possible to setup automatically synchronising the thermostat's clock to that of the computer on which this software is installed. If this is done then it is advisable to ensure that the computer's clock is itself set automatically via NTP.
+
+== Set Time Manually ==
+
+First try running the script manually to ensure that it is installed properly:
+<code language=sh>
+/home/user/heatmiser-wifi-read-only/bin/heatmiser_time.pl -v</code>
+
+If everything is working then it should output something like:
+<blockquote><pre>
+### heatmiser ###
+Before:   2012-04-15 17:39:45
+Computer: 2012-04-15 17:37:31
+After:    2012-04-15 17:37:31</pre></blockquote>
+
+This shows that the thermostat's clock has been adjusted slightly to match that of the computer.
+
+== Add a Cron Job ==
+
+Edit the crontab file:
+<code language=sh>
+crontab -e</code>
+
+This should start an editor with the current contents of the crontab file. Add a new line to synchronise the time automatically once a day (at 0:10am):
+<code language=sh>
+10 00 * * * /home/alex/bin/heatmiser_time.pl</code>
