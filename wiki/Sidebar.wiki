@@ -1,7 +1,10 @@
 #summary Links between Wiki pages
 
  * [http://code.google.com/p/heatmiser-wifi/ Project Home]
- * [Installation Installation Instructions]
+ * Installation Instructions
+   * [Installation Introduction]
+   * [InstallationBasic Basic]
+   * [InstallationWebInterface Web Interface]
  * [DatabaseSchema Database Schema]
  * [HeatmiserProtocol Heatmiser Protocol]
  * [Acknowledgements]
