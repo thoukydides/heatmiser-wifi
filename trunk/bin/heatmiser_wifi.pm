@@ -98,8 +98,7 @@ sub dcb_to_status
 
     # Current date and time
     my $timebase = $status->{product}->{model} =~ /^(PRTHW|TM1)$/ ? 44 : 41;
-    $status->{time} = sqldatetime(@dcb[$timebase .. $timebase + 2,
-                                       $timebase + 4 .. $timebase + 6]);
+    $status->{time} = sqldatetime(@dcb[$timebase .. $timebase + 6]);
 
     # General operating status
     $status->{enabled} = $dcb[21];
@@ -107,7 +106,8 @@ sub dcb_to_status
 
     # Holiday mode
     my (@holiday) = @dcb[25 .. 30];
-    $status->{holiday} = { time => sqldatetime(@holiday[0 .. 4]),
+    $status->{holiday} = { time => sqldatetime(@holiday[0 .. 2], undef,
+                                               @holiday[3 .. 4]),
                            enabled => $holiday[5] };
 
     # Fields that only apply to models with thermometers
@@ -252,7 +252,6 @@ sub status_to_text
     push @text, 'Heating is ' . ($status->{heating}->{on} ? 'ON' : 'OFF') if defined $status->{heating}->{on};
 
     # Status of hot water
-    push @text, "Hot water boost for $status->{hotwater}->{hold} minutes" if $status->{hotwater}->{hold};
     push @text, 'Hot water is ' . ($status->{hotwater}->{on} ? 'ON' : 'OFF') if defined $status->{hotwater}->{on};
 
     # Feature table
@@ -315,7 +314,7 @@ sub lookup_comfort
 
     # Default to the time in the status unless explicitly specified
     $datetime = $status->{time} unless $datetime;
-    die "Badly formatted time" unless $datetime =~ / (\d\d:\d\d:\d\d)$/;
+    die "Badly formatted time '$datetime'\n" unless $datetime =~ / (\d\d:\d\d:\d\d)$/;
     my $time = $1;
 
     # Start with the final temperature for the previous day
@@ -351,7 +350,7 @@ sub lookup_timer
 
     # Default to the time in the status unless explicitly specified
     $datetime = $status->{time} unless $datetime;
-    die "Badly formatted time" unless $datetime =~ / (\d\d:\d\d:\d\d)$/;
+    die "Badly formatted time '$datetime'\n" unless $datetime =~ / (\d\d:\d\d:\d\d)$/;
     my $time = $1;
 
     # Search the timers for the current day for the specified time
@@ -365,6 +364,133 @@ sub lookup_timer
 
     # Return the hot water state
     return $state;
+}
+
+# Convert parts of the status into items to write
+sub status_to_dcb
+{
+    my ($self, $status, %items) = @_;
+
+    # Process the specified items
+    my $model = $status->{product}->{model};
+    my @items;
+    while (my ($key, $value) = each %items)
+    {
+        if ($key eq 'time')
+        {
+            # Current date and time
+            push @items, [43, [fromsqldatetime($value)]];
+        }
+        elsif ($key eq 'enabled')
+        {
+            # General operating status (on/off)
+            push @items, [21, [$value ? 1 : 0]];
+        }
+        elsif ($key eq 'keylock')
+        {
+            # General operating status (key lock)
+            push @items, [22, [$value ? 1 : 0]];
+        }
+        elsif ($key eq 'holiday')
+        {
+            # Holiday mode
+            if (exists $value->{enabled} and not $value->{enabled})
+            {
+                # Cancel holiday mode
+                push @items, [24, [0]];
+            }
+            elsif (exists $value->{time})
+            {
+                # Set return date and time
+                my @holiday = fromsqldatetime($value->{time});
+                push @items, [24, [@holiday[0 .. 2], @holiday[4 .. 5]]];
+            }
+        }
+        elsif ($key eq 'runmode' and $model ne 'TM1')
+        {
+            # Run mode (frost a.k.a. away)
+            push @items, [23, [$value eq 'frost' ? 1 : 0]];
+        }
+        elsif ($key eq 'frostprotect' and $model ne 'TM1')
+        {
+            # Frost protection (temperature only, cannot disable)
+            push @items, [17, [$value->{target}]] if exists $value->{target};
+        }
+        elsif ($key eq 'floorlimit' and $model =~ /-E$/)
+        {
+            # Floor limit (temperature only, cannot disable)
+            push @items, [19, [$value->{floormax}]] if exists $value->{floormax};
+        }
+        elsif ($key eq 'heating' and $model ne 'TM1')
+        {
+            # Status of heating (target and hold only, cannot turn on/off)
+            push @items, [18, [$value->{target}]] if exists $value->{target};
+            push @items, [32, [w2b($value->{hold})]] if exists $value->{hold};
+        }
+        elsif ($key eq 'hotwater' and $model =~ /(HW|TM1)$/)
+        {
+            # Status of hot water (values are different from those read)
+            push @items, [42, [defined $value->{on}
+                               ? ($value->{on} ? 2 : 1) : 0]] if exists $value->{on};
+        }
+        elsif ($key eq 'comfort' and $model =~ /^PRT/)
+        {
+            # Heating comfort levels program
+            my $days = scalar @$value;
+            die "Incorrect number of days specified for comfort levels program\n" unless $days == ($status->{config}->{progmode} eq '5/2' ? 2 : 7);
+            foreach my $day (0 .. $days - 1)
+            {
+                my @comfort;
+                foreach my $entry (0 .. 3)
+                {
+                    my $row = $value->[$day]->[$entry];
+                    push @comfort, ref($row)
+                                   ? (fromsqltimenosecs($row->{time}),
+                                      $row->{target})
+                                   : (24, 0, 16);
+                }
+                push @items, [($days == 2 ? 47 : 103) + $day * 12, [@comfort]];
+            }
+        }
+        elsif ($key eq 'timer' and $model =~ /^(PRTHW|TM1)$/)
+        {
+            # Hot water control program
+            my $days = scalar @$value;
+            die "Incorrect number of days specified for hot water control program\n" unless $days == ($status->{config}->{progmode} eq '5/2' ? 2 : 7);
+            foreach my $day (0 .. $days - 1)
+            {
+                my @timer;
+                foreach my $entry (0 .. 3)
+                {
+                    my $row = $value->[$day]->[$entry];
+                    push @timer, ref($row)
+                                 ? (fromsqltimenosecs($row->{on}),
+                                    fromsqltimenosecs($row->{off}))
+                                 : (24, 0, 24, 0);
+                }
+                push @items, [($days == 2 ? 71 : 187) + $day * 16, [@timer]];
+            }
+        }
+        else
+        {
+            # Other settings are not writable (including basic configuration)
+            # HERE - 25 (PRTHW boost) and 26 (TM1 countdown)
+            # Feature  1: $status->{config}->{units}
+            # Feature  2: $status->{config}->{switchdiff}
+            # Feature  3: $status->{frostprotect}->{enabled}
+            # Feature  5: $status->{config}->{outputdelay}
+            # Feature  7: $status->{config}->{locklimit}
+            # Feature  8: $status->{config}->{sensor}
+            # Feature 10: $status->{config}->{optimumstart}
+            # Feature 11: $status->{rateofchange}
+            # Feature 12: $status->{config}->{progmode}
+            # Other:      $status->{config}->{caloffset}
+            die "Unsupported item identifier '$key' for writing\n";
+        }
+    }
+
+    # Return the items
+    return @items;
 }
 
 
@@ -386,6 +512,33 @@ sub read_dcb
     # Perform some basic sanity checks on the response
     die "Unexpected opcode in thermostat response\n" unless $op == 0x94;
     die "Start address mismatch in thermostat response\n" unless b2w(@data[0, 1]) == $start;
+    my $length = b2w(@data[2, 3]);
+    die "Incorrect PIN used\n" unless $length;
+    die "Incorrect length of thermostat response\n" unless scalar @data == $length + 4;
+
+    # Return the DCB portion of the response
+    return @data[4 .. $#data];
+}
+
+# Write item(s)
+sub write_dcb
+{
+    my ($self, @items) = @_;
+
+    # Construct and issue the write command
+    my @itemdata;
+    foreach my $item (@items)
+    {
+        push @itemdata, w2b($item->[0]), scalar(@{$item->[1]}), @{$item->[1]};
+    }
+    return undef unless $self->command(0xa3, scalar(@items), @itemdata);
+
+    # Read the response
+    my ($op, @data) = $self->response();
+
+    # Perform some basic sanity checks on the response
+    die "Unexpected opcode in thermostat response\n" unless $op == 0x94;
+    die "Start address not zero in thermostat response\n" unless b2w(@data[0, 1]) == 0;
     my $length = b2w(@data[2, 3]);
     die "Incorrect PIN used\n" unless $length;
     die "Incorrect length of thermostat response\n" unless scalar @data == $length + 4;
@@ -435,7 +588,7 @@ sub command
 
     # Construct the command
     my $len = 7 + scalar @data;
-    my @cmd = ($op, w2b($len),w2b($self->{pin}), @data);
+    my @cmd = ($op, w2b($len), w2b($self->{pin}), @data);
     push @cmd, w2b(crc16(@cmd));
 
     # Convert the command to binary
@@ -523,11 +676,29 @@ sub b2w
 # Convert to SQL DATETIME string format
 sub sqldatetime
 {
-    my ($year, $month, $day, $hour, $minute, $second) = @_;
+    my ($year, $month, $day, $wday, $hour, $minute, $second) = @_;
 
     # Convert date and time fields to SQL format (YYYY-MM-DD HH:MM:SS)
     return sprintf '%04i-%02i-%02i %02i:%02i:%02i',
                    2000 + $year, $month, $day, $hour, $minute, $second || 0;
+}
+
+# Convert from SQL DATETIME string format
+sub fromsqldatetime
+{
+    my ($datetime) = @_;
+
+    # Extract the individual fields
+    die "Badly formatted datetime '$datetime'\n" unless $datetime =~ /^(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)$/;
+    my ($year, $month, $day, $hour, $minute, $second) = ($1, $2, $3, $4, $5, $6);
+
+    # Caclulate the day of the week (%u would be simpler but is less portable)
+    my $wday = strftime('%w', 0, 0, 0, $day, $month - 1, $year - 1900);
+    # (0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday)
+    $wday = 7 if $wday == 0;
+
+    # Return the deconstructed date and time
+    return ($year - 2000, $month + 0, $day + 0, $wday + 0, $hour + 0, $minute + 0, $second + 0);
 }
 
 # Convert to SQL TIME string format
@@ -538,6 +709,27 @@ sub sqltime
     # Convert time fields to SQL format (HH:MM:SS)
     return sprintf '%02i:%02i:%02i',
                    $hour, $minute, $second || 0;
+}
+
+# Convert from SQL TIME string format
+sub fromsqltime
+{
+    my ($time) = @_;
+
+    # Extract the individual fields
+    die "Badly formatted time '$time'\n" unless $time =~ /^(\d\d):(\d\d):(\d\d)$/;
+    my ($hour, $minute, $second) = ($1, $2, $3);
+
+    # Return the deconstructed date and time
+    return ($hour + 0, $minute + 0, $second + 0);
+}
+
+# Convert from SQL TIME string format
+sub fromsqltimenosecs
+{
+    # Extract the individual fields and return the first two
+    my (@time) = fromsqltime(@_);
+    return @time[0 .. 1];
 }
 
 # Convert a date into a comfort or timer program index
