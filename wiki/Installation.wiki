@@ -8,4 +8,4 @@ This software has been developed to run under Ubuntu 10.04.3 LTS, but should als
 Start with the [InstallationBasic Basic Setup] and then continue with the other optional installation depending on requirements:
   * [InstallationBasic Basic Setup]
   * [InstallationWebInterface Web Interface]
-  * [InstallationTime Time Synchronisation]
+  * [InstallationTimeSync Time Synchronisation]
