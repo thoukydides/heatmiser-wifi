@@ -23,7 +23,7 @@ Each option appears on a line by itself, with the option name followed by spaces
 
 The following options can be configured:
 
-|| *File Option* || *Command Line Option* ||*Default Value* || *Description* ||
+|| *File Option* || *Command Line Option* || *Default Value* || *Description* ||
 || `DBPASSWORD` || `-a` _password_ || || Password for connecting to the database ||
 || `DBSOURCE` || `-s` _source_ || `dbi:mysql:heatmiser` || The data source name used for connecting to the database ||
 || `DBUSER` || `-u` _username_ || `heatmiser` || The user for connecting to the database ||
