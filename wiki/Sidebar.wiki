@@ -9,6 +9,7 @@
  * [DatabaseSchema Database Schema]
  * [HeatmiserProtocol Heatmiser Protocol]
  * [Acknowledgements]
+ * [Contact]
  * [http://code.google.com/p/heatmiser-wifi/source/checkout Download]
  * [http://code.google.com/p/heatmiser-wifi/w/list List & Search Wiki Pages]
  * *Heatmiser Websites*
@@ -28,6 +29,6 @@
 
 ----
 
-,,© Copyright 2011, 2012 Alexander Thoukydides,,
+,,© Copyright 2011, 2012 [Contact Alexander Thoukydides],,
 
 <g:plusone size="medium" href="http://code.google.com/p/heatmiser-wifi"></g:plusone>
