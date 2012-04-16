@@ -12,7 +12,7 @@ Each script searches for configuration options in the following sequence (with t
 
 == File Format ==
 
-A typical `/etc/heatmiser.conf` or `~/.heatmiser` configuration file would look like:
+A minimal`/etc/heatmiser.conf` or `~/.heatmiser` configuration file to connect to thermostat with hostname `heatmiser` using PIN code `1234` would look like:
 <code language="nocode">
 HOST        heatmiser
 PIN         1234</code>
@@ -23,13 +23,13 @@ Each option appears on a line by itself, with the option name followed by spaces
 
 The following options can be configured:
 
-|| *Option* || *Default Value* || *Description* ||
-|| `DBPASSWORD` || || Password for connecting to the database ||
-|| `DBSOURCE` || `dbi:mysql:heatmiser` || The data source name used for connecting to the database ||
-|| `DBUSER` || `heatmiser` || The user for connecting to the database ||
-|| `DEBUG` || `0` || Set to `1` to output information for debug purposes ||
-|| `HOST` || || Space separated list of IP addresses or hostnames for the thermostats (also used as database key, so should ideally be short and invariant) ||
-|| `LOGFILE` || `/var/log/heatmiser` || The name of the file that the daemon should use for logging its operation ||
-|| `LOGSECONDS` || `60` || The interval in seconds between logging the thermostat's data to the database ||
-|| `PIN` || || PIN code for the thermostat's iPhone interface ||
-|| `VERBOSE` || `0` || Set to 1 to output additional information about the scripts' operation ||
+|| *File Option* || *Command Line Option* ||*Default Value* || *Description* ||
+|| `DBPASSWORD` || `-a` _password_ || || Password for connecting to the database ||
+|| `DBSOURCE` || `-s` _source_ || `dbi:mysql:heatmiser` || The data source name used for connecting to the database ||
+|| `DBUSER` || `-u` _username_ || `heatmiser` || The user for connecting to the database ||
+|| `DEBUG` || `-d` || `0` || Set to `1` to output information for debug purposes ||
+|| `HOST` || `-h` _hostname_ || || Space separated list of IP addresses or hostnames for the thermostats (also used as database key, so should ideally be short and invariant) ||
+|| `LOGFILE` || `-l` _filename_ || `/var/log/heatmiser` || The name of the file that the daemon should use for logging its operation ||
+|| `LOGSECONDS` || `-i` _seconds_ || `60` || The interval in seconds between logging the thermostat's data to the database ||
+|| `PIN` || `-p` _pincode_ || || PIN code for the thermostat's iPhone interface ||
+|| `VERBOSE` || `-v` || `0` || Set to 1 to output additional information about the scripts' operation ||
