@@ -36,8 +36,6 @@ use Getopt::Std;
 use heatmiser_config;
 use heatmiser_wifi;
 
-use Data::Dumper;
-
 # Command line options
 my ($prog) = $0 =~ /([^\\\/]+$)/;
 sub VERSION_MESSAGE { print "Heatmiser Wi-Fi Thermostat Time Synchroniser v1\n"; }
