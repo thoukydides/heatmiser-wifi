@@ -37,8 +37,8 @@ use File::Basename;
 use lib dirname(abs_path $0);
 
 # Useful libraries
-use Data::Dumper;
 use Getopt::Std;
+use POSIX qw(strftime);
 use Proc::Daemon;
 use Proc::PID::File;
 use heatmiser_config;
@@ -67,7 +67,7 @@ die "Daemon already running\n" if Proc::PID::File->running();
 # Redirect all output to the log file and disable buffering
 open(STDOUT, '>&STDERR') or die "Failed to re-open STDOUT to STDERR: $!\n";
 $| = 1, select $_ for select STDOUT;
-print ">>>> $prog started >>>>\n";
+syslog(">>>> $prog started >>>>");
 
 # Connect to the database
 my $db = new heatmiser_db(heatmiser_config::get(qw(dbsource dbuser dbpassword host)));
@@ -90,7 +90,7 @@ foreach my $thermostat (@{heatmiser_config::get_item('host')})
 
 # Loop until a signal is caught
 my $signal;
-sub quit { $signal = shift; print "Caught $signal: exiting gracefully\n"; }
+sub quit { $signal = shift; syslog("Caught $signal: exiting gracefully"); }
 $SIG{HUP}  = sub { quit('SIGHUP'); };
 $SIG{INT}  = sub { quit('SIGINT'); };
 $SIG{QUIT}  = sub { quit('SIGQUIT'); };
@@ -137,7 +137,7 @@ while (not $signal)
                                $self->{last_hotwater});
 
         };
-        print "Error while logging '$thermostat': $@\n" if $@;
+        syslog($@, $thermostat) if $@;
     }
 
     # Pause before reading the status again
@@ -150,13 +150,12 @@ while (not $signal)
         $correction -= $sleep if $sleep / 2 < $correction;
         $sleep -= $correction;
     }
-    print "Sleeping for $sleep seconds\n"
-        if heatmiser_config::get_item('verbose');
+    syslog("Sleeping for $sleep seconds") if heatmiser_config::get_item('verbose');
     sleep($sleep);
 }
 
 # That's all folks!
-print "<<< $prog stopped ($signal) <<<<\n";
+syslog("<<< $prog stopped ($signal) <<<<");
 exit;
 
 
@@ -336,4 +335,15 @@ sub log_event_hotwater
     # Remember the current state
     $last->{cause} = $cause;
     $last->{state} = $state;
+}
+
+# Record an error or debug information in the system log
+sub syslog
+{
+    my ($message, $thermostat) = @_;
+
+    # Output the message prefixed by a timestamp and the thermostat's name
+    $message =~ s/\s+$//;
+    print strftime("%b %d %H:%M:%S", localtime),
+          (defined $thermostat ? " [$thermostat]" : ''), ': ', $message, "\n";
 }
