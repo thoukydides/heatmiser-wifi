@@ -595,7 +595,17 @@ sub command
     my $cmd = join('', map(chr, @cmd));
 
     # Send the command to the thermostat
-    $self->{socket}->send($cmd, 0) or die "Failed to send command to thermostat: $!\n";
+    eval
+    {
+        $self->{socket}->send($cmd, 0) or die "Failed to send command to thermostat: $!\n";
+    };
+    if ($@)
+    {
+        # If there was any error then close the port and re-throw the error
+        my $error = $@;
+        eval { $self->close(); };
+        die $error;
+    }
     return 1;
 }
 
@@ -606,8 +616,18 @@ sub response
 
     # Receive a response from the thermostat
     my $rsp;
-    $self->{socket}->recv($rsp, 0x10000, 0);
-    die "No response received from thermostat\n" unless length $rsp;
+    eval
+    {
+        $self->{socket}->recv($rsp, 0x10000, 0);
+        die "No response received from thermostat\n" unless length $rsp;
+    };
+    if ($@)
+    {
+        # If there was any error then close the port and re-throw the error
+        my $error = $@;
+        eval { $self->close(); };
+        die $error;
+    }
 
     # Split the response into octets
     my (@rsp) = map(ord, split(//, $rsp));
