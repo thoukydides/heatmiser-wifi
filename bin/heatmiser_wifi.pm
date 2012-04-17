@@ -315,7 +315,8 @@ sub lookup_comfort
     # Default to the time in the status unless explicitly specified
     $datetime = $status->{time} unless $datetime;
     die "Badly formatted time '$datetime'\n" unless $datetime =~ / (\d\d:\d\d:\d\d)$/;
-    my $time = $1;
+    sub minutes { my ($hour, $minute) = split /:/, shift; return $hour * 60 + $minute; }
+    my $time = minutes($1);
 
     # Start with the final temperature for the previous day
     my $mode = $status->{config}->{progmode};
@@ -325,22 +326,26 @@ sub lookup_comfort
     # And with the first temperature for the next day
     my $nextdayindex = dateindex($mode, $datetime, +1);
     my $next_target = $status->{comfort}->[$nextdayindex]->[0]->{target};
+    my $next_minutes = minutes($status->{comfort}->[$nextdayindex]->[0]->{time})
+                       + 24 * 60 - $time;
 
     # Search the levels for the current day for the specified time
     my $dayindex = dateindex($mode, $datetime);
     my $entries = $status->{comfort}->[$dayindex];
     foreach my $entry (@$entries)
     {
-        if ($time lt $entry->{time})
+        my $minutes = minutes($entry->{time});
+        if ($time < $minutes)
         {
             $next_target = $entry->{target};
+            $next_minutes = $minutes - $time;
             last;
         }
         $target = $entry->{target};
     }
 
     # Return the target temperature(s)
-    return wantarray ? ($target, $next_target) : $target;
+    return wantarray ? ($target, $next_target, $next_minutes / 60.0) : $target;
 }
 
 # Predict the hot water state for a particular date and time
@@ -477,14 +482,11 @@ sub status_to_dcb
             # HERE - 25 (PRTHW boost) and 26 (TM1 countdown)
             # Feature  1: $status->{config}->{units}
             # Feature  2: $status->{config}->{switchdiff}
-            # Feature  3: $status->{frostprotect}->{enabled}
             # Feature  5: $status->{config}->{outputdelay}
             # Feature  7: $status->{config}->{locklimit}
             # Feature  8: $status->{config}->{sensor}
             # Feature 10: $status->{config}->{optimumstart}
-            # Feature 11: $status->{rateofchange}
             # Feature 12: $status->{config}->{progmode}
-            # Other:      $status->{config}->{caloffset}
             die "Unsupported item identifier '$key' for writing\n";
         }
     }
