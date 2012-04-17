@@ -110,13 +110,14 @@ while (not $signal)
 
             # Decode the status
             my $status = $self->{hm}->dcb_to_status(@dcb);
-            my ($comfort, $next_comfort) = $self->{hm}->lookup_comfort($status);
+            my ($comfort, $next_comfort, $next_comfort_hours) = $self->{hm}->lookup_comfort($status);
             my $timer = $self->{hm}->lookup_timer($status);
             $last_time = $status->{time} unless defined $last_time;
 
             # Determine the actions and their causes
             my ($heat_target, $heat_cause) =
-                action_heat($status, $comfort, $next_comfort);
+                action_heat($status, $comfort,
+                            $next_comfort, $next_comfort_hours);
             my ($hotwater_state, $hotwater_cause) =
                 action_hotwater($status, $timer);
 
@@ -162,7 +163,7 @@ exit;
 # Determine the target temperature and its cause
 sub action_heat
 {
-    my ($status, $comfort, $next_comfort) = @_;
+    my ($status, $comfort, $next_comfort, $next_comfort_hours) = @_;
 
     # Consider influences in decreasing order of importance
     my ($target, $cause);
@@ -194,7 +195,9 @@ sub action_heat
                  : ($status->{heating}->{target} == $comfort
                     ? 'comfortlevel'
                     : (($status->{heating}->{target} == $next_comfort
-                        and $comfort < $next_comfort)
+                        and $comfort < $next_comfort
+                        and $next_comfort_hours
+                            <= $status->{config}->{optimumstart})
                        ? 'optimumstart' : 'manual'));
     }
 
