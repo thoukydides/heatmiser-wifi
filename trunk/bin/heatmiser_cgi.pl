@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -T
 
 # This CGI script provides access to the database of data logged from the
 # iPhone interface of Heatmiser's range of Wi-Fi enabled thermostats.
@@ -33,7 +33,7 @@ use warnings;
 # Allow use of modules in the same directory
 use Cwd 'abs_path';
 use File::Basename;
-use lib dirname(abs_path $0);
+use lib (dirname(abs_path $0) =~ /^(.*)$/)[0]; # (clear taintedness)
 
 # Useful libraries
 use CGI;
@@ -84,8 +84,9 @@ eval
     if ($type eq 'log')
     {
         # Retrieve temperature logs
-        my @columns = qw(time air target comfort);
-        my $temperatures = $db->log_retrieve($thermostat, \@columns, \%range);
+        my $temperatures = $db->log_retrieve($thermostat,
+                                             [qw(time air target comfort)],
+                                             \%range);
         time_log('Database temperatures query');
         $results{temperatures} = fixup_uniq($temperatures);
         time_log('Data conversion');
@@ -109,14 +110,25 @@ eval
                                             'hotwater', \%range);
         $results{hotwater} = fixup($hotwater, sub { ($_[0]+0, $_[1], $_[2]+0) } );
         time_log('Database hot water query');
+
+        # Retrieve the weather log
+        my $weather = $db->weather_retrieve([qw(time external)], \%range);
+        time_log('Database weather query');
+        $results{weather} = fixup_uniq($weather);
+        time_log('Data conversion');
     }
     elsif ($type eq 'minmax')
     {
         # Retrieve daily temperature range
-        my @columns = qw(date min max);
-        my $data = $db->log_daily_min_max($thermostat, \%range);
+        my $temperatures = $db->log_daily_min_max($thermostat, \%range);
         time_log('Database temperatures query');
-        $results{minmax} = fixup_uniq($data);
+        $results{temperatures_minmax} = fixup_uniq($temperatures);
+        time_log('Data conversion');
+
+        # Retrieve daily weather range
+        my $weather = $db->weather_daily_min_max(\%range);
+        time_log('Database weather query');
+        $results{weather_minmax} = fixup_uniq($weather);
         time_log('Data conversion');
     }
     else
