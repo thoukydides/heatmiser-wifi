@@ -163,3 +163,5 @@ Open the new web page in a web browser such as Chrome, Firefox, Internet Explore
 If everything has been installed correctly then this should draw a chart with the recent temperatures:
 
 <div align=center> http://heatmiser-wifi.googlecode.com/svn/wiki/chart-temperatures.png </div>
+
+External temperatures can be added to the chart by configuring use of an [InstallationWeather Online Weather Service].
