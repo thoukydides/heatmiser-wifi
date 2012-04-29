@@ -164,4 +164,4 @@ If everything has been installed correctly then this should draw a chart with th
 
 <div align=center> http://heatmiser-wifi.googlecode.com/svn/wiki/chart-temperatures.png </div>
 
-External temperatures can be added to the chart by configuring use of an [InstallationWeather Online Weather Service].
+External temperatures can be added to the chart by configuring use of an [InstallationWeather Online Weather Service]. Alternatively, setup [InstallationTimeSync Automatic Time Synchronisation] to keep your thermostat's clock accurate and automatically adjust to the start and end of summer (daylight saving) time.
