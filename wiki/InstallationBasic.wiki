@@ -38,7 +38,7 @@ sudo apt-get install perl5</code>
 
 Ensure that essential Perl packages are installed using:
 <code language=sh>
-sudo cpan CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON Proc::Daemon Proc::PID::File Time::HiRes</code>
+sudo cpan CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON LWP::UserAgent Proc::Daemon Proc::PID::File Time::HiRes XML::Simple</code>
 
 == Test Basic Operation ==
 
