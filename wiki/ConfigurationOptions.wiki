@@ -33,3 +33,8 @@ The following options can be configured:
 || `LOGSECONDS` || `-i` _seconds_ || `60` || The interval in seconds between logging the thermostat's data to the database ||
 || `PIN` || `-p` _pincode_ || || PIN code for the thermostat's iPhone interface ||
 || `VERBOSE` || `-v` || `0` || Set to 1 to output additional information about the scripts' operation ||
+|| `WKEY` || `-k` _apikey_ || || API key for the online weather service (only required for `metoffice` and `wunderground`) ||
+|| `WLOCATION` || `-g` _location_ || || Location to request from the online weather service in the appropriate format for the service being used ||
+|| `WLOGRATE` || `-r` _factor_ || `5` || How much slower should the online weather service be polled than the main logging rate ||
+|| `WSERVICE` || `-w` _service_ || || Optional online weather service (`metoffice`, `wunderground`, `google`, `yahoo` or unset for none) for external temperature ||
+|| `WUNITS` || `-f` _units_ || `C` || Temperature units to request from the online weather service (`C` or `F`); should match the thermostats' configuration ||
