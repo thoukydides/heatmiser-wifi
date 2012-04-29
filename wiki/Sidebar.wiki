@@ -28,6 +28,9 @@
  * *Other Resources*
    * [http://www.highcharts.com/ Highcharts]
    * [http://jquery.org/ jQuery]
+   * [http://www.metoffice.gov.uk/public/ddc UK Met Office DataPoint]
+   * [http://www.wunderground.com/weather/api Weather Undeground]
+   * [http://developer.yahoo.com/weather Yahoo! Weather]
 
 ----
 
