@@ -3,7 +3,7 @@
 
 = Installation Introduction =
 
-This software has been developed to run under Ubuntu 10.04.3 LTS, but should also work on other Linux distributions and versions. Installation requires minimal understanding of how to use and administer Linux systems.
+This software has been developed to run under Ubuntu 10.04.3 LTS and 12.04 LTS, but should also work on other Linux distributions and versions. Installation requires minimal understanding of how to use and administer Linux systems.
 
 Start with:
   * [InstallationBasic Basic Setup]
