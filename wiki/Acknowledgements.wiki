@@ -20,6 +20,7 @@ http://shop.highsoft.com/skin/frontend/silver/styled/images/logo.png
 
 The web page also makes use of the [http://jquery.org/ jQuery] !JavaScript library.
 <td>
+http://jquery.org/wp-content/uploads/2010/01/JQuery_logo_color_onwhite-300x74.png
 <wiki:comment>
 <tr><td>
 == UK Met Office DataPoint ==
