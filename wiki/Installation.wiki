@@ -10,4 +10,5 @@ Start with:
 
 Continue with the other optional installation depending on requirements:
   * [InstallationWebInterface Web Interface]
+  * [InstallationWeather Web Interface External Temperature]
   * [InstallationTimeSync Time Synchronisation]
