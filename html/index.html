@@ -64,6 +64,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       var thermostatHeating = [];
       var thermostatTarget = [];
       var thermostatHotWater = [];
+      var thermostatWeather = [];
       var thermostatDays = 0;
 
       // Global chart
@@ -112,9 +113,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           },
           title: { text: 'Wi-Fi Thermostat Temperature Log' },
           plotOptions: {
-            marker: {
-              enabled: false
-            },
+            marker: { enabled: false },
           },
           series: [
             {
@@ -131,9 +130,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
               },
               lineWidth: 1,
               states: { hover: { lineWidth: 1 } },
-              tooltip : {
-                yDecimals : 1,
-              },
+              tooltip : { yDecimals : 1 },
               data: []
             },{
               name: 'Target temperature',
@@ -148,6 +145,15 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
               color: 'rgba(0, 0, 255, 1)',
               step: true,
               dataGrouping: { approximation: 'high' },
+              data: []
+            },{
+              name: 'External temperature',
+              type: 'spline',
+              color: 'rgba(0, 0, 0, 1)',
+              lineWidth: 1,
+              dashStyle: 'Dash',
+              states: { hover: { lineWidth: 1 } },
+              tooltip : { enabled: false },
               data: []
             },{
               name: 'Flags',
@@ -229,13 +235,17 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         thermostatHeating = data.heating.concat(thermostatHeating);
         thermostatTarget = data.target.concat(thermostatTarget);
         thermostatHotWater = data.hotwater.concat(thermostatHotWater);
+        thermostatWeather = data.weather.concat(thermostatWeather);
 
         // Unpack the temperature data
-        var seriesData = [[], [], [], [], []];
+        var seriesData = [[], [], [], [], [], []];
         $.each(thermostatTemperatures, function(i, row) {
           seriesData[0].push([row[0], row[1]]);
           seriesData[1].push([row[0], row[2]]);
           seriesData[2].push([row[0], row[3]]);
+        });
+        $.each(thermostatWeather, function(i, row) {
+          seriesData[3].push([row[0], row[1]]);
         });
 
         // Convert heating periods to plot bands
@@ -283,7 +293,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           var type = flagTypes[row[1]];
           if (type != null)
           {
-            seriesData[3].push({
+            seriesData[4].push({
               x: row[0],
               title: type[0],
               text: type[1] + " " + row[2] + thermostatUnits,
@@ -304,7 +314,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           if (type != null)
           {
             var colour = row[2] ? 'rgba(255, 0, 0, 1)' : 'rgba(0, 0, 0, 1)';
-            seriesData[4].push({
+            seriesData[5].push({
               x: row[0],
               title: type[row[2] ? 0 : 1],
               text: "Hot water " + (row[2] ? 'ON' : 'OFF') + " (" + type[2] + ")",
