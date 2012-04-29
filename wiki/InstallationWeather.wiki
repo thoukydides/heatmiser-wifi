@@ -1,0 +1,116 @@
+#summary External temperature from an online weather service installation instructions
+#labels Phase-Deploy
+
+= Logging and Charting External Temperature =
+
+Once charting of the thermostat data is working by following the [InstallationWebInterface Web Interface Setup] it is possible to add external temperature data obtained from an online weather service.
+
+== Select a Weather Service ==
+
+Several online weather services are supported. Choose one that meets your requirements...
+
+<table border=0>
+<wiki:comment>
+<tr><td valign=top>
+== UK MetOffice Data Point ==
+<td>
+http://www.metoffice.gov.uk/public/ddc
+</wiki:comment>
+
+<tr><td valign=top>
+=== Weather Underground ===
+<td>
+==== Service ====
+Use `wunderground` to specify use of the Weather Underground API.
+==== API Key ====
+Visit http://www.wunderground.com/weather/api and create an account to obtain an API Key (sixteen hexadecimal digits). A _free_ 'developer' account allows for up to 500 calls per day and 10 calls per minute which should be sufficient for most users.
+==== Location ===
+The location can be specified in several ways, including:
+ * `Australia/Sydney` (country,city)
+ * `37.8,-122.4` (latitude,longitude) 
+ * `KJFK` (airport code) 
+ * `pws:ICAMBSCO1` (Personal Weather Station identifier) 
+ * `autoip` (automatically identify location from the IP address) 
+
+<tr><td valign=top>
+=== iGoogle ===
+<td>
+==== Service ====
+Use `google` to specify use of the (unofficial) iGoogle weather API. Note that this API is intended to be used by iGoogle gadgets, so it may change without notice and excessive use is likely to be blocked.
+==== Location ====
+Quite a few formats can be used for specifying the location, including:
+  * `CB248UP` (post code)
+  * `Cottenham,England` (city,country)
+
+<tr><td valign=top>
+=== Yahoo! Weather ===
+<td>
+==== Service ====
+Use `yahoo` to specify use of the [http://developer.yahoo.com/weather Yahoo! Weather RSS Feed].
+==== Location ====
+The location must be specified as a WOEID. This can be found by browsing or searching for your city from the [http://weather.yahoo.com/ Yahoo! Weather] home page; the WOEID is the number that appears at the end of the resulting URL.
+
+For example, a search for _Cottenham_ results in the URL `http://weather.yahoo.com/england/cambridgeshire/cottenham-16974/`, so the WOEID is `16974`.
+
+<tr><td colspan=2>
+
+== Test Basic Operation ==
+
+Once the weather service has been selected, an API key obtained if appropriate (<wiki:comment>MetOffice Data Point or </wiki:comment>Weather Underground), and the location obtained in a suitable format, it is possible to test it by running:
+<code language="sh">
+/home/user/heatmiser-wifi-read-only/bin/heatmiser_weather.pl -w wunderground -k 0123456789abcdef -g pws:ICAMBSCO1</code>
+where `wunderground` should be changed to identify the service being used, `0123456789abcdef` should be set to your API key (or omitted if using iGoogle or Yahoo! Weather), and `pws:ICAMBSCO1` should be replaced by your location.
+
+This should display the most recent weather observation:
+<blockquote><pre>
+External temperature at 2012-04-29 18:15:52 was 14.0C</pre></blockquote>
+
+is the service identifier,  should be replaced by the API key (or the line omitted if iGoogle or Yahoo! Weather are being used)
+
+== Update the Configuration File ==
+
+Once access to the weather service has been confirmed the configuration options should be added to the `/etc/heatmiser.conf` file:
+<code language="nocode">
+HOST        heatmiser
+PIN         1234
+WSERVICE    wunderground
+WKEY        0123456789abcdef
+WLOCATION   pws:ICAMBSCO1</code>
+where `wunderground`, `0123456789abcdef` and `pws:ICAMBSCO1` should be replaced by the service, API key and location used above.
+
+By default the weather service is polled once for every 5 readings of the thermostats, i.e. every 5 minutes. This can be changed by adding a `WLOGRATE` entry to the `/etc/heatmiser.conf` file specifying the number of thermostat readings per poll of the external temperature. Be careful not to exceed any API limits otherwise access is likely to be blocked.
+
+If your thermostats are configured to display temperatures in Fahrenheit  then it is also necessary to add `WUNITS F` to the configuration file in order to obtain the external temperature in the same units.
+
+== Restart the Daemon ==
+
+Restart the daemon manually using:
+
+<code language="sh">
+sudo /etc/init.d/heatmiser_daemon restart</code>
+
+Check the `/var/log/heatmiser` file for any errors.
+
+Logging of external temperature data can be checked by reconnecting to MySQL:
+<code language="sh>
+mysql -u heatmiser heatmiser</code>
+and then viewing the contents of the `weather` table:
+<code language="sql">
+SELECT * FROM weather;</code>
+<blockquote><pre>
++---------------------+----------+
+| time                | external |
++---------------------+----------+
+| 2012-04-29 18:15:52 |     14.0 |
+| 2012-04-29 18:20:43 |     14.3 |
+| 2012-04-29 18:25:34 |     14.5 |
+| 2012-04-29 18:30:46 |     14.6 |
+| 2012-04-29 18:35:56 |     14.4 |
++---------------------+----------+
+5 rows in set (0.00 sec)</pre></blockquote>
+
+As before, when done disconnect from the MySQL server:
+<code language="sql">
+QUIT;</code>
+
+Opening the web page in a web browser should now show a dashed black line for the external temperature.
