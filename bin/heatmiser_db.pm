@@ -82,8 +82,9 @@ sub initialise
     $db->do('CREATE TABLE IF NOT EXISTS timer (thermostat varchar(255), day TINYINT(1), entry TINYINT(1), timeon TIME, timeoff TIME, PRIMARY KEY (thermostat, day, entry))');
     $db->do('CREATE TABLE IF NOT EXISTS temperatures (thermostat varchar(255), time DATETIME, air DECIMAL(3,1), target TINYINT(2), comfort TINYINT(2), PRIMARY KEY (thermostat, time))');
     $db->do('CREATE TABLE IF NOT EXISTS events (thermostat varchar(255), time DATETIME NOT NULL, class VARCHAR(20) NOT NULL, state VARCHAR(20), temperature TINYINT(2))');
+    $db->do('CREATE TABLE IF NOT EXISTS weather (time DATETIME, external DECIMAL(3,1), PRIMARY KEY (time))');
 
-    # Upgrade all of the database tables to support multiple thermostats
+    # Upgrade all of the thermostat tables to support multiple thermostats
     foreach my $table (qw(settings comfort timer temperatures events))
     {
         # List the table's current columns
@@ -151,7 +152,7 @@ sub x_insert
     my $db = $self->db();
 
     # Add the thermostat to the entry
-    $entry{thermostat} = $thermostat;
+    $entry{thermostat} = $thermostat if defined $thermostat;
 
     # Prepare the SQL statement to insert a new table entry
     my @fields = sort keys %entry; # (consistent order to allow cacheing)
@@ -181,6 +182,15 @@ sub event_insert
 
     # Insert a new event entry into the database
     $self->x_insert($thermostat, 'events', %event);
+}
+
+# Add a weather entry
+sub weather_insert
+{
+    my ($self, %weather) = @_;
+
+    # Insert a new weather entry into the database
+    $self->x_insert(undef, 'weather', %weather);
 }
 
 # Replace the thermostat settings
@@ -471,6 +481,53 @@ sub timer_retrieve
 
     # Return the result
     return $timer;
+}
+
+# Retrieve specified weather entries
+sub weather_retrieve
+{
+    my ($self, $fields, $where, $groupby) = @_;
+
+    # Connect to the database
+    my $db = $self->db();
+
+    # Construct columns to retrieve
+    my @fields = @$fields;
+    foreach my $field (@fields)
+    {
+        # Convert dates to the selected format
+        $field = $self->date_from_mysql($field) if $field eq 'time';
+
+        # Aggregated data
+        if (defined $groupby)
+        {
+            my $op = 'AVG';
+            $op = uc $1 if $field =~ s/^(min|max|avg|count)_//i;
+            $field = "$op($field)";
+        }
+    }
+
+    # Convert a range specification into a WHERE clause
+    $where = $self->where_range($where) if ref $where eq 'HASH';
+
+    # Prepare the SQL statement to retrieve each log entry
+    my $sql = 'SELECT ' . join(',', @fields) . ' FROM weather';
+    $sql .= ' WHERE (' . $where . ')' if defined $where;
+    $sql .= ' GROUP BY ' . $groupby if defined $groupby;
+    $sql .= ' ORDER BY time' unless defined $groupby;
+
+    # Fetch and return all matching rows
+    return $db->selectall_arrayref($sql);
+}
+
+# Determine the daily min/max temperatures
+sub weather_daily_min_max
+{
+    my ($self, $where) = @_;
+
+    # Fetch and return all matching rows
+    return $self->weather_retrieve([qw(time min_external max_external)],
+                                   $where, 'DATE(time)');
 }
 
 

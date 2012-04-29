@@ -43,19 +43,24 @@ use Proc::Daemon;
 use Proc::PID::File;
 use heatmiser_config;
 use heatmiser_db;
+use heatmiser_weather;
 use heatmiser_wifi;
 
 # Command line options
 my ($prog) = $0 =~ /([^\\\/]+$)/;
 sub VERSION_MESSAGE { print "Heatmiser Wi-Fi Thermostat Daemon v1\n"; }
-sub HELP_MESSAGE { print "Usage: $prog [-v] [-h <host>] [-p <pin>] [-i <logseconds>] [-s <dbsource>] [-u <dbuser>] [-a <dbpassword>] [-l <logfile>]\n"; }
+sub HELP_MESSAGE { print "Usage: $prog [-v] [-h <host>] [-p <pin>] [-i <logseconds>] [-r <wlograte>] [-w <wservice>] [-k <wkey>] [-g <wlocation>] [-f <wunits>] [-s <dbsource>] [-u <dbuser>] [-a <dbpassword>] [-l <logfile>]\n"; }
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-our ($opt_v, $opt_h, $opt_p, $opt_i, $opt_s, $opt_u, $opt_a, $opt_l);
-getopts('vh:p:i:s:u:a:l:');
+our ($opt_v, $opt_h, $opt_p, $opt_i, $opt_r, $opt_w, $opt_k, $opt_g, $opt_f,
+     $opt_s, $opt_u, $opt_a, $opt_l);
+getopts('vh:p:i:r:w:k:g:f:s:u:a:l:');
 heatmiser_config::set(verbose => $opt_v, host => [h => $opt_h],
                       pin => [p => $opt_p], logseconds => [i => $opt_l],
-                      dbsource => [s => $opt_s], dbuser => [u => $opt_u],
-                      dbpassword => [a => $opt_a], logfile => [l => $opt_l]);
+                      wlograte => [r => $opt_r], wservice => [w => $opt_w],
+                      wkey => [k => $opt_k], wlocation => [g => $opt_g],
+                      wunits => [f => $opt_f], dbsource => [s => $opt_s],
+                      dbuser => [u => $opt_u], dbpassword => [a => $opt_a],
+                      logfile => [l => $opt_l]);
 
 # Start as a daemon (current script exits at this point)
 my $logfile = heatmiser_config::get_item('logfile');
@@ -78,13 +83,28 @@ foreach my $thermostat (@{heatmiser_config::get_item('host')})
 {
     $thermostats{$thermostat} =
     {
-        # Instantiate a object for connecting to this thermostat
+        # Instantiate an object for connecting to this thermostat
         hm => new heatmiser_wifi(host => $thermostat,
                                  heatmiser_config::get(qw(pin))),
 
         # Initial state for this thermostat for tracking interesting events
         last_heat     => { cause => '', state => -1, target => -1 },
         last_hotwater => { cause => '', state => 0 }
+    };
+}
+
+# Prepare the online weather service
+my $weather;
+if (defined heatmiser_config::get_item('wservice'))
+{
+    $weather =
+    {
+        # Instantiate an object for connecting to this weather service
+        ws => new heatmiser_weather(heatmiser_config::get(qw(wservice wkey wlocation wunits))),
+
+        # Initial state for tracking new weather observations
+        last_timestamp => '',
+        count          => 0
     };
 }
 
@@ -139,6 +159,29 @@ while (not $signal)
 
         };
         syslog($@, $thermostat) if $@;
+    }
+
+    # Retrieve the weather observations if enabled
+    if ($weather
+        and ++($weather->{count}) == heatmiser_config::get_item('wlograte'))
+    {
+        # Reset the log rate counter
+        $weather->{count} = 0;
+
+        # Trap errors while retrieving the weather and updating the database
+        eval
+        {
+            # Read the current weather observations
+            my ($external, $timestamp) = $weather->{ws}->current_temperature();
+
+            # Log the weather observations if new
+            if ($timestamp ne $weather->{last_timestamp})
+            {
+                $db->weather_insert(time => $timestamp, external => $external);
+                $weather->{last_timestamp} = $timestamp;
+            }
+        };
+        syslog($@) if $@;
     }
 
     # Pause before reading the status again
