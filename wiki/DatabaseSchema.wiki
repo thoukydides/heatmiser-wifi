@@ -1,9 +1,9 @@
 #summary Acknowledgements
-#labels Phase-Design,Phase-Implementation,Featured
+#labels Phase-Design,Phase-Implementation
 
 = Database Schema =
 
-Five tables are used to record the thermostats' settings, comfort levels, hot water timers, temperature history, and interesting events.
+Five tables are used to record the thermostats' settings, comfort levels, hot water timers, temperature history, and interesting events. A sixth table is used to record external temperature readings from an online weather service.
 
 == Table `settings` ==
 
@@ -80,3 +80,11 @@ The details of the information recorded for each event depend on the `class`:
 || `heating` || Heating off (`0`) or on (`1`) || n/a (`NULL`) ||
 || `target` || Cause (`off`, `holiday`, `away`, `comfortlevel`, `optimumstart`, `hold` or `manual`) || Target heating temperature (`##`) ||
 || `hotwater` || Cause (`off`, `timer` or `override`) || Hot water off (`0`) or on (`1`) ||
+
+== Table `weather` ==
+
+The `weather` table logs external temperatures from an online weather service:
+
+|| *Field* || *Type* || *Description* ||
+|| `time` || `datetime` || The date and time (`YYYY-MM-DD hh:mm:ss`) ||
+|| `external` || `decimal(3,1)` || The current external temperature (`##.#`) ||
