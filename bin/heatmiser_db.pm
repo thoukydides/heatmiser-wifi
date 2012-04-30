@@ -341,12 +341,10 @@ sub log_retrieve
         $field = $self->date_from_mysql($field) if $field eq 'time';
 
         # Aggregated data
-        if (defined $groupby)
-        {
-            my $op = $field =~ /^(target|comfort)$/ ? 'MAX' : 'AVG';
-            $op = uc $1 if $field =~ s/^(min|max|avg|count)_//i;
-            $field = "$op($field)";
-        }
+        my $op;
+        $op = $field =~ /^(target|comfort)$/ ? 'MAX' : 'AVG' if $groupby;
+        $op = uc $1 if $field =~ s/^(min|max|avg|count)_//i;
+        $field = "$op($field)" if defined $op;
     }
 
     # Convert a range specification into a WHERE clause
@@ -354,8 +352,10 @@ sub log_retrieve
 
     # Prepare the SQL statement to retrieve each log entry
     my $sql = 'SELECT ' . join(',', @fields) . ' FROM temperatures';
-    $sql .= " WHERE (thermostat='" . $thermostat . "')";
-    $sql .= ' AND (' . $where . ')' if defined $where;
+    $sql .= ' WHERE' if defined $thermostat or defined $where;
+    $sql .= " (thermostat='" . $thermostat . "')" if defined $thermostat;
+    $sql .= ' AND' if defined $thermostat and defined $where;
+    $sql .= ' (' . $where . ')' if defined $where;
     $sql .= ' GROUP BY ' . $groupby if defined $groupby;
     $sql .= ' ORDER BY time' unless defined $groupby;
 
@@ -381,6 +381,15 @@ sub log_daily_min_max
     # Fetch and return all matching rows
     return $self->log_retrieve($thermostat, [qw(time min_air max_air)],
                                $where, 'DATE(time)');
+}
+
+# Determine the date range of log entries
+sub log_dates
+{
+    my ($self, $thermostat) = @_;
+
+    # Fetch and return the date range
+    return $self->log_retrieve($thermostat, [qw(min_time max_time)])->[0];
 }
 
 # Retrieve specified event entries
@@ -499,12 +508,10 @@ sub weather_retrieve
         $field = $self->date_from_mysql($field) if $field eq 'time';
 
         # Aggregated data
-        if (defined $groupby)
-        {
-            my $op = 'AVG';
-            $op = uc $1 if $field =~ s/^(min|max|avg|count)_//i;
-            $field = "$op($field)";
-        }
+        my $op;
+        $op = 'AVG' if defined $groupby;
+        $op = uc $1 if $field =~ s/^(min|max|avg|count)_//i;
+        $field = "$op($field)" if defined $op;
     }
 
     # Convert a range specification into a WHERE clause
@@ -528,6 +535,15 @@ sub weather_daily_min_max
     # Fetch and return all matching rows
     return $self->weather_retrieve([qw(time min_external max_external)],
                                    $where, 'DATE(time)');
+}
+
+# Determine the date range of weather entries
+sub weather_dates
+{
+    my ($self) = @_;
+
+    # Fetch and return the date range
+    return $self->weather_retrieve([qw(min_time max_time)])->[0];
 }
 
 
