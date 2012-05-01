@@ -14,7 +14,7 @@ Several online weather services are supported. Choose one that meets your requir
 === UK !MetOffice Data Point ===
 <td>
 ==== Service ====
-Use `metoffice` to specify use of the [http://www.metoffice.gov.uk/public/ddc UK MetOffice Data Point] API.
+Use `metoffice` to specify use of the [http://www.metoffice.gov.uk/public/ddc UK MetOffice Data Point] datafeeds.
 
 ==== API Key ====
 
@@ -67,7 +67,7 @@ For example, a search for _Cottenham_ results in the URL `http://weather.yahoo.c
 
 == Test Basic Operation ==
 
-Once the weather service has been selected, an API key obtained if appropriate (<wiki:comment>MetOffice Data Point or </wiki:comment>Weather Underground), and the location obtained in a suitable format, it is possible to test it by running:
+Once the weather service has been selected, an API key obtained if appropriate (Met Office DataPoint or Weather Underground), and the location obtained in a suitable format, it is possible to test it by running:
 <code language="sh">
 /home/user/heatmiser-wifi-read-only/bin/heatmiser_weather.pl -w wunderground -k 0123456789abcdef -g pws:ICAMBSCO1</code>
 where `wunderground` should be changed to identify the service being used, `0123456789abcdef` should be set to your API key (or omitted if using iGoogle or Yahoo! Weather), and `pws:ICAMBSCO1` should be replaced by your location.
