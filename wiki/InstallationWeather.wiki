@@ -10,12 +10,23 @@ Once charting of the thermostat data is working by following the [InstallationWe
 Several online weather services are supported. Choose one that meets your requirements...
 
 <table border=0>
-<wiki:comment>
 <tr><td valign=top>
-== UK MetOffice Data Point ==
+== UK !MetOffice Data Point ==
 <td>
-http://www.metoffice.gov.uk/public/ddc
-</wiki:comment>
+==== Service ====
+Use `metoffice` to specify use of the [http://www.metoffice.gov.uk/public/ddc UK MetOffice Data Point] API.
+
+==== API Key ====
+
+Visit https://register.metoffice.gov.uk/register/ddc and register for an account (or add a Met Office !DataPoint subscription to your existing account). Then visit http://www.metoffice.gov.uk/premium/ddc/retrieveKey.html to obtain your API key.
+
+==== Location ====
+
+The location can be specified as:
+ * `52.288837,0.124287` (latitude,longitude)
+ * `3482` (location ID)
+
+A list of location IDs can be obtained from http://www.metoffice.gov.uk/premium/ddc/previewData.html and clicking on the XML link under the *Observarions site list* heading.
 
 <tr><td valign=top>
 === Weather Underground ===
@@ -26,8 +37,8 @@ Use `wunderground` to specify use of the Weather Underground API.
 Visit http://www.wunderground.com/weather/api and create an account to obtain an API Key (sixteen hexadecimal digits). A _free_ 'developer' account allows for up to 500 calls per day and 10 calls per minute which should be sufficient for most users.
 ==== Location ===
 The location can be specified in several ways, including:
- * `Australia/Sydney` (country,city)
- * `37.8,-122.4` (latitude,longitude) 
+ * `England/Cottenham` (country,city)
+ * `52.288837,0.124287` (latitude,longitude) 
  * `KJFK` (airport code) 
  * `pws:ICAMBSCO1` (Personal Weather Station identifier) 
  * `autoip` (automatically identify location from the IP address) 
