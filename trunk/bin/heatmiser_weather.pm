@@ -33,6 +33,7 @@ use warnings;
 # Useful libraries
 use LWP::UserAgent;
 use POSIX qw(strftime);
+use Time::Local;
 use XML::Simple qw(:strict);
 
 
@@ -85,6 +86,7 @@ sub initialise
 
 # GENERIC HIGH-LEVEL INTERFACE
 
+# Retrieve the current temperature
 sub current_temperature
 {
     my ($self) = @_;
@@ -104,7 +106,13 @@ sub current_temperature
     {
         # Met Office DataPoint UK
         my $observations = $self->metoffice_observations($self->{wlocation});
-        # HERE - Extract the temperature from the returned data
+        my $period = $observations->{DV}->{Location}->{Period};
+        my $maxday = (sort keys %$period)[-1];
+        my $reports = $period->{$maxday}->{Rep};
+        my $maxtime = (sort { $a <=> $b } keys %$reports)[-1];
+        $temperature = $reports->{$maxtime}->{T};
+        $temperature = ($temperature x 9/5) + 32 if $self->{wunits} eq 'F';
+        ($year, $month, $day, $hour, $minute, $second) = iso8601($observations->{DV}->{dataDate});
     }
     elsif ($self->{wservice} eq 'wunderground')
     {
@@ -134,8 +142,11 @@ sub current_temperature
     }
     else
     {
-        die "Unsupported weather service '$self->{wservice}'\n";
+        die "Unsupported weather service for temperature '$self->{wservice}'\n";
     }
+
+    # Check that a valid temperature was obtained
+    die "Failed to read temperature from weather service\n" unless defined $temperature;
 
     # Format the timestamp as an SQL DATETIME string
     my $timestamp = sprintf '%04i-%02i-%02i %02i:%02i:%02i',
@@ -153,8 +164,36 @@ sub metoffice_observations
 {
     my ($self, $location) = @_;
 
-    # HERE - Retrieve the Met Office DataPoint observation data
-    die "Met Office DataPoint is not currently supported";
+    # Convert the location into the appropriate format
+    my ($locurl, @locargs);
+    if ($location =~ /^(-?[\d\.]+),(-?[\d\.]+)$/)
+    {
+        # Nearest location to a specified latitude and longitude
+        ($locurl, @locargs) = ('nearestlatlon', 'lat=' . $1, 'lon=' . $2);
+    }
+    elsif ($location !~ /^\d+$/)
+    {
+        # A specific location ID
+        $locurl = $location;
+    }
+    else
+    {
+        die "Unsupported location '$location' for Met Office DataPoint\n";
+    }
+
+    # Fetch the weather information
+    my $response = $self->{ua}->get('http://partner.metoffice.gov.uk/public/val/wxobs/all/xml/' . $locurl . '?' . join('&', 'res=hourly', @locargs, 'key=' . $self->{wkey}));
+    die "Failed to retrieve Met Office DataPoint observations: " . $response->status_line . "\n" unless $response->is_success;
+
+    # Decode and return the result
+    return XMLin($response->decoded_content,
+                 ContentKey    => 'description',
+                 ForceArray    => ['Param', 'Period', 'Rep'],
+                 KeyAttr       => {Param => 'name',
+                                   Period => 'val',
+                                   Rep   => 'description'},
+                 GroupTags     => {Period => 'Rep'},
+                 SuppressEmpty => 1);
 }
 
 
@@ -173,6 +212,25 @@ sub wunderground_conditions
     # Decode and return the result
     return XMLin($response->decoded_content,
                  ForceArray => [], KeyAttr => []);
+}
+
+# Retrieve historical conditions from Weather Underground
+sub wunderground_history
+{
+    my ($self, $location, $year, $month, $day) = @_;
+
+    # Fetch the weather information
+    my $date = sprintf '%04d%02d%02d', $year, $month, $day;
+    my $response = $self->{ua}->get('http://api.wunderground.com/api/' . $self->{wkey} . '/history_' . $date . '/q/' . $location . '.xml');
+    die "Failed to retrieve Weather Underground conditions: " . $response->status_line . "\n" unless $response->is_success;
+
+    # Decode and return the result
+    return XMLin($response->decoded_content,
+                 ForceArray    => [],
+                 KeyAttr       => [],
+                 GroupTags     => {observations => 'observation',
+                                   dailysummary => 'summary'},
+                 SuppressEmpty => 1);
 }
 
 
@@ -215,13 +273,36 @@ sub yahoo_rss
 
 # UTILITY FUNCTIONS
 
+# Decode an ISO 8601
+sub iso8601
+{
+    my ($iso8601) = @_;
+
+    # Parse the date and time
+    die "Not a supported ISO 8601 date and time: $iso8601\n" unless $iso8601 =~ /^(\d\d\d\d)-?(\d\d)-?(\d\d)T(\d\d):?(\d\d):?(\d\d)?(Z?)$/;
+    my ($year, $month, $day, $hour, $minute, $second, $tzone) = ($1, $2, $3, $4, $5, $6, $7);
+
+    # If a timezeone was specified then convert to local time
+    if (defined $tzone)
+    {
+        die "Only Zulu/UTC supported for ISO 8601 dates\n" unless $tzone eq 'Z';
+        my $time = timegm($second, $minute, $hour, $day, $month - 1, $year);
+        my ($second, $minute, $hour, $day, $month, $year) = localtime($time);
+        $year  += 1900; # (localtime returns number of years since 1900)
+        $month += 1;    # (localtime returns month in range 0..1)
+    }
+
+    # Return the decoded date and time
+    return ($year, $month, $day, $hour, $minute, $second);
+}
+
 # Decode an RFC822 date and time
 sub rfc822
 {
     my ($rfc822) = @_;
 
     # Parse the date and time
-    die "Not an RFC822 date and time: $rfc822\n" unless $rfc822 =~ /^(?:\w\w\w, )(\d?\d) (\w\w\w) (\d\d\d\d) (\d?\d):(\d\d)(?::(\d\d))?(?: (am|pm))?/i;
+    die "Not a supported RFC822 date and time: $rfc822\n" unless $rfc822 =~ /^(?:\w\w\w, )(\d?\d) (\w\w\w) (\d\d\d\d) (\d?\d):(\d\d)(?::(\d\d))?(?: (am|pm))?/i;
     my ($day, $monthname, $year, $hour, $minute, $second, $ampm) = ($1, $2, $3, $4, $5, $6, $7);
 
     # Map the month name to a number
