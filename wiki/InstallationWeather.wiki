@@ -11,7 +11,7 @@ Several online weather services are supported. Choose one that meets your requir
 
 <table border=0>
 <tr><td valign=top>
-== UK !MetOffice Data Point ==
+=== UK !MetOffice Data Point ===
 <td>
 ==== Service ====
 Use `metoffice` to specify use of the [http://www.metoffice.gov.uk/public/ddc UK MetOffice Data Point] API.
