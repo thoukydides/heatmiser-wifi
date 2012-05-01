@@ -5,6 +5,7 @@
    * [Installation Introduction]
    * [InstallationBasic Basic Setup]
    * [InstallationWebInterface Web Interface]
+   * [InstallationWeather Web Interface External Temperature]
    * [InstallationTimeSync Time Synchronisation]
  * Reference Information
    * [ConfigurationOptions Configuration Options]
