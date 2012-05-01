@@ -21,14 +21,12 @@ http://shop.highsoft.com/skin/frontend/silver/styled/images/logo.png
 The web page also makes use of the [http://jquery.org/ jQuery] !JavaScript library.
 <td>
 http://jquery.org/wp-content/uploads/2010/01/JQuery_logo_color_onwhite-300x74.png
-<wiki:comment>
 
 <tr><td>
-== UK Met Office DataPoint ==
-[http://www.metoffice.gov.uk/public/ddc UK Met Office DataPoint]
+== UK Met Office !DataPoint ==
+External temperature data can be obtained using the [http://www.metoffice.gov.uk/public/ddc UK Met Office DataPoint] datafeeds.
 <td>
 https://register.metoffice.gov.uk/WaveRegistrationClient/public/images/lg_mo.gif
-</wiki:comment>
 
 <tr><td>
 == Weather Underground ==
