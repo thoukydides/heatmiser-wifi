@@ -37,7 +37,7 @@ Use `wunderground` to specify use of the Weather Underground API.
 Visit http://www.wunderground.com/weather/api and create an account to obtain an API Key (sixteen hexadecimal digits). A _free_ 'developer' account allows for up to 500 calls per day and 10 calls per minute which should be sufficient for most users.
 ==== Location ===
 The location can be specified in several ways, including:
- * `England/Cottenham` (country,city)
+ * `England/Cottenham` (country/city)
  * `52.288837,0.124287` (latitude,longitude) 
  * `KJFK` (airport code) 
  * `pws:ICAMBSCO1` (Personal Weather Station identifier) 
