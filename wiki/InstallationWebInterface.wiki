@@ -133,6 +133,33 @@ If Apache is not already running then install it using:
 sudo apt-get update
 sudo apt-get install apache2</code>
 
+Allow web pages to be served from `/home/*/public_html` directories using:
+<code language=sh>
+sudo a2enmod userdir</code>
+
+Ensure that the web server accepts symbolic links for running cgi-bin scripts. This involves editing `/etc/apache2/sites-available/default` and replacing `+SymLinksIfOwnerMatch` by `+FollowSymLinks`. There will probably be a section of the file that resembles:
+<pre>
+        ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
+        <Directory "/usr/lib/cgi-bin">
+                AllowOverride None
+                Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+                Order allow,deny
+                Allow from all
+        </Directory></pre>
+This should be changed to:
+<pre>
+        ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
+        <Directory "/usr/lib/cgi-bin">
+                AllowOverride None
+                Options +ExecCGI -MultiViews +FollowSymLinks
+                Order allow,deny
+                Allow from all
+        </Directory></pre>
+
+Restart Apache to use the new configuration using:
+<code language=sh>
+sudo /etc/init.d/apache2 reload</code>
+
 == Install Web Page ==
 
 Create a `cgi-bin` directory for the AJAX back-end script, and create a symbolic link from it to the location of the script:
@@ -142,6 +169,7 @@ sudo ln -s /home/user/heatmiser-wifi-read-only/bin/heatmiser_cgi.pl /usr/lib/cgi
 
 Create a directory for the web page, and create a symbolic link to the HTML file:
 <code language=sh>
+mkdir /home/user/public_html
 mkdir /home/user/public_html/heatmiser-wifi
 ln -s /home/user/heatmiser-wifi-read-only/html/index.html /home/user/public_html/heatmiser-wifi/index.html</code>
 
@@ -163,5 +191,7 @@ Open the new web page in a web browser such as Chrome, Firefox, Internet Explore
 If everything has been installed correctly then this should draw a chart with the recent temperatures:
 
 <div align=center> http://heatmiser-wifi.googlecode.com/svn/wiki/chart-temperatures.png </div>
+
+If the page completely fails to load then it is likely to be due to Apache's configuration for `/home/*/public_html` directories. If a *Loading...* message is displayed indefinitely then it is likely to be due to Apache's configuration for symbolic links to cgi-bin scripts. Either way, look at the last few lines of the `/var/log/apache2/error-log' file for clues.
 
 External temperatures can be added to the chart by configuring use of an [InstallationWeather Online Weather Service]. Alternatively, setup [InstallationTimeSync Automatic Time Synchronisation] to keep your thermostat's clock accurate and automatically adjust to the start and end of summer (daylight saving) time.
