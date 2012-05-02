@@ -171,7 +171,7 @@ sub metoffice_observations
         # Nearest location to a specified latitude and longitude
         ($locurl, @locargs) = ('nearestlatlon', 'lat=' . $1, 'lon=' . $2);
     }
-    elsif ($location !~ /^\d+$/)
+    elsif ($location =~ /^\d+$/)
     {
         # A specific location ID
         $locurl = $location;
