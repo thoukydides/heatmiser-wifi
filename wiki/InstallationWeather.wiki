@@ -7,14 +7,21 @@ Once charting of the thermostat data is working by following the [InstallationWe
 
 == Select a Weather Service ==
 
-Several online weather services are supported. Choose one that meets your requirements...
+Several free online weather services are supported. Choose one that meets your requirements...
 
-<table border=0>
+<table border=0 cellspacing=20>
 <tr><td valign=top>
-=== UK !MetOffice Data Point ===
-<td>
+----
+=== UK Met Office !DataPoint ===
+<img src="https://register.metoffice.gov.uk/WaveRegistrationClient/public/images/lg_mo.gif" width="200px" hspace=50>
+
+_The [http://www.metoffice.gov.uk/public/ddc UK MetOffice Data Point] datafeeds provide hourly observations available from ~122 locations around the UK._
+
+_ Requires registration for a free account._
+<td valign=top>
+----
 ==== Service ====
-Use `metoffice` to specify use of the [http://www.metoffice.gov.uk/public/ddc UK MetOffice Data Point] datafeeds.
+`metoffice`
 
 ==== API Key ====
 
@@ -22,47 +29,72 @@ Visit https://register.metoffice.gov.uk/register/ddc and register for an account
 
 ==== Location ====
 
-The location can be specified as:
- * `52.288837,0.124287` (latitude,longitude)
- * `3482` (location ID)
-
-A list of location IDs can be obtained from http://www.metoffice.gov.uk/premium/ddc/previewData.html and clicking on the XML link under the *Observarions site list* heading.
+The location can be specified in two ways:
+|| *Value* || *Example* || *Description* ||
+|| _latitude_`,`_longitude_ || `52.288837,0.124287` || Nearest location to a specified latitude and longitude ||
+|| _location_id_ || `3482` || A specific location ID. A complete list can be obtained from http://www.metoffice.gov.uk/premium/ddc/previewData.html by clicking on the *XML* link under the *Observarions site list* heading. ||
 
 <tr><td valign=top>
+----
 === Weather Underground ===
-<td>
+<img src="http://icons.wxug.com/logos/images/wundergroundLogo_4c_horz.jpg" width="200px" hspace=50>
+
+_The [http://www.wunderground.com/weather/api Weather Underground API] provides observations from over 22,000 personal weather stations worldwide plus many official weather stations at airports and other locations._
+
+_Requires registration for a free 'developer' account. This allows for up to 500 calls per day and 10 calls per minute which should be sufficient for most users._
+<td valign=top>
+----
 ==== Service ====
-Use `wunderground` to specify use of the Weather Underground API.
+`wunderground`
 ==== API Key ====
-Visit http://www.wunderground.com/weather/api and create an account to obtain an API Key (sixteen hexadecimal digits). A _free_ 'developer' account allows for up to 500 calls per day and 10 calls per minute which should be sufficient for most users.
+Visit http://www.wunderground.com/weather/api to create an account to obtain an API Key (sixteen hexadecimal digits). 
 ==== Location ===
 The location can be specified in several ways, including:
- * `England/Cottenham` (country/city)
- * `52.288837,0.124287` (latitude,longitude) 
- * `KJFK` (airport code) 
- * `pws:ICAMBSCO1` (Personal Weather Station identifier) 
- * `autoip` (automatically identify location from the IP address) 
+|| *Value* || *Example* || *Description* ||
+|| _country_`/`_city_ || `England/Cottenham` || A named city ||
+|| _latitude_`,`_longitude_ || `52.288837,0.124287` || Specified latitude and longitude ||
+|| _airport_code_ || `EGSC` || [http://en.wikipedia.org/wiki/List_of_airports_by_ICAO_code International Civil Aviation Organization (ICAO) airport code] ||
+|| `pws:`_pws_identifier_ || `pws:ICAMBSCO1` || Personal Weather Station identifier ||
+|| `autoip` || `autoip` || Automatically identify location from the IP address ||
 
 <tr><td valign=top>
+----
 === iGoogle ===
-<td>
+<img src="http://www.google.com/ig/images/igoogle_logo_sm.gif" width="200px" hspace=50>
+
+_The [http://www.google.com/ig iGoogle] weather API is intended to be used by iGoogle gadgets, so it may change without notice and excessive use is likely to be blocked._
+
+_No registration is required._
+<td valign=top>
+----
 ==== Service ====
-Use `google` to specify use of the (unofficial) iGoogle weather API. Note that this API is intended to be used by iGoogle gadgets, so it may change without notice and excessive use is likely to be blocked.
+`google`
 ==== Location ====
 Quite a few formats can be used for specifying the location, including:
-  * `CB248UP` (post code)
-  * `Cottenham,England` (city,country)
+|| *Value* || *Example* || *Description* ||
+|| `postcode` || `CB248UP` || Address post code ||
+|| _city_`,`_country_ || `Cottenham,England` || A named city ||
 
 <tr><td valign=top>
+----
 === Yahoo! Weather ===
-<td>
+<img src="http://l.yimg.com/a/i/brand/purplelogo//uh/us/news-wea.gif" width="200px" hspace=50>
+
+_The [http://developer.yahoo.com/weather Yahoo! Weather RSS Feed] provides worldwide weather information._
+
+_No registration is required._
+<td valign=top>
+----
 ==== Service ====
-Use `yahoo` to specify use of the [http://developer.yahoo.com/weather Yahoo! Weather RSS Feed].
+`yahoo`
 ==== Location ====
 The location must be specified as a WOEID. This can be found by browsing or searching for your city from the [http://weather.yahoo.com/ Yahoo! Weather] home page; the WOEID is the number that appears at the end of the resulting URL.
 
 For example, a search for _Cottenham_ results in the URL `http://weather.yahoo.com/england/cambridgeshire/cottenham-16974/`, so the WOEID is `16974`.
-
+<tr><td valign=top>
+----
+<td valign=top>
+----
 <tr><td colspan=2>
 
 == Test Basic Operation ==
