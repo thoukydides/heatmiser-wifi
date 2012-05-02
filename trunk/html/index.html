@@ -53,6 +53,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       var fetchInitDays = 7;
       var fetchExtraDays = 30;
       var fetchFinalDays = 365 * 2;
+      var fetchExtraDelayMilliseconds = 100;
       var fetchPollDelaySeconds = 60;
       var showInitDays = 2;
 
@@ -340,7 +341,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         {
           // Retrieve older data
           thermostatDays += fetchExtraDays;
-          $.getJSON(url, { thermostat: thermostatId, type: 'log', days: thermostatDays, to: thermostatTemperatures[0][0] }, prefixChartData);
+          setTimeout("$.getJSON(url, { thermostat: thermostatId, type: 'log', days: thermostatDays, to: thermostatTemperatures[0][0] }, prefixChartData)", fetchExtraDelayMilliseconds);
         }
         else
         {
