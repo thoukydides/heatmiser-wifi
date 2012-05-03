@@ -161,6 +161,9 @@ sub fixup_uniq
 {
     my ($in) = @_;
 
+    # Disable filtering when new data has been requested
+    return fixup($in) if defined $range{from} and not defined $range{to};
+
     # Process every row
     my ($out, $values, $prev_values) = ([], '', '');
     foreach my $row (@$in)
