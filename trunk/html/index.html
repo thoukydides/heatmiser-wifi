@@ -62,10 +62,10 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       var thermostatName = '';
       var thermostatUnits = '';
       var thermostatTemperatures = [];
+      var thermostatWeather = [];
       var thermostatHeating = [];
       var thermostatTarget = [];
       var thermostatHotWater = [];
-      var thermostatWeather = [];
       var thermostatDays = 0;
 
       // Global chart
@@ -233,11 +233,82 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
 
         // Prefix the new data to that already fetched
         thermostatTemperatures = data.temperatures.concat(thermostatTemperatures);
+        thermostatWeather = data.weather.concat(thermostatWeather);
         thermostatHeating = data.heating.concat(thermostatHeating);
         thermostatTarget = data.target.concat(thermostatTarget);
         thermostatHotWater = data.hotwater.concat(thermostatHotWater);
-        thermostatWeather = data.weather.concat(thermostatWeather);
 
+        // Update the chart with the new data
+        rebuildChart();
+
+        // Check whether all required data has been received
+        if (thermostatDays < fetchFinalDays && data.temperatures.length)
+        {
+          // Retrieve older data
+          thermostatDays += fetchExtraDays;
+          setTimeout("$.getJSON(url, { thermostat: thermostatId, type: 'log', days: thermostatDays, to: thermostatTemperatures[0][0] }, prefixChartData)", fetchExtraDelayMilliseconds);
+        }
+        else
+        {
+          // Start checking for new readings once all data has been received
+          $.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData);
+        }
+      }
+
+      // Update the chart with newer data
+      function postfixChartData(data)
+      {
+        // Handle any error returned
+        if (data.error) return alert('AJAX Error:\n    ' + data.error);
+
+        // Add the new temperature data to the chart
+        $.each(data.temperatures, function(i, row) {
+          if (thermostatTemperatures[thermostatTemperatures.length - 1][0]
+              < row[0]) {
+            thermostatTemperatures.push(row);
+            chart.series[0].addPoint([row[0], row[1]], false);
+            chart.series[1].addPoint([row[0], row[2]], false);
+            chart.series[2].addPoint([row[0], row[3]], false);
+          }
+        });
+        $.each(data.weather, function(i, row) {
+          if (thermostatWeather[thermostatWeather.length - 1][0] < row[0]) {
+            thermostatWeather.push(row);
+            chart.series[3].addPoint([row[0], row[1]], false);
+          }
+        });
+
+        // Incremental update unless new flags or plot bands are required
+        var rebuild = false;
+        $.each(data.heating, function(i, row) {
+          if (thermostatHeating[thermostatHeating.length - 1][0] < row[0]) {
+            thermostatHeating.push(row);
+            rebuild = true;
+          }
+        });
+        $.each(data.target, function(i, row) {
+          if (thermostatTarget[thermostatTarget.length - 1][0] < row[0]) {
+            thermostatTarget.push(row);
+            rebuild = true;
+          }
+        });
+        $.each(data.hotwater, function(i, row) {
+          if (thermostatHotWater[thermostatHotWater.length - 1][0] < row[0]) {
+            thermostatHotWater.push(row);
+            rebuild = true;
+          }
+        });
+
+        // Rebuild the chart if new flags or plot bands are required
+        if (rebuild) rebuildChart();
+
+        // Check for new readings after a delay
+        setTimeout("$.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData)", fetchPollDelaySeconds * 1000);
+      }
+
+      // Rebuild the chart from the cached data
+      function rebuildChart()
+      {
         // Unpack the temperature data
         var seriesData = [[], [], [], [], [], []];
         $.each(thermostatTemperatures, function(i, row) {
@@ -262,9 +333,9 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
                   stops: [[0, 'rgba(255,255,0,0.3)'],
                           [1, 'rgba(255,0,0,0.3)']]
                },
-                zIndex: 0,
-                from: row[0]
-              };
+               zIndex: 0,
+               from: row[0]
+             };
           } else if (currentBand != null) {
             currentBand.to = row[0];
             plotBands.push(currentBand);
@@ -273,7 +344,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         });
         if (currentBand != null)
         {
-          currentBand.to = thermostatTemperatures[thermostatTemperatures.length - 1][0];
+          currentBand.to = Number.MAX_VALUE;
           plotBands.push(currentBand);
         }
 
@@ -335,42 +406,6 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         $.each(plotBands, function(i, plotBand) {
           chart.xAxis[0].addPlotBand(plotBand);
         });
-
-        // Check whether all required data has been received
-        if (thermostatDays < fetchFinalDays && data.temperatures.length)
-        {
-          // Retrieve older data
-          thermostatDays += fetchExtraDays;
-          setTimeout("$.getJSON(url, { thermostat: thermostatId, type: 'log', days: thermostatDays, to: thermostatTemperatures[0][0] }, prefixChartData)", fetchExtraDelayMilliseconds);
-        }
-        else
-        {
-          // Start checking for new readings once all data has been received
-          $.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData);
-        }
-      }
-
-      // Update the chart with newer data
-      function postfixChartData(data)
-      {
-        // Handle any error returned
-        if (data.error) return alert('AJAX Error:\n    ' + data.error);
-
-        // Add the new temperature data to the chart
-        $.each(data.temperatures, function(i, row) {
-          if (thermostatTemperatures[thermostatTemperatures.length - 1][0]
-              < row[0]) {
-            thermostatTemperatures.push(row);
-            chart.series[0].addPoint([row[0], row[1]], false);
-            chart.series[1].addPoint([row[0], row[2]], false);
-            chart.series[2].addPoint([row[0], row[3]], false);
-          }
-        });
-
-        // HERE - Also rebuild the heating bands and flags if appropriate
-
-        // Check for new readings after a delay
-        setTimeout("$.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData)", fetchPollDelaySeconds * 1000);
       }
 
       // Hide the URL bar when iOS devices are rotated
