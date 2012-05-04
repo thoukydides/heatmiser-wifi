@@ -154,7 +154,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
               lineWidth: 1,
               dashStyle: 'Dash',
               states: { hover: { lineWidth: 1 } },
-              tooltip : { enabled: false },
+              tooltip : { yDecimals : 1 },
               data: []
             },{
               name: 'Flags',
@@ -238,8 +238,34 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         thermostatTarget = data.target.concat(thermostatTarget);
         thermostatHotWater = data.hotwater.concat(thermostatHotWater);
 
-        // Update the chart with the new data
-        rebuildChart();
+        // Unpack the temperature data
+        var seriesData = [[], [], [], [], [], []];
+        $.each(thermostatTemperatures, function(i, row) {
+          seriesData[0].push([row[0], row[1]]);
+          seriesData[1].push([row[0], row[2]]);
+          seriesData[2].push([row[0], row[3]]);
+        });
+        $.each(thermostatWeather, function(i, row) {
+          seriesData[3].push([row[0], row[1]]);
+        });
+
+        // Create flags for changes to the target temperature and hot water
+        $.each(thermostatTarget, function(i, row) {
+          var flag = createTargetFlag(row);
+          if (flag != null) seriesData[4].push(flag);
+        });
+        $.each(thermostatHotWater, function(i, row) {
+          var flag = createHotWaterFlag(row);
+          if (flag != null) seriesData[5].push(flag);
+        });
+
+        // Replace the existing chart data (if any)
+        $.each(seriesData, function(i, data) {
+          chart.series[i].setData(data, true);
+        });
+
+        // Create and replace the existing heating bands (if any)
+        rebuildHeatingBands();
 
         // Check whether all required data has been received
         if (thermostatDays < fetchFinalDays && data.temperatures.length)
@@ -278,7 +304,23 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           }
         });
 
-        // Incremental update unless new flags or plot bands are required
+        // Add flags for changes to the target temperature and hot water
+        $.each(data.target, function(i, row) {
+          if (thermostatTarget[thermostatTarget.length - 1][0] < row[0]) {
+            thermostatTarget.push(row);
+            var flag = createTargetFlag(row);
+            if (flag != null) chart.series[4].addPoint(flag, false);
+          }
+        });
+        $.each(data.hotwater, function(i, row) {
+          if (thermostatHotWater[thermostatHotWater.length - 1][0] < row[0]) {
+            thermostatHotWater.push(row);
+            var flag = createHotWaterFlag(row);
+            if (flag != null) chart.series[5].addPoint(flag, false);
+          }
+        });
+
+        // Rebuild heating bands if any changes are required
         var rebuild = false;
         $.each(data.heating, function(i, row) {
           if (thermostatHeating[thermostatHeating.length - 1][0] < row[0]) {
@@ -286,40 +328,69 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
             rebuild = true;
           }
         });
-        $.each(data.target, function(i, row) {
-          if (thermostatTarget[thermostatTarget.length - 1][0] < row[0]) {
-            thermostatTarget.push(row);
-            rebuild = true;
-          }
-        });
-        $.each(data.hotwater, function(i, row) {
-          if (thermostatHotWater[thermostatHotWater.length - 1][0] < row[0]) {
-            thermostatHotWater.push(row);
-            rebuild = true;
-          }
-        });
-
-        // Rebuild the chart if new flags or plot bands are required
-        if (rebuild) rebuildChart();
+        if (rebuild) rebuildHeatingBands();
 
         // Check for new readings after a delay
         setTimeout("$.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData)", fetchPollDelaySeconds * 1000);
       }
 
-      // Rebuild the chart from the cached data
-      function rebuildChart()
+      // Create a flag for a change to the target temperature
+      function createTargetFlag(event)
       {
-        // Unpack the temperature data
-        var seriesData = [[], [], [], [], [], []];
-        $.each(thermostatTemperatures, function(i, row) {
-          seriesData[0].push([row[0], row[1]]);
-          seriesData[1].push([row[0], row[2]]);
-          seriesData[2].push([row[0], row[3]]);
-        });
-        $.each(thermostatWeather, function(i, row) {
-          seriesData[3].push([row[0], row[1]]);
-        });
+        // Map the event to a display format
+        var flagTypes = {
+          // Thermostat off
+          off:          ['-', 'Thermostat off',   'rgba(0, 0, 0, 1)'],
+          // Frost protection
+          holiday:      ['H*', 'Holiday (frost)', 'rgba(0, 255, 255, 1)'],
+          away:         ['A*', 'Away (frost)',    'rgba(0, 255, 255, 1)'],
+          // Normal (suppress normal programmed comfort levels)
+          hold:         ['H', 'Hold',             'rgba(0, 255, 0, 1)'],
+          manual:       ['M', 'Manual',           'rgba(0, 255, 0, 1)'],
+          //comfortlevel: ['C', 'Comfort level',    'rgba(0, 0, 255, 1)'],
+          //optimumstart: ['P', 'Optimum start',    'rgba(0, 0, 255, 1)']
+        };
+        var type = flagTypes[event[1]];
+        if (type == null) return null;
 
+        // Construct a flag for this event
+        return {
+          x: event[0],
+          title: type[0],
+          text: type[1] + " " + event[2] + thermostatUnits,
+          color: type[2],
+          states: { hover: { fillColor: type[2] } }
+        };
+      }
+
+      // Create a flag for a change to the hot water
+      function createHotWaterFlag(event)
+      {
+        // Map the event to a display format
+        var flagTypes = {
+          off:      ['-', '-', 'thermostat off'],
+          timer:    ['T', 't', 'timer program'],
+          override: ['M', 'm', 'manual override']
+        };
+        var type = flagTypes[event[1]];
+        if (type == null) return null;
+
+        // Construct a flag for this event
+        var colour = event[2] ? 'rgba(255, 0, 0, 1)' : 'rgba(0, 0, 0, 1)';
+        return {
+          x: event[0],
+          title: type[event[2] ? 0 : 1],
+          text: "Hot water " + (event[2] ? 'ON' : 'OFF') + " (" + type[2] + ")",
+          color: colour,
+          fillColor: colour,
+          style: { color: 'white' },
+          states: { hover: { color: 'white', fillColor: colour } }
+        };
+      }
+
+      // Rebuild the chart from the cached data
+      function rebuildHeatingBands()
+      {
         // Convert heating periods to plot bands
         var plotBands = [];
         var currentBand = null;
@@ -348,60 +419,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           plotBands.push(currentBand);
         }
 
-        // Create flags for changes to the target temperature
-        var flagTypes = {
-          // Thermostat off
-          off:          ['-', 'Thermostat off',   'rgba(0, 0, 0, 1)'],
-          // Frost protection
-          holiday:      ['H*', 'Holiday (frost)', 'rgba(0, 255, 255, 1)'],
-          away:         ['A*', 'Away (frost)',    'rgba(0, 255, 255, 1)'],
-          // Normal (suppress normal programmed comfort levels)
-          hold:         ['H', 'Hold',             'rgba(0, 255, 0, 1)'],
-          manual:       ['M', 'Manual',           'rgba(0, 255, 0, 1)'],
-          //comfortlevel: ['C', 'Comfort level',    'rgba(0, 0, 255, 1)'],
-          //optimumstart: ['P', 'Optimum start',    'rgba(0, 0, 255, 1)']
-        };
-        $.each(thermostatTarget, function(i, row) {
-          var type = flagTypes[row[1]];
-          if (type != null)
-          {
-            seriesData[4].push({
-              x: row[0],
-              title: type[0],
-              text: type[1] + " " + row[2] + thermostatUnits,
-              color: type[2],
-              states: { hover: { fillColor: type[2] } }
-            });
-          }
-        });
-
-        // Create flags for changes to the hot water
-        var flagTypes = {
-          off:      ['-', '-', 'thermostat off'],
-          timer:    ['T', 't', 'timer program'],
-          override: ['M', 'm', 'manual override']
-        };
-        $.each(thermostatHotWater, function(i, row) {
-          var type = flagTypes[row[1]];
-          if (type != null)
-          {
-            var colour = row[2] ? 'rgba(255, 0, 0, 1)' : 'rgba(0, 0, 0, 1)';
-            seriesData[5].push({
-              x: row[0],
-              title: type[row[2] ? 0 : 1],
-              text: "Hot water " + (row[2] ? 'ON' : 'OFF') + " (" + type[2] + ")",
-              color: colour,
-              fillColor: colour,
-              style: { color: 'white' },
-              states: { hover: { color: 'white', fillColor: colour } }
-            });
-          }
-        });
-
-        // Replace the existing chart data
-        $.each(seriesData, function(i, data) {
-          chart.series[i].setData(data, true);
-        });
+        // Replace the existing chart data (if any)
         chart.xAxis[0].removePlotBand('heating');
         $.each(plotBands, function(i, plotBand) {
           chart.xAxis[0].addPlotBand(plotBand);
