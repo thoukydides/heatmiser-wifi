@@ -56,6 +56,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       var fetchExtraDelayMilliseconds = 100;
       var fetchPollDelaySeconds = 60;
       var showInitDays = 2;
+      var autoScrollPercent = 5;
 
       // Thermostat data
       var thermostatId = '';
@@ -287,6 +288,13 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         // Handle any error returned
         if (data.error) return alert('AJAX Error:\n    ' + data.error);
 
+        // Record the previous chart position
+        var maxTime = Math.max(thermostatWeather[thermostatWeather.length - 1][0], thermostatWeather[thermostatWeather.length - 1][0]);
+        var extremes = chart.xAxis[0].getExtremes();
+        var timeRange = extremes.max - extremes.min;
+        var autoScroll = (maxTime - timeRange * autoScrollPercent / 100)
+                         < extremes.max;
+
         // Add the new temperature data to the chart
         $.each(data.temperatures, function(i, row) {
           if (thermostatTemperatures[thermostatTemperatures.length - 1][0]
@@ -329,6 +337,14 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           }
         });
         if (rebuild) rebuildHeatingBands();
+
+        // Scroll the chart if it was previously showing the latest data
+        if (autoScroll)
+        {
+          var newMaxTime = Math.max(thermostatWeather[thermostatWeather.length - 1][0], thermostatWeather[thermostatWeather.length - 1][0]);
+          chart.xAxis[0].setExtremes(newMaxTime - timeRange, newMaxTime, false);
+          chart.redraw();
+        }
 
         // Check for new readings after a delay
         setTimeout("$.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData)", fetchPollDelaySeconds * 1000);
