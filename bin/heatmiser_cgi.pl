@@ -158,7 +158,9 @@ if ($@)
 }
 
 # Output the result in JSON format
-print $cgi->header('application/json'), encode_json(\%results);
+my $status;
+$status = '500 ' . $results{error} if exists $results{error};
+print $cgi->header('application/json', $status), encode_json(\%results);
 time_log('JSON encoding');
 
 # Log the profiling information
