@@ -54,7 +54,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       var fetchExtraDays = 30;
       var fetchFinalDays = 365 * 2;
       var fetchExtraDelayMilliseconds = 100;
-      var fetchPollDelaySeconds = 60;
+      var fetchPollTimeoutSeconds = 60;
       var showInitDays = 2;
       var autoScrollPercent = 5;
 
@@ -278,7 +278,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         else
         {
           // Start checking for new readings once all data has been received
-          $.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData);
+          $.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0], timeout: fetchPollTimeoutSeconds }, postfixChartData);
         }
       }
 
@@ -347,7 +347,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         }
 
         // Check for new readings after a delay
-        setTimeout("$.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0] }, postfixChartData)", fetchPollDelaySeconds * 1000);
+        $.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0], timeout: fetchPollTimeoutSeconds }, postfixChartData);
       }
 
       // Create a flag for a change to the target temperature
