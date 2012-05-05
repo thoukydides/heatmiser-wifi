@@ -73,6 +73,9 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       // Global chart
       var chart;
 
+      // Distinguish between AJAX errors and the user navigating away
+      var running = true;
+
       // Don't do anything until the page has finshed loading
       $(document).ready(function() {
 
@@ -81,6 +84,9 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           var s = pair.split('=');
           if (s[0] == 'thermostat') thermostatId = s[1];
         });
+
+        // Hide unused parts of the page
+        $('#thermostats').parent().hide();
 
         // Create an empty chart
         chart = new Highcharts.StockChart({
@@ -187,52 +193,84 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         // Show a message while waiting for the data to be fetched
         chart.showLoading();
 
+        // Ensure that AJAX errors are always reported properly
+        $(window).bind('beforeunload', function() {
+          running = false;
+        });
+        $.ajaxSetup({
+          error: function(jqXHR, textStatus, errorThrown) {
+            var msg;
+            if (!running && (jqXHR.readyState == 0 || jqXHR.status === 0)) {
+              return; // Page is probably being reloaded
+            } else if (jqXHR.status === 0) {
+              msg = 'Could not connect to server; verify network connection';
+            } else if (jqXHR.status == 404) {
+              msg = 'CGI script not found on server (has it been installed?)';
+            } else if (jqXHR.status == 500) {
+              msg = 'Server returned an error';
+              if (errorThrown != null) msg += ': ' + errorThrown;
+            } else if (textStatus === 'parsererror') {
+              msg = 'Response from server was not in JSON format';
+            } else if (textStatus === 'timeout') {
+              msg = 'No response received from server';
+            } else if (textStatus === 'abort') {
+              msg = 'AJAX request was aborted';
+            } else {
+              msg = 'Unexpected error:\n' + jqXHR.responseText;
+            }
+            chart.hideLoading();
+            chart.setTitle({}, { text: 'Error: ' + msg,
+                                 style: { color: 'rgba(255, 0, 0, 1)' }});
+            alert(msg);
+          }
+        });
+
         // Fetch the recent temperature data
         thermostatDays = fetchInitDays;
-        $.getJSON(url, { thermostat: thermostatId, type: 'log', days: thermostatDays }, function(data) {
-
-          // Handle any error returned
-          if (data.error) return alert('AJAX Error:\n    ' + data.error);
-
-          // Extract interesting settings
-          thermostatName = data.settings.vendor + ' ' + data.settings.model
-                           + ' (' + data.settings.host + ')';
-          thermostatUnits = '°' + data.settings.units;
-
-          // Construct a list of thermostats (when there is more than one)
-          if (thermostatId == '') thermostatId = data.settings.host;
-          $.each(data.thermostats, function(i, thermostat) {
-            $('#thermostats').append('<option' + (thermostat == thermostatId ? ' selected="selected"' : '') + '>' + thermostat + '</option>');
-          });
-          $('#thermostats').change(function() {
-            window.location.search = '?thermostat=' + $(this).find('option:selected').text();
-          });
-          if (data.thermostats.length == 1) $('#thermostats').parent().hide();
-
-          // Update the chart's details
-          chart.hideLoading();
-          chart.setTitle({}, { text: thermostatName });
-          $.each(chart.series, function(i, series) {
-            series.tooltipOptions.ySuffix = thermostatUnits;
-          });
-
-          // Add the data to the chart
-          prefixChartData(data);
-
-          // Default to showing the recent data
-          var xMax = data.temperatures[data.temperatures.length - 1][0];
-          var xMin = Math.max(data.temperatures[0][0],
-                              xMax - 1000 * 60 * 60 * 24 * showInitDays);
-          chart.xAxis[0].setExtremes(xMin, xMax);
-        });
+        $.getJSON(url, { thermostat: thermostatId, type: 'log', days: thermostatDays }, initialiseChartData);
       });
+
+      // Initialise the chart when thermostat's information has been received
+      function initialiseChartData(data)
+      {
+        // Extract interesting settings
+        thermostatName = data.settings.vendor + ' ' + data.settings.model
+                         + ' (' + data.settings.host + ')';
+        thermostatUnits = '°' + data.settings.units;
+
+        // Construct a list of thermostats (when there is more than one)
+        if (thermostatId == '') thermostatId = data.settings.host;
+        $.each(data.thermostats, function(i, thermostat) {
+          $('#thermostats').append('<option' + (thermostat == thermostatId
+                                                ? ' selected="selected"' : '')
+                                   + '>' + thermostat + '</option>');
+        });
+        $('#thermostats').change(function() {
+          window.location.search = '?thermostat='
+                                   + $(this).find('option:selected').text();
+        });
+        if (1 < data.thermostats.length) $('#thermostats').parent().show();
+
+        // Update the chart's details
+        chart.hideLoading();
+        chart.setTitle({}, { text: thermostatName });
+        $.each(chart.series, function(i, series) {
+          series.tooltipOptions.ySuffix = thermostatUnits;
+        });
+
+        // Add the data to the chart
+        prefixChartData(data);
+
+        // Default to showing the recent data
+        var xMax = data.temperatures[data.temperatures.length - 1][0];
+        var xMin = Math.max(data.temperatures[0][0],
+                            xMax - 1000 * 60 * 60 * 24 * showInitDays);
+        chart.xAxis[0].setExtremes(xMin, xMax);
+      }
 
       // Update the chart with older data
       function prefixChartData(data)
       {
-        // Handle any error returned
-        if (data.error) return alert('AJAX Error:\n    ' + data.error);
-
         // Prefix the new data to that already fetched
         thermostatTemperatures = data.temperatures.concat(thermostatTemperatures);
         thermostatWeather = data.weather.concat(thermostatWeather);
@@ -286,9 +324,6 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       // Update the chart with newer data
       function postfixChartData(data)
       {
-        // Handle any error returned
-        if (data.error) return alert('AJAX Error:\n    ' + data.error);
-
         // Record the previous chart position
         var maxTime = Math.max(thermostatWeather[thermostatWeather.length - 1][0], thermostatWeather[thermostatWeather.length - 1][0]);
         var extremes = chart.xAxis[0].getExtremes();
