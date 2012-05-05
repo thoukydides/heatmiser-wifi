@@ -32,6 +32,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <meta content="yes" name="apple-mobile-web-app-capable" />
     <meta content="user-scalable=no" name="viewport" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
     <title>Heatmiser Wi-Fi Thermostat</title>
 
@@ -115,7 +116,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           },
           title: { text: 'Wi-Fi Thermostat Temperature Log' },
           plotOptions: {
-            marker: { enabled: false },
+            marker: { enabled: false }
           },
           series: [
             {
@@ -362,7 +363,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           away:         ['A*', 'Away (frost)',    'rgba(0, 255, 255, 1)'],
           // Normal (suppress normal programmed comfort levels)
           hold:         ['H', 'Hold',             'rgba(0, 255, 0, 1)'],
-          manual:       ['M', 'Manual',           'rgba(0, 255, 0, 1)'],
+          manual:       ['M', 'Manual',           'rgba(0, 255, 0, 1)']
           //comfortlevel: ['C', 'Comfort level',    'rgba(0, 0, 255, 1)'],
           //optimumstart: ['P', 'Optimum start',    'rgba(0, 0, 255, 1)']
         };
@@ -451,6 +452,12 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
     </script>
   </head>
   <body onorientationchange="updateOrientation();">
+
+    <!-- Warn users if JavaScript is disabled in their browser -->
+    <noscript>
+      <h1>JavaScript is Disabled</h1>
+      This page requires JavaScript; please enable scripting in your browser.
+    </noscript>
 
     <!-- This is where the chart will appear -->
     <div id="chart" style="width: 100%; height: 540px"></div>
