@@ -58,6 +58,7 @@ my $type = $cgi->param('type') || 'log';
 my %range = (from => scalar $cgi->param('from'),
              to => scalar $cgi->param('to'),
              days => scalar $cgi->param('days'));
+my $timeout = time() + ($cgi->param('timeout') || 10);
 
 # Trap any errors that occur while interrogating the database
 my (%results, $db);
@@ -79,6 +80,18 @@ eval
     # Always retrieve the thermostat's settings
     $results{settings} = { $db->settings_retrieve($thermostat) };
     time_log('Database settings query');
+
+    # If requesting new data then wait for up to the timeout value
+    if (defined $range{from} and not defined $range{to})
+    {
+        while (time() < $timeout)
+        {
+            my $latest = $db->log_retrieve_latest($thermostat, ['time'])->[0];
+            last if $range{from} < $latest;
+            sleep(1);
+        }
+        time_log('Wait for new data');
+    }
 
     # Retrieve the requested data
     if ($type eq 'log')
@@ -161,16 +174,13 @@ sub fixup_uniq
 {
     my ($in) = @_;
 
-    # Disable filtering when new data has been requested
-    return fixup($in) if defined $range{from} and not defined $range{to};
-
     # Process every row
     my ($out, $values, $prev_values) = ([], '', '');
     foreach my $row (@$in)
     {
-        # Skip over duplicates (ignoring the time field)
+        # Skip over duplicates (ignoring the time field), except last entry
         ($prev_values, $values) = ($values, join(',', @$row[1 .. $#$row]));
-        next if $values eq $prev_values;
+        next if $values eq $prev_values and $row->[0] != $in->[-1]->[0];
 
         # Convert all values to numbers
         push @$out, [map { $_ + 0 } @$row];
