@@ -122,8 +122,8 @@ sub db
                                      # Die if an error occurs
                                      PrintError => 0,
                                      RaiseError => 1,
-                                     # Use explicit transactions for updates
-                                     AutoCommit => 0
+                                     # Transactions are explicit where used
+                                     AutoCommit => 1
                                  })
         or die "Cannot connect to database: $DBI::errstr\n";
 
@@ -163,7 +163,6 @@ sub x_insert
 
     # Insert this entry into the database
     $insert->execute(@values);
-    $db->commit();
 }
 
 # Add a log entry
@@ -210,6 +209,7 @@ sub settings_update
         my $delete = $db->prepare_cached('DELETE FROM settings WHERE (htermostat=?) AND (name=?)');
 
         # Update all specified settings entries
+        $db->{AutoCommit} = 0;
         while (my ($name, $value) = each %settings)
         {
             $replace->execute($thermostat, $name, $value);
@@ -224,12 +224,13 @@ sub settings_update
         }
 
         # Commit the changes
-        $db->commit();
+        $db->{AutoCommit} = 1;
     };
     if ($@)
     {
         # Rollback the incomplete changes
         eval { $db->rollback };
+        $db->{AutoCommit} = 1;
         die "Settings update transaction aborted: $@\n";
     }
 }
@@ -250,6 +251,7 @@ sub comfort_update
         my $delete = $db->prepare_cached('DELETE FROM comfort WHERE (thermostat=?) AND (day=?) AND (entry=?)');
 
         # Update all possible table entries (7 days, 4 entries per day)
+        $db->{AutoCommit} = 0;
         foreach my $day (0 .. 6)
         {
             foreach my $entry (0 .. 3)
@@ -267,12 +269,13 @@ sub comfort_update
         }
 
         # Commit the changes
-        $db->commit();
+        $db->{AutoCommit} = 1;
     };
     if ($@)
     {
         # Rollback the incomplete changes
         eval { $db->rollback };
+        $db->{AutoCommit} = 1;
         die "Comfort levels update transaction aborted: $@\n";
     }
 }
@@ -293,6 +296,7 @@ sub timer_update
         my $delete = $db->prepare_cached('DELETE FROM timer WHERE (thermostat=?) AND (day=?) AND (entry=?)');
 
         # Update all possible table entries (7 days, 4 entries per day)
+        $db->{AutoCommit} = 0;
         foreach my $day (0 .. 6)
         {
             foreach my $entry (0 .. 3)
@@ -310,12 +314,13 @@ sub timer_update
         }
 
         # Commit the changes
-        $db->commit();
+        $db->{AutoCommit} = 1;
     };
     if ($@)
     {
         # Rollback the incomplete changes
         eval { $db->rollback };
+        $db->{AutoCommit} = 1;
         die "Timer program update transaction aborted: $@\n";
     }
 }
