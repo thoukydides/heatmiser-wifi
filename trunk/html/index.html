@@ -34,7 +34,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
     <meta content="user-scalable=no" name="viewport" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <title>Heatmiser Wi-Fi Thermostat</title>
+    <title>Wi-Fi Thermostat Temperature Log</title>
 
     <style type="text/css">
       label {
@@ -118,9 +118,10 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
               y: 3
             },
             tickInterval: 1,
-            title: { text: 'Temperature' }
+            title: { text: 'Temperature' },
           },
-          title: { text: 'Wi-Fi Thermostat Temperature Log' },
+          title: { text: document.title },
+          subtitle: { text: '© 2011, 2012 Alexander Thoukydides' },
           plotOptions: {
             marker: { enabled: false }
           },
@@ -316,7 +317,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         else
         {
           // Start checking for new readings once all data has been received
-          $.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0], timeout: fetchPollTimeoutSeconds }, postfixChartData);
+          $.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0], wfrom: thermostatWeather.length ? thermostatWeather[thermostatWeather.length - 1][0] : 0, timeout: fetchPollTimeoutSeconds }, postfixChartData);
         }
       }
 
@@ -324,7 +325,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       function postfixChartData(data)
       {
         // Record the previous chart position
-        var maxTime = Math.max(thermostatWeather[thermostatWeather.length - 1][0], thermostatWeather[thermostatWeather.length - 1][0]);
+        var maxTime = thermostatTemperatures[thermostatTemperatures.length - 1][0];
         var extremes = chart.xAxis[0].getExtremes();
         var timeRange = extremes.max - extremes.min;
         var autoScroll = (maxTime - timeRange * autoScrollPercent / 100)
@@ -376,13 +377,13 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         // Scroll the chart if it was previously showing the latest data
         if (autoScroll)
         {
-          var newMaxTime = Math.max(thermostatWeather[thermostatWeather.length - 1][0], thermostatWeather[thermostatWeather.length - 1][0]);
+          var newMaxTime = thermostatTemperatures[thermostatTemperatures.length - 1][0];
           chart.xAxis[0].setExtremes(newMaxTime - timeRange, newMaxTime, false);
           chart.redraw();
         }
 
         // Check for new readings after a delay
-        $.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0], timeout: fetchPollTimeoutSeconds }, postfixChartData);
+        $.getJSON(url, { thermostat: thermostatId, type: 'log', from: thermostatTemperatures[thermostatTemperatures.length - 1][0], wfrom: thermostatWeather.length ? thermostatWeather[thermostatWeather.length - 1][0] : 0, timeout: fetchPollTimeoutSeconds }, postfixChartData);
       }
 
       // Create a flag for a change to the target temperature

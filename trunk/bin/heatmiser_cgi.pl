@@ -58,6 +58,8 @@ my $type = $cgi->param('type') || 'log';
 my %range = (from => scalar $cgi->param('from'),
              to => scalar $cgi->param('to'),
              days => scalar $cgi->param('days'));
+my %wrange = %range;
+$wrange{from} = scalar $cgi->param('wfrom') if $cgi->param('wfrom');
 my $timeout = time() + ($cgi->param('timeout') || 10);
 
 # Trap any errors that occur while interrogating the database
@@ -65,7 +67,7 @@ my (%results, $db);
 eval
 {
     # Check range values are numeric (to guard against SQL injection attacks)
-    die "Illegal range specified\n" if grep { defined $_ and !/^\d+(?:\.\d+)?$/ } values %range;
+    die "Illegal range specified\n" if grep { defined $_ and !/^\d+(?:\.\d+)?$/ } (values %range, values %wrange);
 
     # Provide a list of thermostats, default to the first if none specified
     $results{thermostats} = heatmiser_config::get_item('host');
@@ -125,7 +127,7 @@ eval
         time_log('Database hot water query');
 
         # Retrieve the weather log
-        my $weather = $db->weather_retrieve([qw(time external)], \%range);
+        my $weather = $db->weather_retrieve([qw(time external)], \%wrange);
         time_log('Database weather query');
         $results{weather} = fixup_uniq($weather);
         time_log('Data conversion');
@@ -139,7 +141,7 @@ eval
         time_log('Data conversion');
 
         # Retrieve daily weather range
-        my $weather = $db->weather_daily_min_max(\%range);
+        my $weather = $db->weather_daily_min_max(\%wrange);
         time_log('Database weather query');
         $results{weather_minmax} = fixup_uniq($weather);
         time_log('Data conversion');
@@ -157,11 +159,16 @@ if ($@)
     print STDERR "Error during database access: $err\n";
 }
 
-# Output the result in JSON format
+# Convert the result to JSON format
+$results{profile} = \@time_log;
+my $json = encode_json(\%results);
+time_log('JSON encoding');
+
+# Return the data
 my $status;
 $status = '500 ' . $results{error} if exists $results{error};
-print $cgi->header('application/json', $status), encode_json(\%results);
-time_log('JSON encoding');
+print $cgi->header('application/json', $status), $json;
+time_log('HTTP response');
 
 # Log the profiling information
 push @time_log, ['TOTAL', time() - $time_start];
