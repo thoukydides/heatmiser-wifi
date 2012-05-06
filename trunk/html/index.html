@@ -200,6 +200,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         $(window).bind('unload', function() { running = false; });
 
         // Fetch the recent temperature data
+        $.ajaxSetup({ cache: false });
         fetchData();
       });
 
