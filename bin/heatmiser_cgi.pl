@@ -60,6 +60,7 @@ my %range = (from => scalar $cgi->param('from'),
              days => scalar $cgi->param('days'));
 my %wrange = %range;
 $wrange{from} = scalar $cgi->param('wfrom') if $cgi->param('wfrom');
+$wrange{to} = scalar $cgi->param('wto') if $cgi->param('wto');
 my $timeout = time() + ($cgi->param('timeout') || 10);
 
 # Trap any errors that occur while interrogating the database
