@@ -342,14 +342,14 @@ sub log_retrieve
     my @fields = @$fields;
     foreach my $field (@fields)
     {
-        # Convert dates to the selected format
-        $field = $self->date_from_mysql($field) if $field eq 'time';
-
         # Aggregated data
         my $op;
         $op = $field =~ /^(target|comfort)$/ ? 'MAX' : 'AVG' if $groupby;
-        $op = uc $1 if $field =~ s/^(min|max|avg|count)_//i;
+        $op = uc $1 if $field =~ s/^(min|max|avg|count|date)_//i;
         $field = "$op($field)" if defined $op;
+
+        # Convert dates to the selected format
+        $field = $self->date_from_mysql($field) if $field =~ /\btime\b/;
     }
 
     # Convert a range specification into a WHERE clause
@@ -383,7 +383,7 @@ sub log_daily_min_max
     my ($self, $thermostat, $where) = @_;
 
     # Fetch and return all matching rows
-    return $self->log_retrieve($thermostat, [qw(time min_air max_air)],
+    return $self->log_retrieve($thermostat, [qw(date_time min_air max_air)],
                                $where, 'DATE(time)');
 }
 
@@ -508,14 +508,14 @@ sub weather_retrieve
     my @fields = @$fields;
     foreach my $field (@fields)
     {
-        # Convert dates to the selected format
-        $field = $self->date_from_mysql($field) if $field eq 'time';
-
         # Aggregated data
         my $op;
         $op = 'AVG' if defined $groupby;
-        $op = uc $1 if $field =~ s/^(min|max|avg|count)_//i;
+        $op = uc $1 if $field =~ s/^(min|max|avg|count|date)_//i;
         $field = "$op($field)" if defined $op;
+
+        # Convert dates to the selected format
+        $field = $self->date_from_mysql($field) if $field =~ /\btime\b/;
     }
 
     # Convert a range specification into a WHERE clause
@@ -546,7 +546,7 @@ sub weather_daily_min_max
     my ($self, $where) = @_;
 
     # Fetch and return all matching rows
-    return $self->weather_retrieve([qw(time min_external max_external)],
+    return $self->weather_retrieve([qw(date_time min_external max_external)],
                                    $where, 'DATE(time)');
 }
 
