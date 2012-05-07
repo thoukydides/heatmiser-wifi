@@ -38,19 +38,32 @@ use heatmiser_weather;
 
 # Command line options
 my ($prog) = $0 =~ /([^\\\/]+$)/;
-sub VERSION_MESSAGE { print "Heatmiser Wi-Fi Thermostat Weather CLI v1\n"; }
-sub HELP_MESSAGE { print "Usage: $prog [-w <wservice>] [-k <wkey>] [-g <wlocation>] [-f <wunits>]\n"; }
+sub VERSION_MESSAGE { print "Heatmiser Wi-Fi Thermostat Weather CLI\n"; }
+sub HELP_MESSAGE { print "Usage: $prog [-w <wservice>] [-k <wkey>] [-g <wlocation>] [-f <wunits>] [-d]\n"; }
 $Getopt::Std::STANDARD_HELP_VERSION = 1;
-our ($opt_w, $opt_k, $opt_g, $opt_f);
-getopts('w:k:g:f:');
+our ($opt_w, $opt_k, $opt_g, $opt_f, $opt_d);
+getopts('w:k:g:f:d');
 heatmiser_config::set(wservice => [w => $opt_w], wkey => [k => $opt_k],
-                      wlocation => [g => $opt_g], wunits => [f => $opt_f]);
+                      wlocation => [g => $opt_g], wunits => [f => $opt_f],
+                      debug => $opt_d);
 
-# Read the most recent weather observation
+# Read the most recent weather observation, trapping any error to allow debug
 my $weather = new heatmiser_weather(heatmiser_config::get(qw(wservice wkey wlocation wunits)));
-my ($temperature, $time) = $weather->current_temperature();
-my $units = heatmiser_config::get_item('wunits');
-print "External temperature at $time was $temperature$units\n";
+eval
+{
+    my ($temperature, $time) = $weather->current_temperature();
+    my $units = heatmiser_config::get_item('wunits');
+    print "External temperature at $time was $temperature$units\n";
+};
+my $err = $@;
+
+# Display the raw request and response if debugging
+if (heatmiser_config::get_item('debug') and exists $weather->{debug})
+{
+    print "\nRequest:\n" .  $weather->{debug}->{uri} . "\n\n",
+          "Response:\n" . $weather->{debug}->{raw} . "\n\n";
+}
 
 # That's all folks
+die $err if $err;
 exit;
