@@ -92,7 +92,7 @@ sub current_temperature
     my ($self) = @_;
 
     # Ensure that a location has been specified
-    die "Cannot read current temperature unless a location is specified"
+    die 'Cannot read current temperature unless a location is specified'
         unless defined $self->{wlocation};
 
     # Assume that the observation is for the current time unless specified
@@ -181,7 +181,7 @@ sub metoffice_observations
 
     # Fetch the weather information
     my $response = $self->{ua}->get('http://partner.metoffice.gov.uk/public/val/wxobs/all/xml/' . $locurl . '?' . join('&', 'res=hourly', @locargs, 'key=' . $self->{wkey}));
-    die "Failed to retrieve Met Office DataPoint observations: " . $response->status_line . "\n" unless $response->is_success;
+    die 'Failed to retrieve Met Office DataPoint observations: ' . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
     my $xml =  XMLin($response->decoded_content,
@@ -190,7 +190,10 @@ sub metoffice_observations
                      KeyAttr       => { Param  => 'name' },
                      GroupTags     => { Period => 'Rep' },
                      SuppressEmpty => 1);
-    die "Error returned for Met Office DataPoint observations: " . $xml->{msg} . "\n" if exists $xml->{msg};
+    $self->{debug} = { uri => $response->request->uri(),
+                       raw => $response->decoded_content,
+                       xml => $xml }; # (XML structure modified in-place below)
+    die 'Error returned for Met Office DataPoint observations: ' . $xml->{msg} . "\n" if exists $xml->{msg};
 
     # Index the data, removing erroneous duplicate entries
     my %reports;
@@ -213,9 +216,6 @@ sub metoffice_observations
     $xml->{DV}->{Rep} = { %reports };
 
     # Return the result
-    $self->{debug} = { uri => $response->request->uri(),
-                       raw => $response->decoded_content,
-                       xml => $xml };
     return $xml;
 }
 
@@ -230,7 +230,7 @@ sub wunderground_conditions
 
     # Fetch the weather information
     my $response = $self->{ua}->get('http://api.wunderground.com/api/' . $self->{wkey} . '/conditions/q/' . $location . '.xml');
-    die "Failed to retrieve Weather Underground conditions: " . $response->status_line . "\n" unless $response->is_success;
+    die 'Failed to retrieve Weather Underground conditions: ' . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
     my $xml = XMLin($response->decoded_content,
@@ -238,6 +238,7 @@ sub wunderground_conditions
     $self->{debug} = { uri => $response->request->uri(),
                        raw => $response->decoded_content,
                        xml => $xml };
+    die 'Error returned for Weather Underground conditions: ' . $xml->{error}->{description} . "\n" if exists $xml->{error};
     return $xml;
 }
 
@@ -249,7 +250,7 @@ sub wunderground_history
     # Fetch the weather information
     my $date = sprintf '%04d%02d%02d', $year, $month, $day;
     my $response = $self->{ua}->get('http://api.wunderground.com/api/' . $self->{wkey} . '/history_' . $date . '/q/' . $location . '.xml');
-    die "Failed to retrieve Weather Underground conditions: " . $response->status_line . "\n" unless $response->is_success;
+    die 'Failed to retrieve Weather Underground history: ' . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
     my $xml = XMLin($response->decoded_content,
@@ -261,6 +262,7 @@ sub wunderground_history
     $self->{debug} = { uri => $response->request->uri(),
                        raw => $response->decoded_content,
                        xml => $xml };
+    die 'Error returned for Weather Underground history: ' . $xml->{error}->{description} . "\n" if exists $xml->{error};
     return $xml;
 }
 
@@ -274,7 +276,7 @@ sub google_api
 
     # Fetch the weather information
     my $response = $self->{ua}->get('http://www.google.com/ig/api?weather=' . $location);
-    die "Failed to retrieve Google weather: " . $response->status_line . "\n" unless $response->is_success;
+    die 'Failed to retrieve Google weather: ' . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
     my $xml = XMLin($response->decoded_content,
@@ -297,7 +299,7 @@ sub yahoo_rss
 
     # Fetch the weather information
     my $response = $self->{ua}->get('http://weather.yahooapis.com/forecastrss?w=' . $location . '&u= ' . lc $units);
-    die "Failed to retrieve Yahoo! Weather RSS feed: " . $response->status_line . "\n" unless $response->is_success;
+    die 'Failed to retrieve Yahoo! Weather RSS feed: ' . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
     my $xml = XMLin($response->decoded_content,
@@ -306,6 +308,7 @@ sub yahoo_rss
     $self->{debug} = { uri => $response->request->uri(),
                        raw => $response->decoded_content,
                        xml => $xml };
+    die 'Error returned for Yahoo! Weather RSS feed: ' . $xml->{channel}->{item}->{title} . "\n" if $xml->{channel}->{title} =~ /\berror\b/i;
     return $xml;
 }
 
