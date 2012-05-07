@@ -374,8 +374,7 @@ sub log_retrieve_latest
     my ($self, $thermostat, $fields) = @_;
 
     # Fetch and return the matching row
-    return $self->log_retrieve($thermostat, $fields,
-                               'time = (SELECT MAX(time) FROM temperatures)')->[0];
+    return $self->log_retrieve($thermostat, $fields, "time = (SELECT MAX(time) FROM temperatures WHERE thermostat='" . $thermostat . "')")->[0];
 }
 
 # Determine the daily min/max temperatures
@@ -530,6 +529,15 @@ sub weather_retrieve
 
     # Fetch and return all matching rows
     return $db->selectall_arrayref($sql);
+}
+
+# Retrieve the most recent weather entry
+sub weather_retrieve_latest
+{
+    my ($self, $fields) = @_;
+
+    # Fetch and return the matching row
+    return $self->weather_retrieve($fields, 'time = (SELECT MAX(time) FROM weather)')->[0];
 }
 
 # Determine the daily min/max temperatures
