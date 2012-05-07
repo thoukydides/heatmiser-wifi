@@ -15,7 +15,7 @@ Several free online weather services are supported. Choose one that meets your r
 === UK Met Office !DataPoint ===
 <img src="https://register.metoffice.gov.uk/WaveRegistrationClient/public/images/lg_mo.gif" width="200px" hspace=50>
 
-_The [http://www.metoffice.gov.uk/public/ddc UK MetOffice Data Point] datafeeds provide hourly observations available from ~122 locations around the UK._
+_The [http://www.metoffice.gov.uk/public/ddc UK Met Office DataPoint] datafeeds provide hourly observations available from ~122 locations around the UK._
 
 _ Requires registration for a free account._
 <td valign=top>
@@ -33,6 +33,8 @@ The location can be specified in two ways:
 || *Value* || *Example* || *Description* ||
 || _latitude_`,`_longitude_ || `52.288837,0.124287` || Nearest location to a specified latitude and longitude ||
 || _location_id_ || `3482` || A specific location ID. A complete list can be obtained from http://www.metoffice.gov.uk/premium/ddc/previewData.html by clicking on the *XML* link under the *Observarions site list* heading. ||
+
+Specifying a latitude and longitude is likely to be more reliable since valid data will still be obtained if observations are temporarily unavailable from a specific location.
 
 <tr><td valign=top>
 ----
