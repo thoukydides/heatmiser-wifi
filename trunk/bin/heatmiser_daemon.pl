@@ -103,7 +103,7 @@ if (defined heatmiser_config::get_item('wservice'))
         ws => new heatmiser_weather(heatmiser_config::get(qw(wservice wkey wlocation wunits))),
 
         # Initial state for tracking new weather observations
-        last_timestamp => '',
+        last_timestamp => eval { $db->weather_retrieve_latest(['time'])->[0]; } || '',
         count          => 0
     };
 }
@@ -177,8 +177,8 @@ while (not $signal)
             # Log the weather observations if new
             if ($timestamp ne $weather->{last_timestamp})
             {
-                $db->weather_insert(time => $timestamp, external => $external);
                 $weather->{last_timestamp} = $timestamp;
+                $db->weather_insert(time => $timestamp, external => $external);
             }
         };
         syslog($@) if $@;
