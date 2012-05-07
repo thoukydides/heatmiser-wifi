@@ -52,4 +52,4 @@ Thank you to:
  * [http://www.richpyke.info/ Rich Pyke] for helping to discover and test the changes required to support the PRT/HW-TS Wi-Fi thermostat
  * [http://www.logics.co.uk/ Chris Bond] for testing the multiple thermostat logging and charting
  * [http://www.heenan.me.uk Joseph Heenan] for testing the external temperature logging.
- * Robert Hancock for spotting a silly error in the Met Office !DataPoint code.
+ * Robert Hancock for reporting various issues with the handling of Met Office !DataPoint feeds.
