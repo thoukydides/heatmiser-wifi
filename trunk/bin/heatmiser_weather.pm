@@ -184,16 +184,17 @@ sub metoffice_observations
     die "Failed to retrieve Met Office DataPoint observations: " . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
-    my $observations =  XMLin($response->decoded_content,
-                              ContentKey    => 'description',
-                              ForceArray    => [qw(Param Period Rep Location)],
-                              KeyAttr       => {Param  => 'name'},
-                              GroupTags     => {Period => 'Rep'},
-                              SuppressEmpty => 1);
+    my $xml =  XMLin($response->decoded_content,
+                     ContentKey    => 'description',
+                     ForceArray    => [ qw(Param Period Rep Location) ],
+                     KeyAttr       => { Param  => 'name' },
+                     GroupTags     => { Period => 'Rep' },
+                     SuppressEmpty => 1);
+    die "Error returned for Met Office DataPoint observations: " . $xml->{msg} . "\n" if exists $xml->{msg};
 
     # Index the data, removing erroneous duplicate entries
     my %reports;
-    my $loc = $observations->{DV}->{Location}->[0];
+    my $loc = $xml->{DV}->{Location}->[0];
     foreach my $period (@{$loc->{Period}})
     {
         my $day = $period->{val};
@@ -208,11 +209,14 @@ sub metoffice_observations
         }
     }
     delete $loc->{Period};
-    $observations->{DV}->{Location} = $loc;
-    $observations->{DV}->{Rep} = { %reports };
+    $xml->{DV}->{Location} = $loc;
+    $xml->{DV}->{Rep} = { %reports };
 
     # Return the result
-    return $observations;
+    $self->{debug} = { uri => $response->request->uri(),
+                       raw => $response->decoded_content,
+                       xml => $xml };
+    return $xml;
 }
 
 
@@ -229,8 +233,12 @@ sub wunderground_conditions
     die "Failed to retrieve Weather Underground conditions: " . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
-    return XMLin($response->decoded_content,
-                 ForceArray => [], KeyAttr => []);
+    my $xml = XMLin($response->decoded_content,
+                    ForceArray => [], KeyAttr => []);
+    $self->{debug} = { uri => $response->request->uri(),
+                       raw => $response->decoded_content,
+                       xml => $xml };
+    return $xml;
 }
 
 # Retrieve historical conditions from Weather Underground
@@ -244,12 +252,16 @@ sub wunderground_history
     die "Failed to retrieve Weather Underground conditions: " . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
-    return XMLin($response->decoded_content,
-                 ForceArray    => [],
-                 KeyAttr       => [],
-                 GroupTags     => {observations => 'observation',
-                                   dailysummary => 'summary'},
-                 SuppressEmpty => 1);
+    my $xml = XMLin($response->decoded_content,
+                    ForceArray    => [],
+                    KeyAttr       => [],
+                    GroupTags     => { observations => 'observation',
+                                       dailysummary => 'summary' },
+                    SuppressEmpty => 1);
+    $self->{debug} = { uri => $response->request->uri(),
+                       raw => $response->decoded_content,
+                       xml => $xml };
+    return $xml;
 }
 
 
@@ -265,10 +277,14 @@ sub google_api
     die "Failed to retrieve Google weather: " . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
-    return XMLin($response->decoded_content,
-                 ForceArray => ['forecast_conditions'],
-                 KeyAttr    => ['day_of_week'],
-                 ValueAttr  => ['data']);
+    my $xml = XMLin($response->decoded_content,
+                    ForceArray => [ 'forecast_conditions' ],
+                    KeyAttr    => [ 'day_of_week' ],
+                    ValueAttr  => [ 'data' ]);
+    $self->{debug} = { uri => $response->request->uri(),
+                       raw => $response->decoded_content,
+                       xml => $xml };
+    return $xml;
 }
 
 
@@ -284,9 +300,13 @@ sub yahoo_rss
     die "Failed to retrieve Yahoo! Weather RSS feed: " . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
-    return XMLin($response->decoded_content,
-                 ForceArray => ['yweather:forecast'],
-                 KeyAttr    => {'yweather:forecast' => '+date'});
+    my $xml = XMLin($response->decoded_content,
+                    ForceArray => [ 'yweather:forecast' ],
+                    KeyAttr    => { 'yweather:forecast' => '+date' });
+    $self->{debug} = { uri => $response->request->uri(),
+                       raw => $response->decoded_content,
+                       xml => $xml };
+    return $xml;
 }
 
 
