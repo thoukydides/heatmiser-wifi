@@ -106,13 +106,11 @@ sub current_temperature
     {
         # Met Office DataPoint UK
         my $observations = $self->metoffice_observations($self->{wlocation});
-        my $period = $observations->{DV}->{Location}->{Period};
-        my $maxday = (sort keys %$period)[-1];
-        my $reports = $period->{$maxday}->{Rep};
-        my $maxtime = (sort { $a <=> $b } keys %$reports)[-1];
-        $temperature = $reports->{$maxtime}->{T};
+        my $reports = $observations->{DV}->{Rep};
+        my $latest = (sort keys %$reports)[-1];
+        $temperature = $reports->{$latest}->{T};
         $temperature = ($temperature x 9/5) + 32 if $self->{wunits} eq 'F';
-        ($year, $month, $day, $hour, $minute, $second) = iso8601($observations->{DV}->{dataDate});
+        ($year, $month, $day, $hour, $minute, $second) = iso8601($latest);
     }
     elsif ($self->{wservice} eq 'wunderground')
     {
@@ -186,14 +184,35 @@ sub metoffice_observations
     die "Failed to retrieve Met Office DataPoint observations: " . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
-    return XMLin($response->decoded_content,
-                 ContentKey    => 'description',
-                 ForceArray    => ['Param', 'Period', 'Rep'],
-                 KeyAttr       => {Param => 'name',
-                                   Period => 'val',
-                                   Rep   => 'description'},
-                 GroupTags     => {Period => 'Rep'},
-                 SuppressEmpty => 1);
+    my $observations =  XMLin($response->decoded_content,
+                              ContentKey    => 'description',
+                              ForceArray    => [qw(Param Period Rep Location)],
+                              KeyAttr       => {Param  => 'name'},
+                              GroupTags     => {Period => 'Rep'},
+                              SuppressEmpty => 1);
+
+    # Index the data, removing erroneous duplicate entries
+    my %reports;
+    my $loc = $observations->{DV}->{Location}->[0];
+    foreach my $period (@{$loc->{Period}})
+    {
+        my $day = $period->{val};
+        my $tzone = '';
+        $tzone = $1 if $day =~ s/(Z)$//;
+        foreach my $rep (@{$period->{Rep}})
+        {
+            my $minutes = $rep->{description};
+            my $datetime = sprintf '%sT%02i:%02i:%02i%s',
+                                   $day, $minutes/60, $minutes%60, 0, $tzone;
+            $reports{$datetime} = $rep;
+        }
+    }
+    delete $loc->{Period};
+    $observations->{DV}->{Location} = $loc;
+    $observations->{DV}->{Rep} = { %reports };
+
+    # Return the result
+    return $observations;
 }
 
 
@@ -287,7 +306,7 @@ sub iso8601
     {
         die "Only Zulu/UTC supported for ISO 8601 dates\n" unless $tzone eq 'Z';
         my $time = timegm($second, $minute, $hour, $day, $month - 1, $year);
-        my ($second, $minute, $hour, $day, $month, $year) = localtime($time);
+        ($second, $minute, $hour, $day, $month, $year) = localtime($time);
         $year  += 1900; # (localtime returns number of years since 1900)
         $month += 1;    # (localtime returns month in range 0..1)
     }
