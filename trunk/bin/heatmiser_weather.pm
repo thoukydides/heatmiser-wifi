@@ -199,6 +199,7 @@ sub historical_temperature
             my $obsdate = sprintf '%04i-%02i-%02i %02i:%02i:00',
                           @{$observation->{date}}{qw(year mon mday hour min)};
             next if $obsdate lt $from or $to le $obsdate;
+            next if $temperature < -99.9;
             push @observations, [$obsdate, $temperature];
         }
         unshift @history, sort { $a->[0] cmp $b->[0] } @observations;
