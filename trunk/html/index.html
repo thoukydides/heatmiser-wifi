@@ -4,10 +4,10 @@ This is a web page to display the data logged from the iPhone interface of
 Heatmiser's range of Wi-Fi enabled thermostats. A symbolic link to this file
 should be created from a suitable public_html directory or subdirectory.
 
-The jQuery JavaScript library from <http://code.jquery.com/jquery-1.6.1.min.js>
+The jQuery JavaScript library from <http://code.jquery.com/jquery-1.7.2.min.js>
 should be placed in the same directory,
 as should the "highstock.js" file from the "js" subdirectory of
-<http://www.highcharts.com/downloads/zips/Highstock-1.0.2.zip>.
+<http://www.highcharts.com/downloads/zips/Highstock-1.1.5.zip>.
 
 Copyright © 2011, 2012 Alexander Thoukydides
 
@@ -43,7 +43,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       }
     </style>
 
-    <script src="jquery-1.6.1.min.js" type="text/javascript"></script>
+    <script src="jquery-1.7.2.min.js" type="text/javascript"></script>
     <script src="highstock.js" type="text/javascript"></script>
     <script type="text/javascript">
     <!--
@@ -89,6 +89,9 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         // Hide unused parts of the page
         $('#thermostats').parent().hide();
 
+        // Warn if the version of the Highstock JS library is too old
+        if (Highcharts.version < '1.1.5') alert('This web page is designed to work with Highstock JS version 1.1.5, but the currently installed version is ' + Highcharts.version + '.\nDownload the latest version from http://www.highcharts.com/download\n');
+
         // Create an empty chart
         chart = new Highcharts.StockChart({
           chart: {
@@ -109,8 +112,8 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
             inputDateFormat: '%e %b %Y'
           },
           xAxis: {
-            minorTickInterval: 24 * 60 * 60 * 1000, // 1 day in milliseconds
-            maxZoom: 8 * 60 * 60 * 1000 // 8 hours in milliseconds
+            maxZoom: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
+            ordinal: false
           },
           yAxis: {
             labels: {
@@ -127,6 +130,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
             marker: { enabled: false }
           },
           series: [
+            // Normal chart data
             {
               name: 'Current temperature',
               type: 'areaspline',
@@ -248,8 +252,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           thermostatDays = data.temperatures.length
                            ? thermostatDays + fetchExtraDays : fetchFinalDays;
           prefixChartData(data);
-        }
-        else {
+        } else {
           // Newer data
           postfixChartData(data);
         }
