@@ -159,3 +159,18 @@ As before, when done disconnect from the MySQL server:
 QUIT;</code>
 
 Opening the web page in a web browser should now show a dashed black line for the external temperature.
+
+== Import Historical Data ==
+
+If Weather Underground is being used for the external temperature data then it is possible to retrieve historical temperature data. This is useful if the thermostat temperatures have been logged for a while before configuring a weather service to populate the database with corresponding external temperature data.
+
+To avoid using up the daily API call allowance required by the daemon it is recommended to create a second API key at http://www.wunderground.com/weather/api/d/edit.html. Ensure that the _Yes, give me FULL access to one of the biggest historical weather databases on the web_ option is selected when creating the key.
+
+Retrieve the historical temperature data using:
+<code language="sh">
+/home/user/heatmiser-wifi-read-only/bin/heatmiser_history.pl -k 0123456789abcdef</code>
+where `0123456789abcdef` should be set to your new API key.
+
+Note that this will take a long time to run. Please be very patient. A 6 second delay is inserted between requesting each day's data to avoid exceeding the 10 calls per minute API limit. Adding thousands of new rows to the database will also take a while.
+
+It is safe to re-run the script to ensure that all available historical data has been imported.
