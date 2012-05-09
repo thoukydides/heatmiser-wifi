@@ -154,6 +154,71 @@ sub current_temperature
     return wantarray ? ($temperature, $timestamp) : $temperature;
 }
 
+# Retrieve the historical temperatures (may not be for full range requested)
+sub historical_temperature
+{
+    my ($self, $from, $to) = @_;
+
+    # Historical data is only supported by Weather Underground
+    die "Unsupported weather service for historical data '$self->{wservice}'\n"
+        unless $self->{wservice} eq 'wunderground';
+
+    # Split the date range into their component parts
+    die "Badly formatted start date\n" unless $from =~ /^(\d\d\d\d)-(\d\d)-(\d\d)/;
+    my ($from_year, $from_month, $from_day) = ($1, $2, $3);
+    die "Badly formatted end date\n" unless $to =~ /^(\d\d\d\d)-(\d\d)-(\d\d)/;
+    my ($year, $month, $day) = ($1, $2, $3);
+
+    # Loop through dates in range (from most recent in case API limit exceeded)
+    my @history;
+    while ($from_year < $year
+           or ($from_year == $year
+               and ($from_month < $month
+                    or ($from_month == $month and $from_day <= $day))))
+    {
+        # Retrieve the historical data for this date
+        my $history;
+        eval
+        {
+            $history = $self->wunderground_history($self->{wlocation},
+                                                   $year, $month, $day);
+        };
+        if ($@)
+        {
+            # Only report the error if no data has been obtained
+            last if scalar @history;
+            die $@;
+        }
+
+        # Extract the temperatures
+        my @observations;
+        foreach my $observation (@{$history->{history}->{observations}})
+        {
+            my $temperature = $self->{wunits} eq 'F' ? $observation->{tempi}
+                                                     : $observation->{tempm};
+            my $obsdate = sprintf '%04i-%02i-%02i %02i:%02i:00',
+                          @{$observation->{date}}{qw(year mon mday hour min)};
+            next if $obsdate lt $from or $to le $obsdate;
+            push @observations, [$obsdate, $temperature];
+        }
+        unshift @history, sort { $a->[0] cmp $b->[0] } @observations;
+
+        # Pause before requesting the next reading to avoid exceeding API limit
+        sleep(6);
+
+        # Calculate the next (earlier) date to retrieve
+        if (--$day == 0)
+        {
+            ($year, $month) = ($year - 1, 12) unless --$month;
+            $day = (31, ($year % 4 ? 28 : 29), 31, 30,
+                    31, 30, 31, 31, 30, 31, 30, 31)[$month - 1];
+        }
+    }
+
+    # Return the results
+    return [@history];
+}
+
 
 # UK MET OFFICE DATAPOINT
 
