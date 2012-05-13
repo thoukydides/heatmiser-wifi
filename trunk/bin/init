@@ -1,8 +1,8 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:          heatmiser_daemon
-# Required-Start:    $remote_fs
-# Required-Stop:     $remote_fs
+# Required-Start:    $remote_fs mysql
+# Required-Stop:     $remote_fs mysql
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start/stop daemon to log Heatmiser Wi-Fi thermostats.
@@ -16,7 +16,7 @@
 ### END INIT INFO
 
 # Based on Ubuntu "/etc/init.d/skeleton" file
-# Modifications and additions Copyright © 2011 Alexander Thoukydides
+# Modifications and additions Copyright © 2011, 2012 Alexander Thoukydides
 #
 # This file is part of the Heatmiser Wi-Fi project.
 # <http://code.google.com/p/heatmiser-wifi/>
