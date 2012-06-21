@@ -7,9 +7,9 @@
 
 Start by downloading the current version of the software using [http://svnbook.red-bean.com/ Subversion (SVN)]:
 <code language="sh">
-svn checkout http://heatmiser-wifi.googlecode.com/svn/trunk/ /home/user/heatmiser-wifi-read-only</code>
+svn checkout http://heatmiser-wifi.googlecode.com/svn/trunk/ ~/heatmiser-wifi-read-only</code>
 
-The example commands in these instructions assume that the files are checked out to `/home/user/heatmiser-wifi-read-only`. Replace the path as appropriate.
+The example commands in these instructions assume that the files are checked out to `~/heatmiser-wifi-read-only`. Replace the path as appropriate.
 
 For more details see the instructions on the [http://code.google.com/p/heatmiser-wifi/source/checkout Source Checkout] page.
 
@@ -44,7 +44,7 @@ sudo cpan CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON LWP::UserAgent P
 
 That should be all that's necessary for basic operation. Test the connection to the thermostat by running:
 <code language="sh">
-/home/user/heatmiser-wifi-read-only/bin/heatmiser.pl -h heatmiser -p 1234</code>
+~/heatmiser-wifi-read-only/bin/heatmiser.pl -h heatmiser -p 1234</code>
 where `heatmiser` should be changed to the IP address or hostname of the thermostat, and `1234` should be changed to the PIN code selected for the thermostat's iPhone interface.
 
 This should display the current status of the thermostat:
@@ -87,6 +87,6 @@ where `heatmiser` and `1234` should be replaced by the hostname and PIN used abo
 
 Check correct operation again by running the script, but without the hostname and PIN on the command line:
 <code language="sh">
-/home/user/heatmiser-wifi-read-only/bin/heatmiser.pl</code>
+~/heatmiser-wifi-read-only/bin/heatmiser.pl</code>
 
 If everything is working properly then you can now setup the [InstallationWebInterface Web Interface] to log the thermostat's operation and plot charts of the temperature. Alternatively, setup [InstallationTimeSync Automatic Time Synchronisation] to keep your thermostat's clock accurate and automatically adjust to the start and end of summer (daylight saving) time.
