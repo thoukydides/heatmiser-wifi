@@ -9,7 +9,7 @@ Once rudimentary communication with the thermostat has been confirmed by followi
 
 First try running the script manually to ensure that it is installed properly:
 <code language=sh>
-/home/user/heatmiser-wifi-read-only/bin/heatmiser_time.pl -v</code>
+~/heatmiser-wifi-read-only/bin/heatmiser_time.pl -v</code>
 
 If everything is working then it should output something like:
 <blockquote><pre>
@@ -29,3 +29,4 @@ crontab -e</code>
 This should start an editor with the current contents of the crontab file. Add a new line to synchronise the time automatically once a day (at 2:01am to correct quickly for the start and end of summer time):
 <code language=sh>
 01 02 * * * /home/user/heatmiser-wifi-read-only/bin/heatmiser_time.pl</code>
+where `user` should be replaced as appropriate.
