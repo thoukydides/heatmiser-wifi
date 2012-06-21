@@ -63,8 +63,8 @@ QUIT;</code>
 
 Create symbolic links to the daemon script and the `init` script used to control it:
 <code language="sh">
-sudo ln -s /home/user/heatmiser-wifi-read-only/bin/init /etc/init.d/heatmiser_daemon
-sudo ln -s /home/user/heatmiser-wifi-read-only/bin/heatmiser_daemon.pl /usr/local/bin/heatmiser_daemon</code>
+sudo ln -s ~/heatmiser-wifi-read-only/bin/init /etc/init.d/heatmiser_daemon
+sudo ln -s ~/heatmiser-wifi-read-only/bin/heatmiser_daemon.pl /usr/local/bin/heatmiser_daemon</code>
 
 Start the daemon manually using:
 
@@ -165,24 +165,24 @@ sudo /etc/init.d/apache2 reload</code>
 Create a `cgi-bin` directory for the AJAX back-end script, and create a symbolic link from it to the location of the script:
 <code language=sh>
 sudo mkdir /usr/lib/cgi-bin/heatmiser
-sudo ln -s /home/user/heatmiser-wifi-read-only/bin/heatmiser_cgi.pl /usr/lib/cgi-bin/heatmiser/ajax.pl</code>
+sudo ln -s ~/heatmiser-wifi-read-only/bin/heatmiser_cgi.pl /usr/lib/cgi-bin/heatmiser/ajax.pl</code>
 
 Create a directory for the web page, and create a symbolic link to the HTML file:
 <code language=sh>
-mkdir /home/user/public_html
-mkdir /home/user/public_html/heatmiser-wifi
-ln -s /home/user/heatmiser-wifi-read-only/html/index.html /home/user/public_html/heatmiser-wifi/index.html</code>
+mkdir ~/public_html
+mkdir ~/public_html/heatmiser-wifi
+ln -s ~/heatmiser-wifi-read-only/html/index.html ~/public_html/heatmiser-wifi/index.html</code>
 
 If a different `cgi-bin` directory was used then it will probably be necessary to modify `index.html` with the correct URL to access it.
 
 Download the jQuery !JavaScript library to the same directory as the `index.html` file:
 <code language="sh">
-wget http://code.jquery.com/jquery-1.7.2.min.js -O /home/user/public_html/heatmiser-wifi/jquery-1.7.2.min.js</code>
+wget http://code.jquery.com/jquery-1.7.2.min.js -O ~/public_html/heatmiser-wifi/jquery-1.7.2.min.js</code>
 
 Also download the Highcharts Highstock !JavaScript library to the same directory:
 <code language="sh">
 wget http://www.highcharts.com/downloads/zips/Highstock-1.1.5.zip -O /tmp/highstock.zip
-unzip -j /tmp/highstock.zip js/highstock.js -d /home/user/public_html/heatmiser-wifi</code>
+unzip -j /tmp/highstock.zip js/highstock.js -d ~/public_html/heatmiser-wifi</code>
 
 == View Web Page ==
 
