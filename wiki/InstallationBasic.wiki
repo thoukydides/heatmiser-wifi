@@ -5,7 +5,12 @@
 
 == Download the Software ==
 
-Start by downloading the current version of the software using [http://svnbook.red-bean.com/ Subversion (SVN)]:
+First ensure that [http://svnbook.red-bean.com/ Subversion (SVN)] is installed:
+<code language="sh">
+sudo apt-get update
+sudo apt-get install subversion</code>
+
+Then use it to download the current version of this software:
 <code language="sh">
 svn checkout http://heatmiser-wifi.googlecode.com/svn/trunk/ ~/heatmiser-wifi-read-only</code>
 
