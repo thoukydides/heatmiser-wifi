@@ -55,3 +55,4 @@ Thank you to:
  * Robert Hancock for reporting various issues with the handling of Met Office !DataPoint feeds.
  * Paul Whelan for providing feedback on the installation instructions and testing on a [http://www.raspberrypi.org/ Raspberry Pi].
  * [https://twitter.com/jamesmulcahy James Mulcahy] for also testing on a [http://www.raspberrypi.org/ Raspberry Pi].
+ * [http://chris.gg/ Chris Barnes] for writing [http://chris.gg/2012/07/how-to-set-up-a-web-interface-for-a-heatmiser-wi-fi-thermostat-with-a-raspberry-pi/ instructions] for how to install on a [http://www.raspberrypi.org/ Raspberry Pi].
