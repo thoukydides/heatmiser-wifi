@@ -1,6 +1,6 @@
 # This is a Perl library for retrieving weather observations from online
 # services:
-#   UK MetOffice DataPoint  http://www.metoffice.gov.uk/public/ddc
+#   UK MetOffice DataPoint  http://www.metoffice.gov.uk/datapoint
 #   Weather Underground     http://www.wunderground.com/weather/api
 #   iGoogle weather API     (unofficial API)
 #   Yahoo! Weather          http://developer.yahoo.com/weather
@@ -76,7 +76,7 @@ sub initialise
     die "No weather service selected\n" unless defined $self->{wservice};
 
     # Check that an API key has been configured if required
-    die "An API key is required for Met Office DataPoint: http://www.metoffice.gov.uk/public/ddc\n" if $self->{wservice} eq 'metoffice' and not defined $self->{wkey};
+    die "An API key is required for Met Office DataPoint: http://www.metoffice.gov.uk/datapoint\n" if $self->{wservice} eq 'metoffice' and not defined $self->{wkey};
     die "An API key is required for Weather Underground: http://www.wunderground.com/weather/api\n" if $self->{wservice} eq 'wunderground' and not defined $self->{wkey};
 
     # Create a user agent
@@ -246,7 +246,7 @@ sub metoffice_observations
     }
 
     # Fetch the weather information
-    my $response = $self->{ua}->get('http://partner.metoffice.gov.uk/public/val/wxobs/all/xml/' . $locurl . '?' . join('&', 'res=hourly', @locargs, 'key=' . $self->{wkey}));
+    my $response = $self->{ua}->get('http://datapoint.metoffice.gov.uk/public/data/val/wxobs/all/xml/' . $locurl . '?' . join('&', 'res=hourly', @locargs, 'key=' . $self->{wkey}));
     die 'Failed to retrieve Met Office DataPoint observations: ' . $response->status_line . "\n" unless $response->is_success;
 
     # Decode and return the result
@@ -266,7 +266,7 @@ sub metoffice_observations
     my $loc = $xml->{DV}->{Location}->[0];
     foreach my $period (@{$loc->{Period}})
     {
-        my $day = $period->{val};
+        my $day = $period->{value};
         my $tzone = '';
         $tzone = $1 if $day =~ s/(Z)$//;
         foreach my $rep (@{$period->{Rep}})
