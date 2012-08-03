@@ -24,7 +24,7 @@ http://jquery.org/wp-content/uploads/2010/01/JQuery_logo_color_onwhite-300x74.pn
 
 <tr><td>
 == UK Met Office !DataPoint ==
-External temperature data can be obtained using the [http://www.metoffice.gov.uk/public/ddc UK Met Office DataPoint] datafeeds.
+External temperature data can be obtained using the [http://www.metoffice.gov.uk/datapoint UK Met Office DataPoint] datafeeds.
 <td>
 https://register.metoffice.gov.uk/WaveRegistrationClient/public/images/lg_mo.gif
 
