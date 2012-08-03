@@ -17,7 +17,7 @@ Several free online weather services are supported. Choose one that meets your r
 
 _The [http://www.metoffice.gov.uk/public/ddc UK Met Office DataPoint] datafeeds provide hourly observations available from ~122 locations around the UK._
 
-_ Requires registration for a free account._
+_Requires registration for a free account. The [http://www.metoffice.gov.uk/about-us/legal/fair-usage fair use policy] allows for up to 5000 calls per day and 100 calls per minute which should be sufficient for most users._
 <td valign=top>
 ----
 ==== Service ====
