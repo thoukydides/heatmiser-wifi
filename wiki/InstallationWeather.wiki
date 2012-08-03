@@ -15,7 +15,7 @@ Several free online weather services are supported. Choose one that meets your r
 === UK Met Office !DataPoint ===
 <img src="https://register.metoffice.gov.uk/WaveRegistrationClient/public/images/lg_mo.gif" width="200px" hspace=50>
 
-_The [http://www.metoffice.gov.uk/public/ddc UK Met Office DataPoint] datafeeds provide hourly observations available from ~122 locations around the UK._
+_The [http://www.metoffice.gov.uk/datapoint UK Met Office DataPoint] datafeeds provide hourly observations available from ~122 locations around the UK._
 
 _Requires registration for a free account. The [http://www.metoffice.gov.uk/about-us/legal/fair-usage fair use policy] allows for up to 5000 calls per day and 100 calls per minute which should be sufficient for most users._
 <td valign=top>
@@ -25,7 +25,7 @@ _Requires registration for a free account. The [http://www.metoffice.gov.uk/abou
 
 ==== API Key ====
 
-Visit https://register.metoffice.gov.uk/register/ddc and register for an account (or add a Met Office !DataPoint subscription to your existing account). Then visit http://www.metoffice.gov.uk/premium/ddc/retrieveKey.html to obtain your API key.
+Visit http://register.metoffice.gov.uk/register/datapoint and register for an account (or add a Met Office !DataPoint subscription to your existing account). Then visit http://www.metoffice.gov.uk/premium/ddc/retrieveKey.html to obtain your API key.
 
 ==== Location ====
 
