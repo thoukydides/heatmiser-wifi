@@ -25,7 +25,7 @@ _Requires registration for a free account. The [http://www.metoffice.gov.uk/abou
 
 ==== API Key ====
 
-Visit http://register.metoffice.gov.uk/register/datapoint and register for an account (or add a Met Office !DataPoint subscription to your existing account). Then visit http://www.metoffice.gov.uk/premium/ddc/retrieveKey.html to obtain your API key.
+Visit http://register.metoffice.gov.uk/register/datapoint and register for an account (or add a Met Office !DataPoint subscription to your existing account). Then visit http://www.metoffice.gov.uk/datapoint/support/API to obtain your API key.
 
 ==== Location ====
 
