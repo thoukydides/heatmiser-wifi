@@ -17,7 +17,6 @@
  * [http://code.google.com/p/heatmiser-wifi/w/list List & Search Wiki Pages]
  * *Heatmiser Websites*
    * [http://www.heatmiser.co.uk/web/index.php/wifi-thermostats Wi-Fi Thermostats]
-   * [http://heatmiser.co.uk/forum/ Community Forum]
    * [http://www.heatmisershop.co.uk/ Shop]
    * [http://itunes.apple.com/app/heatmiser-wifi-thermostat/id461728950 iPhone App]
    * [http://www.facebook.com/pages/Heatmiser/254790094531348 Facebook]
