@@ -61,24 +61,6 @@ The location can be specified in several ways, including:
 
 <tr><td valign=top>
 ----
-=== iGoogle ===
-<img src="http://www.google.com/ig/images/igoogle_logo_sm.gif" width="200px" hspace=50>
-
-_The [http://www.google.com/ig iGoogle] weather API is intended to be used by iGoogle gadgets, so it may change without notice and excessive use is likely to be blocked._
-
-_No registration is required._
-<td valign=top>
-----
-==== Service ====
-`google`
-==== Location ====
-Quite a few formats can be used for specifying the location, including:
-|| *Value* || *Example* || *Description* ||
-|| `postcode` || `CB248UP` || Address post code ||
-|| _city_`,`_country_ || `Cottenham,England` || A named city ||
-
-<tr><td valign=top>
-----
 === Yahoo! Weather ===
 <img src="http://l.yimg.com/a/i/brand/purplelogo//uh/us/news-wea.gif" width="200px" hspace=50>
 
