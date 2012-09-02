@@ -2,7 +2,6 @@
 # services:
 #   UK MetOffice DataPoint  http://www.metoffice.gov.uk/datapoint
 #   Weather Underground     http://www.wunderground.com/weather/api
-#   iGoogle weather API     (unofficial API)
 #   Yahoo! Weather          http://developer.yahoo.com/weather
 
 # Copyright © 2012 Alexander Thoukydides
@@ -121,15 +120,6 @@ sub current_temperature
                                               : $observations->{temp_c};
         undef $temperature if $temperature <= -99.9;
         ($year, $month, $day, $hour, $minute, $second) = rfc822($observations->{observation_time_rfc822});
-    }
-    elsif ($self->{wservice} eq 'google')
-    {
-        # iGoogle
-        my $api = $self->google_api($self->{wlocation});
-        my $conditions = $api->{weather}->{current_conditions};
-        $temperature = $self->{wunits} eq 'F' ? $conditions->{temp_f}
-                                              : $conditions->{temp_c};
-        # (No observation time is returned)
     }
     elsif ($self->{wservice} eq 'yahoo')
     {
@@ -330,29 +320,6 @@ sub wunderground_history
                        raw => $response->decoded_content,
                        xml => $xml };
     die 'Error returned for Weather Underground history: ' . $xml->{error}->{description} . "\n" if exists $xml->{error};
-    return $xml;
-}
-
-
-# GOOGLE
-
-# Retrieve the current conditions and forecast from iGoogle
-sub google_api
-{
-    my ($self, $location) = @_;
-
-    # Fetch the weather information
-    my $response = $self->{ua}->get('http://www.google.com/ig/api?weather=' . $location);
-    die 'Failed to retrieve Google weather: ' . $response->status_line . "\n" unless $response->is_success;
-
-    # Decode and return the result
-    my $xml = XMLin($response->decoded_content,
-                    ForceArray => [ 'forecast_conditions' ],
-                    KeyAttr    => [ 'day_of_week' ],
-                    ValueAttr  => [ 'data' ]);
-    $self->{debug} = { uri => $response->request->uri(),
-                       raw => $response->decoded_content,
-                       xml => $xml };
     return $xml;
 }
 
