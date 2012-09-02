@@ -36,5 +36,5 @@ The following options can be configured:
 || `WKEY` || `-k` _apikey_ || || API key for the online weather service (only required for `metoffice` and `wunderground`) ||
 || `WLOCATION` || `-g` _location_ || || Location to request from the online weather service in the appropriate format for the service being used ||
 || `WLOGRATE` || `-r` _factor_ || `5` || How much slower should the online weather service be polled than the main logging rate ||
-|| `WSERVICE` || `-w` _service_ || || Optional online weather service (`metoffice`, `wunderground`, `google`, `yahoo` or unset for none) for external temperature ||
+|| `WSERVICE` || `-w` _service_ || || Optional online weather service (`metoffice`, `wunderground`, `yahoo` or unset for none) for external temperature ||
 || `WUNITS` || `-f` _units_ || `C` || Temperature units to request from the online weather service (`C` or `F`); should match the thermostats' configuration ||
