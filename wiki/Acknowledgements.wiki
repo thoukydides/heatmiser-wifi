@@ -35,12 +35,6 @@ External temperature data can be obtained using the [http://www.wunderground.com
 http://icons.wxug.com/logos/images/wundergroundLogo_4c_horz.jpg
 
 <tr><td>
-== iGoogle ==
-External temperature data can be obtained using the (undocumented) [http://www.google.com/ig iGoogle] weather gadget API.
-<td>
-http://www.google.com/ig/images/igoogle_logo_sm.gif
-
-<tr><td>
 == Yahoo! Weather ==
 External temperature data can be obtained using the [http://developer.yahoo.com/weather Yahoo! Weather RSS Feed].
 <td>
