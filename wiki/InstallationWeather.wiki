@@ -86,13 +86,13 @@ For example, a search for _Cottenham_ results in the URL `http://weather.yahoo.c
 Once the weather service has been selected, an API key obtained if appropriate (Met Office !DataPoint or Weather Underground), and the location obtained in a suitable format, it is possible to test it by running:
 <code language="sh">
 ~/heatmiser-wifi-read-only/bin/heatmiser_weather.pl -w wunderground -k 0123456789abcdef -g pws:ICAMBSCO1</code>
-where `wunderground` should be changed to identify the service being used, `0123456789abcdef` should be set to your API key (or omitted if using iGoogle or Yahoo! Weather), and `pws:ICAMBSCO1` should be replaced by your location.
+where `wunderground` should be changed to identify the service being used, `0123456789abcdef` should be set to your API key (or omitted if using Yahoo! Weather), and `pws:ICAMBSCO1` should be replaced by your location.
 
 This should display the most recent weather observation:
 <blockquote><pre>
 External temperature at 2012-04-29 18:15:52 was 14.0C</pre></blockquote>
 
-is the service identifier,  should be replaced by the API key (or the line omitted if iGoogle or Yahoo! Weather are being used)
+is the service identifier,  should be replaced by the API key (or the line omitted if Yahoo! Weather are being used)
 
 == Update the Configuration File ==
 
