@@ -25,6 +25,8 @@ http://jquery.org/wp-content/uploads/2010/01/JQuery_logo_color_onwhite-300x74.pn
 <tr><td>
 == UK Met Office !DataPoint ==
 External temperature data can be obtained using the [http://www.metoffice.gov.uk/datapoint UK Met Office DataPoint] datafeeds.
+
+The Met Office also featured this software in their [http://www.metoffice.gov.uk/datapoint/showcase/heatmiser-scripts DataPoint showcase].
 <td>
 https://register.metoffice.gov.uk/WaveRegistrationClient/public/images/lg_mo.gif
 
