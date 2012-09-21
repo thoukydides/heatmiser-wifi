@@ -255,6 +255,7 @@ sub metoffice_observations
     # Index the data, removing erroneous duplicate entries
     my %reports;
     my $loc = $xml->{DV}->{Location}->[0];
+    die "Unknown location '$location' for Met Office DataPoint\n" unless exists $loc->{name};
     foreach my $period (@{$loc->{Period}})
     {
         my $day = $period->{value};
