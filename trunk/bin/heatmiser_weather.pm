@@ -221,12 +221,7 @@ sub metoffice_observations
 
     # Convert the location into the appropriate format
     my ($locurl, @locargs);
-    if ($location =~ /^(-?[\d\.]+),(-?[\d\.]+)$/)
-    {
-        # Nearest location to a specified latitude and longitude
-        ($locurl, @locargs) = ('nearestlatlon', 'lat=' . $1, 'lon=' . $2);
-    }
-    elsif ($location =~ /^\d+$/)
+    if ($location =~ /^\d+$/)
     {
         # A specific location ID
         $locurl = $location;
