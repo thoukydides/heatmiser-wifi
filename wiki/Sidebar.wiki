@@ -9,6 +9,7 @@
    * [InstallationTimeSync Time Synchronisation]
  * Reference Information
    * [ConfigurationOptions Configuration Options]
+   * [WebInterfaceLegend Web Interface Legend]
    * [DatabaseSchema Database Schema]
    * [HeatmiserProtocol Heatmiser Protocol]
  * [Acknowledgements]
