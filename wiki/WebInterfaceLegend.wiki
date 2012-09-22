@@ -1,0 +1,40 @@
+#summary Meanings of the different line styles and flags in the web interface
+
+= Web Interface Legend =
+
+The [InstallationWebInterface Web Interface] uses a variety of line styles and flags to display the thermostats' activity.
+
+Note that starting or restarting the daemon results in the current state of the thermostat being recorded, and hence flags being displayed in the web interface, even if there has been no change of state.
+
+== Lines for Central Heating ==
+
+|| *Line Style* || *Line Colour * || *Description* ||
+|| Thin solid || <font color="#FF0000">Red || Room temperature as measured by the thermostat (shown with blue/red shading below the line) ||
+|| Thick solid || <font color="#0000FF">Blue || Target temperature that the thermostat is/was trying to achieve ||
+|| Thick dotted || <font color="#0000FF">Blue || Comfort level programmed target temperature (shown even if the heating is switched off to provide a guide as to the preferred temperature profile) ||
+|| Thin dashed || Black || External temperature provided by an optional online weather service ||
+
+== Flags for Central Heating ==
+
+The reason for changes to the target room temperature are indicated by circular flags just above the target temperature line:
+|| *Text* || *Circle Outline Colour* || *Description* ||
+|| `-` || Black || The thermostat is switched off ||
+|| `H*` || <font color="#00FFFF">Cyan || Holiday mode, frost protection enabled until return date ||
+|| `A*` || <font color="#00FFFF">Cyan || Away mode, frost protection enabled indefinitely ||
+|| `H` || <font color="#00FF00">Green || Temperature hold, for selected duration ||
+|| `M` || <font color="#00FF00">Green || Temperature adjusted manually, until next programmed comfort level ||
+
+Two additional flags for normal timer operation are currently disabled, but can be displayed by uncommenting the relevant lines of the `index.html` file:
+|| *Text* || *Circle Outline Colour* || *Description* ||
+|| `C` || <font color="#0000FF">Blue || Target temperature is the programmed comfort level ||
+|| `P` || <font color="#0000FF">Blue || Optimum start has increased the target temperature ahead of the next programmed comfort level ||
+
+== Flags for Hot Water ==
+
+If the thermostat also controls hot water then changes to its state are indicated by square flags at the bottom of the chart:
+|| *Text* || *Rectangle Background Colour* || *Description* ||
+|| `-` || Black || The thermostat is switched off ||
+|| <font color="#FF0000">`T` || <font color=red>Red || Hot water is on, controlled by timer ||
+|| `t` || Black || Hot water is off, controlled by timer ||
+|| <font color="#FF0000">`M` || <font color=red>Red || Hot water is on, manual override ||
+|| `m` || Black || Hot water is off, manual override ||
