@@ -8,11 +8,14 @@ Note that starting or restarting the daemon results in the current state of the 
 
 == Lines for Central Heating ==
 
+The following line styles and colours are used to show the various temperatures:
 || *Line Style* || *Line Colour * || *Description* ||
 || Thin solid || <font color="#FF0000">Red || Room temperature as measured by the thermostat (shown with blue/red shading below the line) ||
 || Thick solid || <font color="#0000FF">Blue || Target temperature that the thermostat is/was trying to achieve ||
 || Thick dotted || <font color="#0000FF">Blue || Comfort level programmed target temperature (shown even if the heating is switched off to provide a guide as to the preferred temperature profile) ||
 || Thin dashed || Black || External temperature provided by an optional online weather service ||
+
+Additionally, orange bands are used to indicate when the thermostat has switched the heating on. The boiler will not generally be on for these full periods since it will have its own thermostat based on the water temperature.
 
 == Flags for Central Heating ==
 
