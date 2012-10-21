@@ -43,7 +43,7 @@ sudo apt-get install perl5</code>
 
 Ensure that essential Perl packages are installed. For fully featured systems use:
 <code language=sh>
-sudo apt-get install libxml-simple-perl
+sudo apt-get install libxml-simple-perl libjson-perl
 sudo cpan CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON LWP::UserAgent Proc::Daemon Proc::PID::File Time::HiRes XML::Simple</code>
 
 For smaller platforms, such as the [http://www.raspberrypi.org/ Raspberry Pi], it may be better to use `cpanminus` instead:
