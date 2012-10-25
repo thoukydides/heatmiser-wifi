@@ -17,6 +17,8 @@ The following line styles and colours are used to show the various temperatures:
 
 Additionally, orange bands are used to indicate when the thermostat has switched the heating on. The boiler will not generally be on for these full periods since it will have its own thermostat based on the water temperature.
 
+The small navigator chart shows the same room temperature data as the main chart, but for the full history that has been logged. This can be used to zoom in on the section of interest.
+
 == Flags for Central Heating ==
 
 The reason for changes to the target room temperature are indicated by circular flags just above the target temperature line:
