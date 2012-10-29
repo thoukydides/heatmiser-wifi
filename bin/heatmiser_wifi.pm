@@ -321,13 +321,21 @@ sub lookup_comfort
     # Start with the final temperature for the previous day
     my $mode = $status->{config}->{progmode};
     my $prevdayindex = dateindex($mode, $datetime, -1);
-    my $target = $status->{comfort}->[$prevdayindex]->[-1]->{target};
+    my $target = $status->{frostprotect}->{target};
+    if (scalar @{$status->{comfort}->[$prevdayindex]})
+    {
+        $target = $status->{comfort}->[$prevdayindex]->[-1]->{target};
+    }
 
     # And with the first temperature for the next day
     my $nextdayindex = dateindex($mode, $datetime, +1);
-    my $next_target = $status->{comfort}->[$nextdayindex]->[0]->{target};
-    my $next_minutes = minutes($status->{comfort}->[$nextdayindex]->[0]->{time})
-                       + 24 * 60 - $time;
+    my $next_target = $status->{frostprotect}->{target};
+    my $next_minutes = 2 * 24 * 60 - $time;
+    if (scalar @{$status->{comfort}->[$nextdayindex]})
+    {
+        $next_target = $status->{comfort}->[$nextdayindex]->[0]->{target};
+        $next_minutes = minutes($status->{comfort}->[$nextdayindex]->[0]->{time}) + 24 * 60 - $time;
+    }
 
     # Search the levels for the current day for the specified time
     my $dayindex = dateindex($mode, $datetime);
