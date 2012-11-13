@@ -1,0 +1,71 @@
+#summary One-sentence summary of this page.
+#labels Phase-Design,Phase-Implementation
+
+= Perl DCB Data Structure =
+
+Data is transferred to or from the thermostat via a binary Device Control Block (DCB). For convenient manipulation the Perl scripts convert this to and from an internal data structure composed of nested hash and array references.
+
+== All Thermostats ==
+
+|| *Primary Key* || *Secondary Key* || *Read/Write* || *Description* ||
+|| `{config}` || `{progmode}` || R || Thermostat program mode (`5/2` or `7`) ||
+|| `{dcblength}` || ||R || Length of the DCB in octets ||
+|| `{enabled}` || || R/W || Thermostat off (`0`) or on (`1`) ||
+|| `{holiday}` || `{enabled}` || R/W || Home (`0`) or away (`1`) ||
+|| `{holiday}` || `{time}` || R/W || End of holiday (`YYYY-MM-DD hh:mm:ss`), if `{enabled}` ||
+|| `{keylock}` || || R/W || Touch screen unlocked (`0`) or locked (`1`) ||
+|| `{product}` || `{model}` || R ||  Thermostat model (`DT`, `DT-E`, `PRT`, `PRT-E`, `PRTHW` or `TM1`) ||
+|| `{product}` || `{vendor}` || R || Thermostat manufacturer (`Heatmiser` or `OEM`) ||
+|| `{product}` || `{version}` || R || Thermostat version number (`#.#`) ||
+|| `{time}` || || R/W || The date and time (`YYYY-MM-DD hh:mm:ss`) ||
+
+== Heating Controllers ==
+
+|| *Primary Key* || *Secondary Key*  || *Read/Write* || *Description* ||
+|| `{config}` || `{caloffset}` || R || Calibration offset (`#####`) ||
+|| `{config}` || `{locklimit}` || R || Feature 7: Temperature limit when locked (`0`...`10`) ||
+|| `{config}` || `{optimumstart}` || R || Feature 10: Optimum start disabled (`0`) or maximum hours (`1`...`3`) ||
+|| `{config}` || `{outputdelay}` || R || Feature 5: Output delay in minutes (`0`...`15`) ||
+|| `{config}` || `{sensor}` || R || Feature 8: Sensor selection (`internal`, `remote`, `floor`, `internal + floor` or `remote + floor`) ||
+|| `{config}` || `{switchdiff}` || R || Feature 2: Switching hysteresis (`0.5`, `1.0` or `1.5`) ||
+|| `{config}` || `{units}` || R || Feature 1: Temperature format (`C` or `F`) ||
+|| `{errorcode}` || || R || Error code (`internal`, `floor`, or `remote`) or `undef` for none ||
+|| `{frostprotect}` || `{enabled}` || R || Feature 3: Frost protection disabled (`0`) or enabled (`1`) ||
+|| `{frostprotect}` || `{target}` || R/W || Feature 4: Frost protection temperature (`##`) ||
+|| `{heating}` || `{hold}` || R/W || Hold time in minutes (`#####`) ||
+|| `{heating}` || `{on}` || R || Heating off (`0`) or on (`1`) ||
+|| `{heating}` || `{target}` || R/W || Target heating temperature (`##`) ||
+|| `{rateofchange}` || || R || Feature 11: Learnt rate of temperature rise in minutes/°C (`###`) ||
+|| `{runmode}` || || R/W || Thermostat operating mode (`heating` or `frost`) ||
+|| `{temperature}` || `{remote}` || R || Remote temperature (`##.#`) or `undef` ||
+|| `{temperature}` || `{floor}` || R || Floor temperature (`##.#`) or `undef` ||
+|| `{temperature}` || `{internal}` || R || Internal air temperature (`##.#`) or `undef` ||
+
+|| *Primary Key* || *Secondary Key* || *Tertiary Key* || *Quaternary Key* || *Read/Write* || *Description* ||
+|| `{comfort}` || `[#]` || `[#]` || `time` || R/W || Start time for the comfort level (`hh:mm:00`) ||
+|| `{comfort}` || `[#]` || `[#]` || `target` || R/W || Comfort level temperature (`##`) ||
+|| || (`0/1` for Weekday/Weekend <br> `0`...`6` for Monday...Sunday) || (`0`...`3` index within the day) || || || ||
+
+== Underfloor Heating Controllers ==
+
+|| *Primary Key* || *Secondary Key* || *Read/Write* || *Description* ||
+|| `{floorlimit}` || `{floormax}` || R/W || Feature 9: Floor temperature limit (`##`) ||
+|| `{floorlimit}` || `{limiting}` || R || In floor limit state (`1`) or not (`0`) ||
+
+== Hot Water Controllers ==
+
+|| *Primary Key* || *Secondary Key* || *Read/Write* || *Description* ||
+|| `{hotwater}` || `{on}` || R/W || Hot water off (`0`), on (`1`) or let timer run (`undef`, for W only) ||
+
+|| *Primary Key* || *Secondary Key* || *Tertiary Key* || *Quaternary Key* || *Read/Write* || *Description* ||
+|| `{timer}` || `[#]` || `[#]` || `on` || R/W || Start time for the hot water (`hh:mm:00`) ||
+|| `{timer}` || `[#]` || `[#]` || `off` || R/W || End time for the hot water (`hh:mm:00`) ||
+|| || (`0/1` for Weekday/Weekend <br> `0`...`6` for Monday...Sunday) || (`0`...`3` index within the day) || || || ||
+
+== Notes ==
+
+ * The Perl scripts represent dates and times as strings using the same format as SQL. Specifically, the current time and end of holiday are in `DATETIME` (`YYYY-MM-DD HH:MM:SS`) format, and programmed comfort levels and hot water timers are in `TIME` (`HH:MM:SS`) format.
+ * Boolean values are represented by `0` (off/disabled) and `1` (on/enabled).
+ * Enumerated values (other than boolean) are generally represented by text strings. However, if the DCB contains an unrecognised value then its raw numeric value is used instead.
+ * Temperatures are specified in the configured units (Feature 1). The learnt rate of temperature change (Feature 11) is always in minutes/°C.
+ * Many settings (including most of the 'Features') cannot be set remotely; they must be adjusted via the thermostat's touchscreen.
