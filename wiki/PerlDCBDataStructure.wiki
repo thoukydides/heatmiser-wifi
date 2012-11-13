@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+#summary Data structure used to represent a thermostat's DCB within the Perl scripts
 #labels Phase-Design,Phase-Implementation
 
 = Perl DCB Data Structure =
