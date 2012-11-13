@@ -11,6 +11,7 @@
    * [ConfigurationOptions Configuration Options]
    * [WebInterfaceLegend Web Interface Legend]
    * [DatabaseSchema Database Schema]
+   * [PerlDCBDataStructure Perl DCB Data Structure]
    * [HeatmiserProtocol Heatmiser Protocol]
  * [Acknowledgements]
  * [Contact]
