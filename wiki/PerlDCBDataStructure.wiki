@@ -42,8 +42,8 @@ Data is transferred to or from the thermostat via a binary Device Control Block 
 || `{temperature}` || `{internal}` || R || Internal air temperature (`##.#`) or `undef` ||
 
 || *Primary Key* || *Secondary Key* || *Tertiary Key* || *Quaternary Key* || *Read/Write* || *Description* ||
-|| `{comfort}` || `[#]` || `[#]` || `time` || R/W || Start time for the comfort level (`hh:mm:00`) ||
-|| `{comfort}` || `[#]` || `[#]` || `target` || R/W || Comfort level temperature (`##`) ||
+|| `{comfort}` || `[#]` || `[#]` || `{time}` || R/W || Start time for the comfort level (`hh:mm:00`) ||
+|| `{comfort}` || `[#]` || `[#]` || `{target}` || R/W || Comfort level temperature (`##`) ||
 || || (`0/1` for Weekday/Weekend <br> `0`...`6` for Monday...Sunday) || (`0`...`3` index within the day) || || || ||
 
 == Underfloor Heating Controllers ==
@@ -58,8 +58,8 @@ Data is transferred to or from the thermostat via a binary Device Control Block 
 || `{hotwater}` || `{on}` || R/W || Hot water off (`0`), on (`1`) or let timer run (`undef`, for W only) ||
 
 || *Primary Key* || *Secondary Key* || *Tertiary Key* || *Quaternary Key* || *Read/Write* || *Description* ||
-|| `{timer}` || `[#]` || `[#]` || `on` || R/W || Start time for the hot water (`hh:mm:00`) ||
-|| `{timer}` || `[#]` || `[#]` || `off` || R/W || End time for the hot water (`hh:mm:00`) ||
+|| `{timer}` || `[#]` || `[#]` || `{on}` || R/W || Start time for the hot water (`hh:mm:00`) ||
+|| `{timer}` || `[#]` || `[#]` || `{off}` || R/W || End time for the hot water (`hh:mm:00`) ||
 || || (`0/1` for Weekday/Weekend <br> `0`...`6` for Monday...Sunday) || (`0`...`3` index within the day) || || || ||
 
 == Notes ==
