@@ -1,0 +1,171 @@
+#summary An example of creating a new Perl script to control the thermostats
+#labels Phase-Design,Phase-Implementation
+
+= Example of Creating a New Perl Script =
+
+The Perl modules within this project provide support for reading and writing all of the thermostats' settings and status that can be accessed via their iPhone interface. It is relatively simple to create new scripts using these libraries.
+
+To illustrate the process we will create a new script called `heatmiser_on.pl` that sets the target temperature of a single thermostat to the value specified on the command line.
+
+== Getting Started ==
+
+The script starts with a standard hashbang (`#!`) line specifying that the Perl interpreter should be used to run the program:
+<code language="perl">
+#!/usr/bin/perl</code>
+
+To help with debugging and catch typos quickly turn on some extra diagnostics (this is optional, but recommended):
+<code language="perl">
+use strict;
+use warnings;</code>
+
+Add the script's directory to the search path for loading Perl modules:
+<code language="perl">
+use Cwd 'abs_path';
+use File::Basename;
+use lib dirname(abs_path $0);</code>
+
+== Parsing Configuration Options ==
+
+The first activity is to parse the options specified on the command line and to combine them with any configuration file that may exist.
+
+The script will optionally take the thermostat's hostname and PIN code, but will always require the temperature to be specified:
+<code language="nocode">
+./heatmiser_on.pl -h heatmiser -p 1234 25</code>
+
+These parameters will be processed using the [http://perldoc.perl.org/Getopt/Std.html Getopt::Std] library that comes with all Perl distributions. This is suitable for simple scripts, but can be easily substituted if more advanced parsing is required.
+<code language="perl">
+use Getopt::Std;
+
+my ($prog) = $0 =~ /([^\\\/]+$)/;
+sub VERSION_MESSAGE { print "Heatmiser Wi-Fi Thermostat Set Temperature v1\n"; }
+sub HELP_MESSAGE { print "Usage: $prog [-h <host>] [-p <pin>] <temperature>\n"; }
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+our ($opt_h, $opt_p);
+getopts('h:p:');</code>
+
+At this point `$opt_h` and `$opt_p` will contain the hostname and PIN code if specified on the command line (or will be set to `undef` if those parameters were not specified). The temperature parameter will be left in the `@ARGV` array, so extract that too:
+<code language="nocode">
+die "No temperature specified\n" unless scalar @ARGV == 1 and $ARGV[0] =~ /^\d+$/;
+my $temperature = $ARGV[0];</code>
+
+The next step is to read the configuration file to pick up default values. The `heatmiser_config.pm` library handles this, so include it in the script:
+<code language="nocode">
+use heatmiser_config;</code>
+
+The `/etc/heatmiser.conf` and `~/.heatmiser` configuration files are automatically loaded; it is not necessary to load them explicitly. Use the command line parameters to override settings from the configuration files:
+<code language="nocode">
+heatmiser_config::set(host => [h => $opt_h], pin => [p => $opt_p]);</code>
+
+This specifies two configuration options that should be set. Taking the first as an example, it is setting a configuration option called `host` based on the `$opt_h` value extracted from the command line. If `$opt_h` is `undef` then it will leave the value obtained from the configuration file. If the configuration file also did not specify a value then an error will be reported, suggesting that a value should be set either via a `HOST <value>` entry in a configuration file or an `-h <value>` command line switch.
+
+The scripts use several [ConfigurationOptions standard configuration options], but new ones can be added simply by setting their values in the same way. A few of the standard options are allowed to not have values set, but any new ones are required to have a value otherwise an error will be reported.
+
+The `host` configuration option is treated specially. It is parsed as a space-separated list of host names and returned as an array reference when its value is requested.
+
+== Reading from the Thermostat ==
+
+The main Perl module used to communicate with the thermostat is `heatmiser_wifi.pm` so include it in the script:
+<code language="nocode">
+use heatmiser_wifi;</code>
+
+Create an object to handle communication with the thermostat:
+<code language="nocode">
+my $heatmiser = new heatmiser_wifi(host => heatmiser_config::get_item('host')->[0],
+                                   heatmiser_config::get(qw(pin)));</code>
+
+The constructor for the `heatmiser_wifi` object is passed a hash with two `(key => value)` pairs:
+ * The first is the `host` (IP address or hostname) to connect to, which is set to the first entry of the array of hosts that has been configured.
+ * The second is the `pin` (PIN code) for the thermostat's iPhone interface. The `heatmiser_config::get` method takes a list of configuration option names and returns a hash mapping those names to values.
+
+The created object can then be used to read the thermostat's Device Control Block (DCB):
+<code language="nocode">
+my @pre_dcb = $heatmiser->read_dcb();</code>
+
+The raw DCB is an array of octets as described in the [HeatmiserProtocol Heatmiser V3 System Protocol documentation]. To make it easier to process, this is converted into a [PerlDCBDataStructure more meaningful Perl data structure] allowing the current target temperature to be displayed:
+<code language="nocode">
+my $pre_status = $heatmiser->dcb_to_status(@pre_dcb);
+my $units = $pre_status->{config}->{units};
+print "Before: $pre_status->{heating}->{target}$units\n";</code>
+
+== Writing to the Thermostat ==
+
+Setting the thermostat's target temperature is essentially the reverse of the procedure used to read it. The first step is to convert a description of the required settings into the corresponding DCB array:
+<code language="nocode">
+my @items = $heatmiser->status_to_dcb($pre_status,
+                                      enabled => 1,
+                                      runmode => 'heating',
+                                      holiday => { enabled => 0 },
+                                      heating => { target => $temperature });
+</code>
+
+The decoded DCB read earlier from the thermostat is required to be able to format the DCB correctly since its format varies between different models.
+
+To ensure that the thermostat is active it is also being switched on (`enabled => 1`), set to normal heating mode (`runmode => 'heating'`) instead of frost protection, and any holiday is cancelled (`holiday => { enabled => 0 }`). Obviously the temperature is also set to the specified value (`heating => { target => $temperature }`).
+
+Note that only some of the settings can be written via the thermostat's iPhone interface.
+
+The DCB can then be written to the thermostat to set the temperature:
+<code language="nocode">
+my @post_dcb = $heatmiser->write_dcb(@items);
+</code>
+
+This also reads the DCB again, so the target temperature that has been set can be displayed:
+<code language="nocode">
+my $post_status = $heatmiser->dcb_to_status(@post_dcb);
+print "After:  $post_status->{heating}->{target}$units\n";</code>
+
+== The Final Script ==
+
+Putting all of the pieces together, here is the final script to allow the thermostat's target temperature to be set from the command line:
+
+<code language="nocode">
+#!/usr/bin/perl
+
+# Catch errors quickly
+use strict;
+use warnings;
+
+# Allow use of modules in the same directory
+use Cwd 'abs_path';
+use File::Basename;
+use lib dirname(abs_path $0);
+
+# Useful libraries
+use Getopt::Std;
+use heatmiser_config;
+use heatmiser_wifi;
+
+# Command line options
+my ($prog) = $0 =~ /([^\\\/]+$)/;
+sub VERSION_MESSAGE { print "Heatmiser Wi-Fi Thermostat Set Temperature v1\n"; }
+sub HELP_MESSAGE { print "Usage: $prog [-h <host>] [-p <pin>] <temperature>\n"; }
+$Getopt::Std::STANDARD_HELP_VERSION = 1;
+our ($opt_h, $opt_p);
+getopts('h:p:');
+die "No temperature specified\n" unless scalar @ARGV == 1 and $ARGV[0] =~ /^\d+$/;
+my $temperature = $ARGV[0];
+heatmiser_config::set(host => [h => $opt_h], pin => [p => $opt_p]);
+
+# Connect to the first configured or specified thermostat
+my $heatmiser = new heatmiser_wifi(host => heatmiser_config::get_item('host')->[0],
+                                   heatmiser_config::get(qw(pin)));
+my @pre_dcb = $heatmiser->read_dcb();
+my $pre_status = $heatmiser->dcb_to_status(@pre_dcb);
+my $units = $pre_status->{config}->{units};
+print "Before: $pre_status->{heating}->{target}$units\n";
+
+# Set the temperature, ensuring that the heating is enabled
+my @items = $heatmiser->status_to_dcb($pre_status,
+                                      enabled => 1,
+                                      runmode => 'heating',
+                                      holiday => { enabled => 0 },
+                                      heating => { target => $temperature });
+my @post_dcb = $heatmiser->write_dcb(@items);
+my $post_status = $heatmiser->dcb_to_status(@post_dcb);
+print "After:  $post_status->{heating}->{target}$units\n";
+
+# That's all folks
+exit;
+</code>
+
+Hopefully this provides sufficient introduction to be able to produce new scripts for interrogating or controlling the thermostats...
