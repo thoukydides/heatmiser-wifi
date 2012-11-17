@@ -3,7 +3,7 @@
 
 = Example of Creating a New Perl Script =
 
-The Perl modules within this project provide support for reading and writing all of the thermostats' settings and status that can be accessed via their iPhone interface. It is relatively simple to create new scripts using these libraries.
+The Perl modules within this project provide support for reading and writing all of the thermostats' settings and status that can be accessed via their Wi-Fi system protocol interface. It is relatively simple to create new scripts using these libraries.
 
 To illustrate the process we will create a new script called `heatmiser_on.pl` that sets the target temperature of a single thermostat to the value specified on the command line.
 
@@ -75,13 +75,13 @@ my $heatmiser = new heatmiser_wifi(host => heatmiser_config::get_item('host')->[
 
 The constructor for the `heatmiser_wifi` object is passed a hash with two `(key => value)` pairs:
  * The first is the `host` (IP address or hostname) to connect to, which is set to the first entry of the array of hosts that has been configured.
- * The second is the `pin` (PIN code) for the thermostat's iPhone interface. The `heatmiser_config::get` method takes a list of configuration option names and returns a hash mapping those names to values.
+ * The second is the `pin` (PIN access code) for the thermostat's Wi-Fi system protocol interface. The `heatmiser_config::get` method takes a list of configuration option names and returns a hash mapping those names to values.
 
 The created object can then be used to read the thermostat's Device Control Block (DCB):
 <code language="nocode">
 my @pre_dcb = $heatmiser->read_dcb();</code>
 
-The raw DCB is an array of octets as described in the [HeatmiserProtocol Heatmiser V3 System Protocol documentation]. To make it easier to process, this is converted into a [PerlDCBDataStructure more meaningful Perl data structure] allowing the current target temperature to be displayed:
+The raw DCB is an array of octets exactly as returned by the thermostat. To make it easier to process, this is converted into a more meaningful Perl data structure, allowing the current target temperature to be displayed:
 <code language="nocode">
 my $pre_status = $heatmiser->dcb_to_status(@pre_dcb);
 my $units = $pre_status->{config}->{units};
@@ -102,7 +102,7 @@ The decoded DCB read earlier from the thermostat is required to be able to forma
 
 To ensure that the thermostat is active it is also being switched on (`enabled => 1`), set to normal heating mode (`runmode => 'heating'`) instead of frost protection, and any holiday is cancelled (`holiday => { enabled => 0 }`). Obviously the temperature is also set to the specified value (`heating => { target => $temperature }`).
 
-Note that only some of the settings can be written via the thermostat's iPhone interface.
+Note that only some of the settings can be written via the thermostat's Wi-Fi system protocol interface.
 
 The DCB can then be written to the thermostat to set the temperature:
 <code language="nocode">
@@ -168,4 +168,4 @@ print "After:  $post_status->{heating}->{target}$units\n";
 exit;
 </code>
 
-Hopefully this provides sufficient introduction to be able to produce new scripts for interrogating or controlling the thermostats...
+Hopefully this provides sufficient introduction to be able to produce new scripts for interrogating or controlling the thermostats. Refer to the [HeatmiserProtocol Heatmiser V3 System Protocol documentation] and [PerlDCBDataStructure Perl DCB data structure documentation] for details of all the settings and status that can be read or written.
