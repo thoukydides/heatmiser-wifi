@@ -31,7 +31,7 @@ The following options can be configured:
 || `HOST` || `-h` _hostname_ || || Space separated list of IP addresses or hostnames for the thermostats (also used as database key, so should ideally be short and invariant) ||
 || `LOGFILE` || `-l` _filename_ || `/var/log/heatmiser` || The name of the file that the daemon should use for logging its operation ||
 || `LOGSECONDS` || `-i` _seconds_ || `60` || The interval in seconds between logging the thermostat's data to the database ||
-|| `PIN` || `-p` _pincode_ || || PIN code for the thermostat's iPhone interface ||
+|| `PIN` || `-p` _pincode_ || || PIN access code for the thermostat's Wi-Fi system protocol interface ||
 || `VERBOSE` || `-v` || `0` || Set to `1` to output additional information about the scripts' operation ||
 || `WKEY` || `-k` _apikey_ || || API key for the online weather service (only required for `metoffice` and `wunderground`) ||
 || `WLOCATION` || `-g` _location_ || || Location to request from the online weather service in the appropriate format for the service being used ||
