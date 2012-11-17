@@ -57,7 +57,7 @@ sudo cpanm CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON LWP::UserAgent 
 That should be all that's necessary for basic operation. Test the connection to the thermostat by running:
 <code language="sh">
 ~/heatmiser-wifi-read-only/bin/heatmiser.pl -h heatmiser -p 1234</code>
-where `heatmiser` should be changed to the IP address or hostname of the thermostat, and `1234` should be changed to the PIN code selected for the thermostat's iPhone interface.
+where `heatmiser` should be changed to the IP address or hostname of the thermostat, and `1234` should be changed to the PIN access code selected for the thermostat's Wi-Fi system protocol interface (as used by the iPhone/iPad and Android apps).
 
 This should display the current status of the thermostat:
 <blockquote><pre>
