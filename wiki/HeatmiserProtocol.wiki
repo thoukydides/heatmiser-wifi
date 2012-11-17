@@ -3,7 +3,7 @@
 
 = Heatmiser V3 System Protocol =
 
-Heatmiser Wi-Fi thermostats expose two interfaces accessible via TCP/IP: an embedded web server running on port 80, and an "iPhone" interface on port 8068. The latter interface is used by this software. It is a variant of the Heatmiser V3 System Protocol, running over TCP/IP rather than a serial link. For the RS485 variant of the protocol see Neil Trimboy's [http://code.google.com/p/heatmiser-monitor-control heatmiser-monitor-control] project.
+Heatmiser Wi-Fi thermostats expose two interfaces accessible via TCP/IP: an embedded web server running on port 80, and a Wi-Fi system protocol on port 8068. The latter interface is used by this software, as well as by Heatmiser's own iPhone/iPad and Android apps. It is a variant of the Heatmiser V3 System Protocol, running over TCP/IP rather than a serial link. For the RS485 variant of the protocol see Neil Trimboy's [http://code.google.com/p/heatmiser-monitor-control heatmiser-monitor-control] project.
 
 [http://www.heatmiser.co.uk/web/index.php/docs/viewcategory/14-custom-integration Heatmiser V3 System Protocol documentation]
 
