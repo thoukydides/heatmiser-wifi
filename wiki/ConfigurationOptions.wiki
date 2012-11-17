@@ -12,7 +12,7 @@ Each script searches for configuration options in the following sequence (with t
 
 == File Format ==
 
-A minimal`/etc/heatmiser.conf` or `~/.heatmiser` configuration file to connect to thermostat with hostname `heatmiser` using PIN code `1234` would look like:
+A minimal`/etc/heatmiser.conf` or `~/.heatmiser` configuration file to connect to thermostat with hostname `heatmiser` using PIN access code `1234` would look like:
 <code language="nocode">
 HOST        heatmiser
 PIN         1234</code>
