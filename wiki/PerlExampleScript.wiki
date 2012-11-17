@@ -28,7 +28,7 @@ use lib dirname(abs_path $0);</code>
 
 The first activity is to parse the options specified on the command line and to combine them with any configuration file that may exist.
 
-The script will optionally take the thermostat's hostname and PIN code, but will always require the temperature to be specified:
+The script will optionally take the thermostat's hostname and PIN access code, but will always require the temperature to be specified:
 <code language="nocode">
 ./heatmiser_on.pl -h heatmiser -p 1234 25</code>
 
@@ -43,7 +43,7 @@ $Getopt::Std::STANDARD_HELP_VERSION = 1;
 our ($opt_h, $opt_p);
 getopts('h:p:');</code>
 
-At this point `$opt_h` and `$opt_p` will contain the hostname and PIN code if specified on the command line (or will be set to `undef` if those parameters were not specified). The temperature parameter will be left in the `@ARGV` array, so extract that too:
+At this point `$opt_h` and `$opt_p` will contain the hostname and PIN access code if specified on the command line (or will be set to `undef` if those parameters were not specified). The temperature parameter will be left in the `@ARGV` array, so extract that too:
 <code language="nocode">
 die "No temperature specified\n" unless scalar @ARGV == 1 and $ARGV[0] =~ /^\d+$/;
 my $temperature = $ARGV[0];</code>
