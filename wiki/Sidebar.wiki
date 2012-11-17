@@ -22,6 +22,7 @@
    * [http://www.heatmiser.co.uk/web/index.php/wifi-thermostats Wi-Fi Thermostats]
    * [http://www.heatmisershop.co.uk/ Shop]
    * [http://itunes.apple.com/app/heatmiser-wifi-thermostat/id461728950 iPhone App]
+   * [https://play.google.com/store/apps/details?id=com.stickmanmobile.engineroom.heatmiser Android App]
    * [http://www.facebook.com/pages/Heatmiser/254790094531348 Facebook]
    * [http://twitter.com/#!/heatmiseruk Twitter]
    * [http://www.heatmiser.co.uk/web/index.php/docs/viewcategory/14-custom-integration V3 Protocol]
