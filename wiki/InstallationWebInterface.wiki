@@ -192,7 +192,7 @@ If everything has been installed correctly then this should draw a chart with th
 
 <div align=center> http://heatmiser-wifi.googlecode.com/svn/wiki/chart-temperatures.png </div>
 
-If the page completely fails to load then it is likely to be due to Apache's configuration for `/home/*/public_html` directories. If a *Loading...* message is displayed indefinitely then it is likely to be due to Apache's configuration for symbolic links to cgi-bin scripts. Either way, look at the last few lines of the `/var/log/apache2/error-log` file for clues.
+If the page completely fails to load then it is likely to be due to Apache's configuration for `/home/*/public_html` directories. If the page loads but just displays an empty list of thermostats then either JavaScript is disabled in the web browser or the `.js` files have not been properly installed. If a *Loading...* message is displayed indefinitely then it is likely to be due to Apache's configuration for symbolic links to cgi-bin scripts. Either way, look at the last few lines of the `/var/log/apache2/error-log` file for clues.
 
 The [WebInterfaceLegend Web Interface Legend] explains the meaning of the different lines and flags that might be displayed on the chart.
 
