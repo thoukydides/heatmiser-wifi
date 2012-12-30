@@ -1,0 +1,74 @@
+#summary Troubleshooting when something doesn't work
+#labels Phase-Deploy
+
+= Installation Troubleshooting =
+
+== Web Interface Problems ==
+
+Most problems with the web interface not working are likely to be due to the configuration of the Apache web server or the installation of the !JavaScript files.
+
+=== "Could not find <i>webserver</i>" or "This page can't be displayed" Error ===
+
+If the web browser is unable to find the web server then it is most likely to be due to either the URL being mistyped or address resolution not working on the local network.
+
+Check that the URL has been correctly entered. If it has then try ping'ing the server from a command line on the same machine as the web browser:
+
+<code language=sh>
+ping webserver</code>
+<blockquote><pre>
+Pinging webserver [192.168.0.42] with 32 bytes of data:
+Reply from 192.168.0.42: bytes=32 time<1ms TTL=64
+Reply from 192.168.0.42: bytes=32 time<1ms TTL=64
+Reply from 192.168.0.42: bytes=32 time<1ms TTL=64
+Reply from 192.168.0.42: bytes=32 time<1ms TTL=64
+
+Ping statistics for 192.168.0.42:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 0ms, Average = 0ms</pre></blockquote>
+
+If the problem is with address resolution then either use the server's IP address, e.g. `http://192.168.0.42/~user/heatmiser-wifi/`, or add an entry to the computer's `hosts` file ('%!WinDir%\hosts' or '%!SystemRoot%\system32\drivers\etc\hosts' on Windows, `/etc/hosts` on Linux and recent versions of Mac OS X).
+
+=== "Could not connect to <i>webserver</i>" or "This page can't be displayed" Error ===
+
+If the web browser can resolve the webserver's address, but connect to the Apache server, then it is likely that the server is not running. Start it using:
+
+<code language=sh>
+sudo /etc/init.d/apache2 start</code>
+<blockquote><pre>
+* Starting web server apache2   [ OK ] </pre></blockquote>
+
+=== "Not Found" Error ===
+
+If the web server returns an error page indicating that the requested URL was not found then it is likely to be due to either Apache not being configured properly or the web interface files not being properly installed.
+
+Verify that the Apache `userdir` module is installed (required to serve files in `/home/*/public_html` directories) by checking that the corresponding symbolic links exist:
+<code language=sh>
+atompc:/etc/apache2/mods-enabled> ls -l /etc/apache2/mods-enabled/userdir.*</code>
+<blockquote><pre>
+lrwxrwxrwx 1 root root 30 Mar 27  2011 /etc/apache2/mods-enabled/userdir.conf -> ../mods-available/userdir.conf
+lrwxrwxrwx 1 root root 30 Mar 27  2011 /etc/apache2/mods-enabled/userdir.load -> ../mods-available/userdir.load</pre></blockquote>
+
+If those symbolic links exist then check the last few lines of the `/var/log/apache2/error.log` file for any reports of files that do not exist. Either correctly install the files at the reported locations or correct the URL to access the files where they have been installed.
+
+The `/var/log/apache/access.log` file may provide additional clues.
+
+=== "!JavaScript is Disabled" Error ===
+
+If the browser displays a message stating that !JavaScript is required then ensure that the browser is configured to allow all sites to run !JavaScript. If the browser being used does not support !JavaScript then use a different browser.
+
+=== Blank Page ===
+
+If the web browser displays a blank page then it is probably due to the `highstock.js` file not being properly installed. Check the last few lines of the `/var/log/apache2/error.log` file for any reports of files that do not exist. Either correctly install the files at the reported locations or correct the URL to access the files where they have been installed.
+
+=== Empty Thermostat List ===
+
+If the web browser displays a page that is blank other than a `Thermostat:` label and an empty drop-down list then it is probably due to the `jquery-1.7.2.min.js` file not being properly installed. Check the last few lines of the `/var/log/apache2/error.log` file for any reports of files that do not exist. Either correctly install the files at the reported locations or correct the URL to access the files where they have been installed.
+
+=== `You don't have permission to access /cgi-bin/heatmiser/ajax.pl` Message ===
+
+If the web page displays a message that access to the CGI script is forbidden then it is probably due to the `FollowSymLinks` not being correctly specified in the `/etc/apache2/sites-available/default` file.  Check the last few lines of the `/var/log/apache2/error.log` file for detailed error messages. Configure Apache appropriately and restart it.
+
+=== `CGI script not found on server` Message ===
+
+If the web page displays a message that the CGI script cannot be found then it is probably due to the `ajax.pl` symbolic link not being properly created. Check the last few lines of the `/var/log/apache2/error.log` file for any reports of files that do not exist. Create the symbolic link if it does not exist, and ensure that it points to the correctly installed files.
