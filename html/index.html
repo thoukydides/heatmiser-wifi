@@ -286,7 +286,9 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
         } else if (textStatus === 'abort') {
           msg = 'AJAX request was aborted';
         } else {
-          msg = 'Unexpected error:\n' + jqXHR.responseText;
+          var response = $(jqXHR.responseText).text();
+          if (response == '') response = jqXHR.responseText;
+          msg = 'Unexpected error: ' + response.trim().replace(/\n+/g, ', ');
         }
 
         // Display the error description as the chart's subtitle
