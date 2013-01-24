@@ -6,7 +6,7 @@
 <table border=0>
 <tr><td>
 == Heatmiser ==
-This software is based on the [http://www.heatmiser.co.uk/web/index.php/docs/viewcategory/14-custom-integration Heatmiser V3 System Protocol documentation].
+This software is based on the [http://www.heatmiser.com/web/index.php/support/manuals-and-documents/viewcategory/27-network-protocol Heatmiser V3 System Protocol documentation].
 <td>
 http://www.heatmiser.co.uk/web/templates/ja_drimia/images/logo.gif
 
