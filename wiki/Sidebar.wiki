@@ -19,13 +19,13 @@
  * [http://code.google.com/p/heatmiser-wifi/source/checkout Download]
  * [http://code.google.com/p/heatmiser-wifi/w/list List & Search Wiki Pages]
  * *Heatmiser Websites*
-   * [http://www.heatmiser.co.uk/web/index.php/wifi-thermostats Wi-Fi Thermostats]
+   * [http://www.heatmiser.com/web/index.php/thermostats/wifi-thermostat-series Wi-Fi Thermostats]
    * [http://www.heatmisershop.co.uk/ Shop]
    * [http://itunes.apple.com/app/heatmiser-wifi-thermostat/id461728950 iPhone/iPad App]
    * [https://play.google.com/store/apps/details?id=com.stickmanmobile.engineroom.heatmiser Android App]
    * [http://www.facebook.com/pages/Heatmiser/254790094531348 Facebook]
    * [http://twitter.com/#!/heatmiseruk Twitter]
-   * [http://www.heatmiser.co.uk/web/index.php/docs/viewcategory/14-custom-integration V3 Protocol]
+   * [http://www.heatmiser.com/web/index.php/support/manuals-and-documents/viewcategory/27-network-protocol V3 Protocol]
  * *Related Projects*
    * [http://code.google.com/p/heatmiser-control/ heatmiser-control]
    * [http://code.google.com/p/heatmiser-monitor-control/ heatmiser-monitor-control]
