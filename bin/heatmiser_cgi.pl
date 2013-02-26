@@ -155,7 +155,9 @@ eval
 if ($@)
 {
     # Include the error message in the result
-    my $err = ($@ =~ /^(.*?)\s*$/)[0];
+    my $err = $@;
+    $err =~ s/\s*$//;
+    $err =~ s/\s*[\n\r]\s*/ - /g;
     $results{error} = $err;
     print STDERR "Error during database access: $err\n";
 }
