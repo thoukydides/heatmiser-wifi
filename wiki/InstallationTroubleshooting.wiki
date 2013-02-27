@@ -65,6 +65,10 @@ If the web browser displays a blank page then it is probably due to the `highsto
 
 If the web browser displays a page that is blank other than a `Thermostat:` label and an empty drop-down list then it is probably due to the `jquery-1.7.2.min.js` file not being properly installed. Check the last few lines of the `/var/log/apache2/error.log` file for any reports of files that do not exist. Either correctly install the files at the reported locations or correct the URL to access the files where they have been installed.
 
+=== "No value specified for configuration item < host > - Add 'HOST < value >' to /etc/heatmiser.conf or /var/www/.heatmiser" Message ===
+
+If the web page displays a message that a configuration item does not have a value for a configuration item then check that the `/etc/heatmiser.conf` file exists and contains an appropriate value for the item reported. Check whether `heatmiser.pl` works correctly without any parameters.
+
 === "You don't have permission to access /cgi-bin/heatmiser/ajax.pl" Message ===
 
 If the web page displays a message that access to the CGI script is forbidden then it is probably due to the `FollowSymLinks` not being correctly specified in the `/etc/apache2/sites-available/default` file.  Check the last few lines of the `/var/log/apache2/error.log` file for detailed error messages. Configure Apache appropriately and restart it.
