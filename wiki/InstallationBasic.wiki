@@ -46,6 +46,7 @@ Ensure that essential Perl packages are installed. For fully featured systems us
 <code language=sh>
 sudo apt-get install build-essential libxml-simple-perl libjson-perl
 sudo cpan CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON LWP::UserAgent Proc::Daemon Proc::PID::File Time::HiRes XML::Simple</code>
+Answer `yes` to any questions about whether the tool should configure itself and choose mirror sites automatically.
 
 For smaller platforms, such as the [http://www.raspberrypi.org/ Raspberry Pi], it may be better to use `cpanminus` instead:
 <code language=sh>
