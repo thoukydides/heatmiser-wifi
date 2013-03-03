@@ -49,12 +49,12 @@ sudo cpan CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON LWP::UserAgent P
 
 Answer `yes` to any questions about whether the tool should configure itself and choose mirror sites automatically.
 
-This will take a *very* long time on smaller platforms such as the [http://www.raspberrypi.org/ Raspberry Pi]. On such platforms it may be quicker to use `cpanminus` instead:
+On smaller platforms such as the [http://www.raspberrypi.org/ Raspberry Pi] it may be preferable to use `cpanminus` instead:
 <code language=sh>
 curl -L http://cpanmin.us | perl - --sudo App::cpanminus
 sudo apt-get install libxml-simple-perl
 sudo cpanm CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON LWP::UserAgent Proc::Daemon Proc::PID::File Time::HiRes XML::Simple</code>
-This should be faster, but some users have reported problems with its use. If it fails then use the `cpan` command listed above.
+However, some users have reported problems with its use. If it fails then use the `cpan` command listed above.
 
 == Test Basic Operation ==
 
