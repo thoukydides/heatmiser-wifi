@@ -29,7 +29,7 @@ Visit http://register.metoffice.gov.uk/register/datapoint and register for an ac
 
 ==== Location ====
 
-The location must be specified as a location ID. A complete list can be obtained from http://www.metoffice.gov.uk/premium/ddc/previewData.html by clicking on the *XML* link under the *Observations site list* heading.
+The location must be specified as a location ID. A complete list can be obtained from http://datapoint.metoffice.gov.uk/public/data/val/wxobs/all/xml/sitelist?key=hourly&key=12345678-1234-1234-1234-123456789ABC where `12345678-1234-1234-1234-123456789ABC` should be replaced by the API key as obtained above.
 
 <tr><td valign=top>
 ----
