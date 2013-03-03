@@ -186,11 +186,11 @@ unzip -j /tmp/highstock.zip js/highstock.js -d ~/public_html/heatmiser-wifi</cod
 
 == View Web Page ==
 
-Open the new web page in a web browser such as Chrome, Firefox, Internet Explorer or Safari. If Apache is running on a host called `webserver` then the URL should be something like `http://webserver/~user/heatmiser-wifi/`.
+Open the new web page in a web browser such as Chrome, Firefox, Internet Explorer or Safari. If Apache is running on a host called `webserver` then the URL should be something like `http://webserver/~user/heatmiser-wifi/`. For example, if both the server and browser are being run on a Raspberry Pi then the URL will be `http://localhost/~pi/heatmiser-wifi/`
 
 If everything has been installed correctly then this should draw a chart with the recent temperatures:
 
-<div align=center> http://heatmiser-wifi.googlecode.com/svn/wiki/chart-temperatures.png </div>
+<div align=center> http://heatmiser-wifi.googlecode.com/svn/wiki/chart-raspberrypi.png </div>
 
 If the page completely fails to load then it is likely to be due to Apache's configuration for `/home/*/public_html` directories. If the page loads but just displays an empty list of thermostats then either !JavaScript is disabled in the web browser or the `.js` files have not been properly installed. If a *Loading...* message is displayed indefinitely then it is likely to be due to Apache's configuration for symbolic links to cgi-bin scripts. Either way, look at the last few lines of the `/var/log/apache2/error-log` file for clues.
 
