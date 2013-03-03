@@ -19,14 +19,14 @@ If this is not shown then install it using:
 sudo apt-get update
 sudo apt-get install mysql-server</code>
 
-This is likely to prompt for a `root` password. Choose something memorable.
+This is likely to prompt for a `root` password; choose something memorable.
 
 == Create a MySQL User ==
 
 By default the daemon connects to a MySQL database called `heatmiser` as a local user also called `heatmiser`. These both needs to be created. Connect to the MySQL server using:
 <code language="sh>
 mysql -u root -p</code>
-Enter the MySQL `root` password when prompted. Then create the database and user:
+Enter the MySQL `root` password when prompted. This password is selected during the initial installation of MySQL and may be different to the main `root` account password. Then create the database and user:
 <code language="sql">
 CREATE DATABASE heatmiser;
 CREATE USER 'heatmiser'@'localhost';
@@ -118,7 +118,7 @@ As before, when done disconnect from the MySQL server:
 <code language="sql">
 QUIT;</code>
 
-By default the daemon logs the temperature every 60 seconds. This can be changed by adding a `LOGSECONDS` entry to the ` etc/heatmiser.conf` file specifying the interval in seconds between successive values.
+By default the daemon logs the temperature every 60 seconds. This can be changed by adding a `LOGSECONDS` entry to the ` e c/heatmiser.conf` file specifying the interval in seconds between successive values.
 
 Configure the daemon to start automatically when the computer is booted using:
 <code language="sh">
