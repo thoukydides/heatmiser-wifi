@@ -46,9 +46,10 @@ Ensure that essential Perl packages are installed. For fully featured systems us
 <code language=sh>
 sudo apt-get install build-essential libxml-simple-perl libjson-perl
 sudo cpan CGI Cwd DBI File::HomeDir Getopt::Std IO::Socket JSON LWP::UserAgent Proc::Daemon Proc::PID::File Time::HiRes XML::Simple</code>
+
 Answer `yes` to any questions about whether the tool should configure itself and choose mirror sites automatically.
 
-For smaller platforms, such as the [http://www.raspberrypi.org/ Raspberry Pi], it may be better to use `cpanminus` instead:
+This will take a *very* long time on smaller platforms such as the [http://www.raspberrypi.org/ Raspberry Pi]. On such platforms it may be quicker to use `cpanminus` instead:
 <code language=sh>
 curl -L http://cpanmin.us | perl - --sudo App::cpanminus
 sudo apt-get install libxml-simple-perl
@@ -88,7 +89,7 @@ Weekday   1: 07:00 21 deg C
 Weekend   1: 07:00 21 deg C
           2: 20:00 15 deg C</pre></blockquote>
 
-The error `Unable to create socket: Invalid argument` indicates that the hostname is wrong. The error `Incorrect PIN used` should be self explanatory.
+If a `Can't locate File/HomeDir.pm in @INC` (or similar) error is displayed then re-run the `cpan` or `cpanminus` command listed above. The error `Unable to create socket: Invalid argument` indicates that the hostname is wrong. The error `Incorrect PIN used` should be self explanatory.
 
 == Configuration File ==
 
