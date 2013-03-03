@@ -25,16 +25,17 @@ Check that Perl version 5 is installed using:
 perl -v</code>
 If it is already installed then it should output something like:
 <blockquote><pre>
-This is perl, v5.10.1 (*) built for x86_64-linux-gnu-thread-multi
+This is perl 5, version 14, subversion 2 (v5.14.2) built for arm-linux-gnueabihf-thread-multi-64int
+(with 75 registered patches, see perl -V for more detail)
 
- Copyright 1987-2009, Larry Wall
+ Copyright 1987-2011, Larry Wall
 
  Perl may be copied only under the terms of either the Artistic License or the
 GNU General Public License, which may be found in the Perl 5 source kit.
 
  Complete documentation for Perl, including FAQ lists, should be found on
 this system using "man perl" or "perldoc perl".  If you have access to the
-Internet, point your browser at http://www.perl.org/, the Perl Home Page.</pre></blockquote>
+Internet, point your browser at http://www.perl.org/, the Perl Home Page. </pre></blockquote>
 
 Otherwise install it using:
 <code language=sh>
