@@ -120,7 +120,7 @@ By default the daemon logs the temperature every 60 seconds. This can be changed
 
 Configure the daemon to start automatically when the computer is booted using:
 <code language="sh">
-sudo insserv /etc/init.d/heatmiser_daemon</code>
+sudo update-rc.d heatmiser_daemon defaults</code>
 
 = Plot Charts =
 
