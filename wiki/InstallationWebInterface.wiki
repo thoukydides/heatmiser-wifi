@@ -124,7 +124,7 @@ sudo update-rc.d heatmiser_daemon defaults</code>
 
 = Plot Charts =
 
-The final step of the installation is to set up a web page to plot charts of the temperature.
+The final step of the installation is to set up a web page to plot charts of the temperature. The following instructions are for the default option of Apache; there are alternative instructions for [InstallationWebInterfaceNginx Nginx Installation].
 
 == Install Apache ==
 
