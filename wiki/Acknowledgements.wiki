@@ -8,7 +8,7 @@
 == Heatmiser ==
 This software is based on the [http://www.heatmiser.com/web/index.php/support/manuals-and-documents/viewcategory/27-network-protocol Heatmiser V3 System Protocol documentation].
 <td>
-http://www.heatmiser.co.uk/web/templates/ja_drimia/images/logo.gif
+http://www.heatmiser.com/web/templates/theme995/images/logo/logo.png
 
 <tr><td>
 == Highstock ==
@@ -52,3 +52,4 @@ Thank you to:
  * Paul Whelan for providing feedback on the installation instructions and testing on a [http://www.raspberrypi.org/ Raspberry Pi].
  * [https://twitter.com/jamesmulcahy James Mulcahy] for also testing on a [http://www.raspberrypi.org/ Raspberry Pi].
  * [http://chris.gg/ Chris Barnes] for writing [http://chris.gg/2012/07/how-to-set-up-a-web-interface-for-a-heatmiser-wi-fi-thermostat-with-a-raspberry-pi/ instructions] for how to install on a [http://www.raspberrypi.org/ Raspberry Pi].
+ * [mailto:salnajjar@gmail.com Seri Al-Najjar] for writing [InstallationWebInterfaceNginx instructions] for how to install  using [http://wiki.nginx.org/Main Nginx] instead of Apache.
