@@ -4,7 +4,7 @@
  * Installation Instructions
    * [Installation Introduction]
    * [InstallationBasic Basic Setup]
-   * [InstallationWebInterface Web Interface]
+   * [InstallationWebInterface Web Interface] (or using  [InstallationWebInterfaceNginx Nginx])
    * [InstallationWeather Web Interface External Temperature]
    * [InstallationTimeSync Time Synchronisation]
  * Reference Information
