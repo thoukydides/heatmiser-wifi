@@ -1,0 +1,94 @@
+#summary Web interface installation instructions using Nginx
+#labels Phase-Deploy
+
+= Plot Charts via Nginx =
+
+The following instructions were provided by [mailto:salnajjar@gmail.com Seri Al-Najjar] for using [http://wiki.nginx.org/Main Nginx] instead of Apache. Follow the instructions for [InstallationWebInterface Logging to a Database] before continuing.
+
+----
+
+As the Heatmiser-!WiFi Perl web interface uses CGI scripts, and nginx only supports FCGI, to be able to get everything to work together, we need another server or daemon that nginx can talk to and proxy the CGI access to.
+
+The most lightweight solution I found for this was to UWSGI (be sure to check that your nginx install was built with uwsgi support).
+
+These instructions have been used and tested on Gentoo, however, it shouldn't be too complicated to modify them for other Linux distributions.
+
+== UWSGI Configuration ==
+
+Install uwsgi if you haven't done so already:
+<code language="sh">
+emerge -av uwsgi</code>
+
+Once installed, create an application specific configuration for proxying & interpreting CGI files:
+<code language="sh">
+cp /etc/conf.d/uwsgi /etc/conf.d/uwsgi.cgi</code>
+
+Modify the following lines in the `/etc/conf.d/uwsgi.cgi` file:
+<code language="sh">
+UWSGI_PROGRAM=/var/www/localhost/uwsgi
+UWSGI_XML_CONFIG=/var/www/localhost/uwsgi/cgi/config/config.xml
+UWSGI_LOG_FILE=/var/log/uwsgi/uwsgi.cgi.log</code>
+
+Create a folder structure to hold our UWSGI application and configuration:
+<code language="sh">
+mkdir -p /var/www/localhost/uwsgi/cgi/config</code>
+
+Create a configuration XML file for CGI proxying, this configuration file instructs UWSGI to listen on the loopback adapter on port 3128, to present a virtual `/cgi-bin` directory that serves the files located in `/var/www/localhost/cgi-bin`, and lastly, to only serve files that end with a `.cgi` or `.pl` extension:
+<code language="sh">
+vi /var/www/localhost/uwsgi/cgi/config/config.xml</code>
+<code language="xml">
+<uwsgi>
+
+    <plugins>cgi</plugins>
+
+    <socket>127.0.0.1:3128</socket>
+
+    <cgi>/cgi-bin=/var/www/localhost/cgi-bin</cgi>
+
+    <cgi-allowed-ext>.cgi</cgi-allowed-ext>
+
+    <cgi-allowed-ext>.pl</cgi-allowed-ext>
+
+</uwsgi></code>
+
+Lastly, create a init script instance to start the UWSGI CGI application, set it to start at boot and then start it manually for the time being:
+<code language="sh">
+cp /etc/init.d/uwsgi /etc/init.d/uwsgi.cgi
+rc-update add uwsgi.cgi default
+rc-service uwsgi.cgi start</code>
+
+UWSGI should now be fully configured and functional, listening on port 3128 and serving any CGI files that are located in `/var/www/localhost/cgi-bin`.
+
+== Configuring NGINX to interface with UWSGI ==
+Update your NGINX configurations HTTP section to add the following alias and redirect:
+<code language="text">
+location ~ /cgi-bin {
+    include uwsgi_params;
+    uwsgi_param REDIRECT_STATUS 200;
+    uwsgi_modifier1 9;
+    uwsgi_pass 127.0.0.1:3128;
+}</code>
+
+And restart NGINX:
+<code language="sh">
+rc-service nginx restart</code>
+
+== Configuring the Heatmiser Perl Web Application ==
+
+From the heatmiser-wifi/bin directory, copy the following files into the web cgi-bin directory (`/var/www/localhost/cgi-bin/`):
+  * `ajax.pl`
+  * `heatmiser_config.pm`
+  * `heatmiser_db.pm`
+
+From the `heatmiser-wifi/bin` directory, copy the `index.html` file to whatever directory in your web root you want to make the interface available from (i.e.):
+<code language="sh">
+mkdir /var/www/localhost/htdocs/thermostat/
+cp theheatmiser-wifi/bin/index.html /var/www/localhost/htdocs/thermostat/index.html</code>
+
+And download the jquery and highstock javascript libraries:
+<code language="sh">
+wget http://code.jquery.com/jquery-1.7.2.min.js -O /var/www/localhost/htdocs/thermostat/jquery-1.7.2.min.js
+wget http://www.highcharts.com/downloads/zips/Highstock-1.1.5.zip -O /tmp/highstock.zip
+unzip -j /tmp/highstock.zip js/highstock.js -d /var/www/localhost/htdocs/thermostat/</code>
+
+You should now be able to browse to your server/thermostat to view the web interface.
