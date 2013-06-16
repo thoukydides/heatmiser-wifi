@@ -20,7 +20,7 @@ http://shop.highsoft.com/skin/frontend/silver/styled/images/logo.png
 == jQuery ==
 The web page also makes use of the [http://jquery.org/ jQuery] !JavaScript library.
 <td>
-http://jquery.org/wp-content/uploads/2010/01/JQuery_logo_color_onwhite-300x74.png
+http://upload.wikimedia.org/wikipedia/en/thumb/9/9e/JQuery_logo.svg/250px-JQuery_logo.svg.png
 
 <tr><td>
 == UK Met Office !DataPoint ==
@@ -53,3 +53,4 @@ Thank you to:
  * [https://twitter.com/jamesmulcahy James Mulcahy] for also testing on a [http://www.raspberrypi.org/ Raspberry Pi].
  * [http://chris.gg/ Chris Barnes] for writing [http://chris.gg/2012/07/how-to-set-up-a-web-interface-for-a-heatmiser-wi-fi-thermostat-with-a-raspberry-pi/ instructions] for how to install on a [http://www.raspberrypi.org/ Raspberry Pi].
  * [mailto:salnajjar@gmail.com Seri Al-Najjar] for writing [InstallationWebInterfaceNginx instructions] for how to install  using [http://wiki.nginx.org/Main Nginx] instead of Apache.
+ * [http://thelifeofraspberrypi.blogspot.co.uk/ David Black] for building on this project with Siri integration and other extensions.
