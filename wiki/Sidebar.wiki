@@ -12,6 +12,7 @@
    * [WebInterfaceLegend Web Interface Legend]
    * [DatabaseSchema Database Schema]
    * [PerlExampleScript Perl Script Example]
+   * [JSONControlScript JSON Control Interface]
    * [PerlDCBDataStructure Perl DCB Data Structure]
    * [HeatmiserProtocol Heatmiser Protocol]
  * [Acknowledgements]
