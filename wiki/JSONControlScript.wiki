@@ -1,0 +1,113 @@
+#summary Controlling the thermostats from other languages using JSON
+#labels Phase-Design,Phase-Implementation
+
+= JSON Control Interface =
+
+Sometimes it is necessary to use languages other than Perl, for example [https://github.com/plamoni/SiriProxy SiriProxy] plugins must be written in [http://www.ruby-lang.org Ruby]. To assist integration of these scripts with other languages the `heatmiser_json.pl` script provides full read/write access to the thermostats via a [http://www.json.org/ JavaScript Object Notation (JSON)] encoding. If, however, it is not necessary to use a different language then the [PerlExampleScript Perl example script] might be a better starting point.
+
+== Reading from the Thermostat ==
+
+The simplest usage of the script is to run it without any parameters:
+<code language="sh">
+~/heatmiser-wifi-read-only/bin/heatmiser_json.pl</code>
+
+This reads the status from all configured thermostats and outputs the full contents of their Device Control Block (DCB) in JSON encoding:
+<blockquote><pre>
+{
+   "heatmiser" : {
+      "comfort" : [
+         [
+            {
+               "target" : 18,
+               "time" : "05:30:00"
+            },
+            {
+               "target" : 17,
+               "time" : "06:30:00"
+            },
+            {
+               "target" : 21,
+               "time" : "16:00:00"
+            },
+            {
+               "target" : 15,
+               "time" : "20:00:00"
+            }
+         ],
+         [
+            {
+               "target" : 21,
+               "time" : "07:00:00"
+            },
+            {
+               "target" : 15,
+               "time" : "20:00:00"
+            }
+         ]
+      ],
+      "config" : {
+         "caloffset" : 0,
+         "locklimit" : 0,
+         "optimumstart" : 3,
+         "outputdelay" : 0,
+         "progmode" : "5/2",
+         "sensor" : "internal",
+         "switchdiff" : 0.5,
+         "units" : "C"
+      },
+      "dcblength" : 72,
+      "enabled" : 1,
+      "errorcode" : null,
+      "frostprotect" : {
+         "enabled" : 1,
+         "target" : 12
+      },
+      "heating" : {
+         "hold" : 0,
+         "on" : 0,
+         "target" : 21
+      },
+      "holiday" : {
+         "enabled" : 0,
+         "time" : "2013-06-20 18:05:00"
+      },
+      "keylock" : 0,
+      "product" : {
+         "model" : "PRT",
+         "vendor" : "Heatmiser",
+         "version" : 1.6
+      },
+      "rateofchange" : 81,
+      "runmode" : "frost",
+      "temperature" : {
+         "floor" : null,
+         "internal" : 22.2,
+         "remote" : null
+      },
+      "time" : "2013-06-20 18:05:18"
+   }
+}</pre></blockquote>
+
+The keys of the top level object are the hostnames of the thermostats. Any `undef` values are converted to `null` in the JSON encoding.
+
+The DCB for a single thermostat can be read by specifying a `-h` parameter with the IP address or hostname of the thermostat.
+
+== Writing to the Thermostat ==
+
+If any parameters are passed to the script (other than the `-h` and `-p` options) then they are parsed as items to write to the thermostat in JSON format. For example, to set the thermostat to 21 degrees:
+<code language="sh">
+~/heatmiser-wifi-read-only/bin/heatmiser_json.pl '{"heating":{"target":21}}'</code>
+
+To ensure that the thermostat is active it should also be switched on (`"enabled":1`), set to normal heating mode (`"runmode":"heating"`) instead of frost protection, and any holiday cancelled (`"holiday":{"enabled":0}`):
+<code language="sh">
+~/heatmiser-wifi-read-only/bin/heatmiser_json.pl '{"enabled":1,"runmode":"heating","holiday":{"enabled":0},"heating":{"target":21}}'</code>
+
+This writes the same setting to all configured thermostats. To control a single thermostat specify a `-h` parameter with the required IP address or hostname.
+
+The updated status of each thermostat is read after writing the specified settings and the full contents of their Device Control Block (DCB) output in JSON encoding.
+
+Note that only some of the settings can be written via the thermostat's Wi-Fi system protocol interface.
+
+== Next Steps ==
+
+Hopefully this provides sufficient information to be able to use this script for interrogating or controlling the thermostats from other lanugages. Refer to the [HeatmiserProtocol Heatmiser V3 System Protocol documentation] and [PerlDCBDataStructure Perl DCB data structure documentation] for details of all the settings and status that can be read or written.
