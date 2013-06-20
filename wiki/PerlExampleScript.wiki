@@ -3,7 +3,7 @@
 
 = Example of Creating a New Perl Script =
 
-The Perl modules within this project provide support for reading and writing all of the thermostats' settings and status that can be accessed via their Wi-Fi system protocol interface. It is relatively simple to create new scripts using these libraries.
+The Perl modules within this project provide support for reading and writing all of the thermostats' settings and status that can be accessed via their Wi-Fi system protocol interface. It is relatively simple to create new scripts using these libraries. Alternatively, there is a script that provides the same access from other languages using a [JSONControlScript JSON control interface].
 
 To illustrate the process we will create a new script called `heatmiser_on.pl` that sets the target temperature of a single thermostat to the value specified on the command line.
 
