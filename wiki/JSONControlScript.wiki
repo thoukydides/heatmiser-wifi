@@ -90,7 +90,7 @@ This reads the status from all configured thermostats and outputs the full conte
 
 The keys of the top level object are the hostnames of the thermostats. Any `undef` values are converted to `null` in the JSON encoding.
 
-The DCB for a single thermostat can be read by specifying a `-h` parameter with the IP address or hostname of the thermostat.
+The DCB for a single thermostat can be read by specifying an `-h` parameter with the IP address or hostname of the thermostat.
 
 == Writing to the Thermostat ==
 
@@ -102,12 +102,12 @@ To ensure that the thermostat is active it should also be switched on (`"enabled
 <code language="sh">
 ~/heatmiser-wifi-read-only/bin/heatmiser_json.pl '{"enabled":1,"runmode":"heating","holiday":{"enabled":0},"heating":{"target":21}}'</code>
 
-This writes the same setting to all configured thermostats. To control a single thermostat specify a `-h` parameter with the required IP address or hostname.
+This writes the same setting to all configured thermostats. To control a single thermostat specify an `-h` parameter with the required IP address or hostname.
 
 The updated status of each thermostat is read after writing the specified settings and the full contents of their Device Control Block (DCB) output in JSON encoding.
 
 Note that only some of the settings can be written via the thermostat's Wi-Fi system protocol interface.
 
-== Next Steps ==
+== Further Information ==
 
 Hopefully this provides sufficient information to be able to use this script for interrogating or controlling the thermostats from other lanugages. Refer to the [HeatmiserProtocol Heatmiser V3 System Protocol documentation] and [PerlDCBDataStructure Perl DCB data structure documentation] for details of all the settings and status that can be read or written.
