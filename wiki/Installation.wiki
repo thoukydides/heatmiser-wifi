@@ -1,5 +1,5 @@
-#summary Installation instructions
 #labels Phase-Deploy,Featured
+summary Installation instructions
 
 = Installation Introduction =
 
@@ -8,7 +8,14 @@ This software has been developed to run under Ubuntu 10.04.3 LTS and 12.04 LTS, 
 Start with:
   * [InstallationBasic Basic Setup]
 
-Continue with the other optional installation depending on requirements:
+Continue with the other optional installation steps depending on requirements:
   * [InstallationWebInterface Web Interface]
   * [InstallationWeather Web Interface External Temperature]
   * [InstallationTimeSync Time Synchronisation]
+  * [InstallationSiriProxy Voice Control via SiriProxy]
+
+Developers may be interested in the reference documentation:
+  * [DatabaseSchema Database Schema]
+  * [PerlExampleScript Perl Script Example]
+  * [JSONControlScript JSON Control Interface]
+  * [PerlDCBDataStructure Perl DCB Data Structure]
