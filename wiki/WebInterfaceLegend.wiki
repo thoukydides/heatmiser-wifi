@@ -10,37 +10,36 @@ Note that starting or restarting the daemon results in the current state of the 
 == Lines for Central Heating ==
 
 The following line styles and colours are used to show the various temperatures:
-|| *Line Style* || *Line Colour * || *Description* ||
-|| Thin solid || <font color="#FF0000">Red || Room temperature as measured by the thermostat (shown with blue/red shading below the line) ||
-|| Thick solid || <font color="#0000FF">Blue || Target temperature that the thermostat is/was trying to achieve ||
-|| Thick dotted || <font color="#0000FF">Blue || Comfort level programmed target temperature (shown even if the heating is switched off to provide a guide as to the preferred temperature profile) ||
-|| Thin dashed || Black || External temperature provided by an optional online weather service ||
-
-Additionally, orange bands are used to indicate when the thermostat has switched the heating on. The boiler will not generally be on for these full periods since it will have its own thermostat based on the water temperature.
+|| *Style* || *Description* ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-line-room.png   || Room temperature as measured by the thermostat ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-line-target.png || Target temperature that the thermostat is/was trying to achieve ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-line-comfort.png || Comfort level programmed target temperature (shown even if the heating is switched off to provide a guide as to the preferred temperature profile) ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-line-external.png || External temperature provided by an optional online weather service ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-band-heating-active.png || Thermostat has switched the heating on (the boiler will not generally be on for these full periods since it will have its own thermostat based on the water temperature) ||
 
 The small navigator chart shows the same room temperature data as the main chart, but for the full history that has been logged. This can be used to zoom in on the section of interest.
 
 == Flags for Central Heating ==
 
 The reason for changes to the target room temperature are indicated by circular flags just above the target temperature line:
-|| *Text* || *Circle Outline Colour* || *Description* ||
-|| `-` || Black || The thermostat is switched off ||
-|| `H*` || <font color="#00FFFF">Cyan || Holiday mode, frost protection enabled until return date ||
-|| `A*` || <font color="#00FFFF">Cyan || Away mode, frost protection enabled indefinitely ||
-|| `H` || <font color="#00FF00">Green || Temperature hold, for selected duration ||
-|| `M` || <font color="#00FF00">Green || Temperature adjusted manually, until next programmed comfort level ||
+|| *Flag* || *Description* ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-off.png  || The thermostat is switched off ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-holiday.png || Holiday mode, frost protection enabled until return date ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-away.png || Away mode, frost protection enabled indefinitely ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-hold.png || Temperature hold, for selected duration ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-manual.png || Temperature adjusted manually, until next programmed comfort level ||
 
 Two additional flags for normal timer operation are currently disabled, but can be displayed by uncommenting the relevant lines of the `index.html` file:
-|| *Text* || *Circle Outline Colour* || *Description* ||
-|| `C` || <font color="#0000FF">Blue || Target temperature is the programmed comfort level ||
-|| `P` || <font color="#0000FF">Blue || Optimum start has increased the target temperature ahead of the next programmed comfort level ||
+|| *Flag* || *Description* ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-comfort.png || Target temperature is the programmed comfort level ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-optimum.png || Optimum start has increased the target temperature ahead of the next programmed comfort level ||
 
 == Flags for Hot Water ==
 
 If the thermostat also controls hot water then changes to its state are indicated by square flags at the bottom of the chart:
-|| *Text* || *Rectangle Background Colour* || *Description* ||
-|| `-` || Black || The thermostat is switched off ||
-|| <font color="#FF0000">`T` || <font color=red>Red || Hot water is on, controlled by timer ||
-|| `t` || Black || Hot water is off, controlled by timer ||
-|| <font color="#FF0000">`M` || <font color=red>Red || Hot water is on, manual override ||
-|| `m` || Black || Hot water is off, manual override ||
+|| *Flag* || *Description* ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-off.png || The thermostat is switched off ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-timer-on.png || Hot water is on, controlled by timer ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-timer-off.png || Hot water is off, controlled by timer ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-manual-on.png || Hot water is on, manual override ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-manual-off.png || Hot water is off, manual override ||
