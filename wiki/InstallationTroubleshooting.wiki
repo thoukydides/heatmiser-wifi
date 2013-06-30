@@ -63,7 +63,7 @@ If the web browser displays a blank page then it is probably due to the `highsto
 
 === Empty Thermostat List ===
 
-If the web browser displays a page that is blank other than a `Thermostat:` label and an empty drop-down list then it is probably due to the `jquery-1.7.2.min.js` file not being properly installed. Check the last few lines of the `/var/log/apache2/error.log` file for any reports of files that do not exist. Either correctly install the files at the reported locations or correct the URL to access the files where they have been installed.
+If the web browser displays a page that is blank other than a `Thermostat:` label and an empty drop-down list then it is probably due to the `jquery-2.0.2.min.js` file not being properly installed. Check the last few lines of the `/var/log/apache2/error.log` file for any reports of files that do not exist. Either correctly install the files at the reported locations or correct the URL to access the files where they have been installed.
 
 === "No value specified for configuration item < host > - Add 'HOST < value >' to /etc/heatmiser.conf or /var/www/.heatmiser" Message ===
 
