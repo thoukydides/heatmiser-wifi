@@ -1,7 +1,7 @@
 #summary !SiriProxy plugin installation instructions
 #labels Phase-Deploy
 
-= Voice Control from an iPhone or iPad via SiriProxy =
+= Voice Control from an iPhone or iPad via !SiriProxy =
 
 Pete Lamonica's [https://github.com/plamoni/SiriProxy SiriProxy] allows the connection between an iOS device and Apple's Siri servers to be intercepted. Plugins can then be used to locally extend the functionality of Siri.
 
