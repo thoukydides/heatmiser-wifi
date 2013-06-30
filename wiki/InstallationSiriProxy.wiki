@@ -7,4 +7,4 @@ Pete Lamonica's [https://github.com/plamoni/SiriProxy SiriProxy] allows the conn
 
 [http://thelifeofraspberrypi.blogspot.co.uk/ Dave Black] has produced a such a plugin allowing voice control of Heatmiser Wi-Fi thermostats using this project's Perl scripts. See his [http://thelifeofraspberrypi.blogspot.co.uk/2013/06/setting-up-siriproxy-to-heatmiser-image.html pre-prepared Raspberry Pi disk image and setup instructions] for more details.
 
-<div align=center>http://blog.heatmiser.com/wp-content/uploads/2013/06/photo.png </div>
+<p align=center>[http://thelifeofraspberrypi.blogspot.co.uk/2013/06/setting-up-siriproxy-to-heatmiser-image.html http://blog.heatmiser.com/wp-content/uploads/2013/06/photo.png] </p>
