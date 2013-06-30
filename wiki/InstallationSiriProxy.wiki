@@ -1,12 +1,16 @@
 #summary SiriProxy plugin installation instructions
 #labels Phase-Deploy
 
+<table border=0>
+<tr><td valign=top>
 = Voice Control from an iPhone or iPad via !SiriProxy =
 
 Pete Lamonica's [https://github.com/plamoni/SiriProxy SiriProxy] allows the connection between an iOS device and Apple's Siri servers to be intercepted. Plugins can then be used to locally extend the functionality of Siri.
 
 [http://thelifeofraspberrypi.blogspot.co.uk/ Dave Black] has produced a such a plugin allowing voice control of Heatmiser Wi-Fi thermostats using these Perl scripts. See his [http://thelifeofraspberrypi.blogspot.co.uk/2013/06/setting-up-siriproxy-to-heatmiser-image.html pre-prepared Raspberry Pi disk image and setup instructions] for more details.
-
+<td>
+http://blog.heatmiser.com/wp-content/uploads/2013/06/photo.png
+<tr><td colspan=2>
 == !SiriProxy Setup Hints ==
 
 Installing and configuring !SiriProxy can be quite tricky. The easiest approach is to use Dave's prebuilt Raspberry Pi image (above). The following hints may be helpful if attempting to install it manually from scratch.
