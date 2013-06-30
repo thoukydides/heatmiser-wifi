@@ -1,0 +1,136 @@
+#summary !SiriProxy plugin installation instructions
+#labels Phase-Deploy
+
+= Voice Control from an iPhone or iPad via SiriProxy =
+
+Pete Lamonica's [https://github.com/plamoni/SiriProxy SiriProxy] allows the connection between an iOS device and Apple's Siri servers to be intercepted. Plugins can then be used to locally extend the functionality of Siri.
+
+== Raspberry Pi Disk Image ==
+
+[http://thelifeofraspberrypi.blogspot.co.uk/ Dave Black] has produced a such a plugin allowing voice control of Heatmiser Wi-Fi thermostats using these Perl scripts. See his [http://thelifeofraspberrypi.blogspot.co.uk/2013/06/setting-up-siriproxy-to-heatmiser-image.html pre-prepared Raspberry Pi disk image and setup instructions] for more details.
+
+== !SiriProxy Setup Hints ==
+
+Installing and configuring SiriProxy can be quite tricky. The easiest approach is to use Dave's prebuilt Raspberry Pi image (above). The following hints may be helpful if attempting to install it manually from scratch.
+
+=== Install Ruby as `root` ===
+
+Follow the [https://github.com/plamoni/SiriProxy#set-up-instructions SiriProxy setup instructions] for Ruby and RVM as `root`. This ensures that Ruby will be installed system-wide, and makes it much easier to automatically launch !SiriProxy as a service. The easiest way to do this is to start a new shell before starting the setup:
+<code language=sh>
+sudo -i </code>
+
+When finished, exit the `root` shell and apply the `.bashrc` modifications (applied to `/root/.bashrc`) to the normal user's `~/.bashrc` by repeating the two `echo` commands.
+
+=== Use a `bash` Shell for !SiriProxy ===
+
+RVM and the standard !SiriProxy setup assume use of a `bash` shell. If a different default shell has been configured (such as `tcsh`) then temporarily start a new shell for installing and running !SiriProxy:
+<code language=sh>
+bash </code>
+
+=== Launch !SiriProxy as a Service using `upstart` ===
+
+To avoid needing to manually launch !SiriProxy configure it as a service managed by `upstart`.
+
+Put the following in `~/bin/siriproxy`:
+<code language=sh>
+#!/bin/bash
+HOME=/home/USER
+PATH=$PATH:/usr/local/rvm/bin
+[[ -s "/usr/local/rvm/scripts/rvm" ]] && source "/usr/local/rvm/scripts/rvm"
+export rvmsudo_secure_path=1
+rvmsudo siriproxy server </code>
+
+
+Put the following in `/etc/init/siriproxy.conf`:
+<code language=sh>description "SiriProxy server"
+
+start on (started networking
+          and filesystem)
+
+start on runlevel [2345]
+
+stop on runlevel [!2345]
+
+respawn
+
+exec start-stop-daemon --start --make-pidfile --pidfile /var/run/siriproxy.pid --exec /home/USER/bin/siriproxy </code>
+
+In both files replace `USER` by the name of the user account being used. The shell script can be placed in a different location by modifying the path in the `exec start-stop-daemon` line of the `siriproxy.conf` file appropriately.
+
+!SiriProxy can then be started using:
+<code language=sh>
+sudo start siriproxy</code>
+and stopped using:
+<code language=sh>
+sudo stop siriproxy</code>
+
+The logging output from !SiriProxy can then be viewed using:
+<code language=sh>
+sudo tail -f /var/log/upstart/siriproxy.log</code>
+
+== Redirect Siri to !SiriProxy ==
+
+One of the trickiest aspects of installing !SiriProxy is intercepting the connection to Apple's Siri servers, whilst still allowing !SiriProxy itself to connect to them. This redirection is accomplished by running a local DNS server (or forwarder) that points `guzzoni.apple.com` to the machine running `SiriProxy`.
+
+With early versions of !SiriProxy this was quite complicated because !SiriProxy would use the default DNS to resolve `guzzoni.apple.com` itself, so it was necessary to provide a separate DNS server just for the iOS devices. This was traditionally done by manually configuring the DNS server in the iOS devices' Wi-Fi settings to point to a server running `dnsmasq`, which would then redirect `guzzoni.apple.com` whilst forwarding other addresses to the normal DNS server.
+
+However, recent versions of !SiriProxy make the process far simpler. Firstly, !SiriProxy now has its own DNS configuration (defaulting to Google's public DNS servers) so the default DNS server can safely be changed for all devices on the local network, e.g. by specifying it in the DHCP server's configuration. Secondly, !SiriProxy contains its own DNS server that redirects `guzzoni.apple.com` to itself whilst forwarding all other requests, so it is not necessary to setup a separate DNS server.
+
+=== DNS Configuration using `BIND` ===
+
+It is still possible to use a separate DNS server to redirect the connection to the Siri servers. The following example is for `BIND` (`named`).
+
+Add the following to `/etc/bind/named.conf.local`:
+<code language=sh>
+zone "guzzoni.apple.com" {
+        type master;
+        file "/etc/bind/db.guzzoni.apple.com";
+        forwarders { };
+};</code>
+
+Create `/etc/bind/db.guzzoni.apple.com`:
+<code language=sh>
+;
+; BIND data file to redirect iOS devices to SiriProxy
+;
+$TTL    20m
+$ORIGIN guzzoni.apple.com.
+@       IN      SOA     ns1.local.thouky.co.uk. username.example.com. (
+                     2013061402         ; Serial (yyyymmddss)
+                            20m         ; Refresh
+                             5m         ; Retry
+                             4w         ; Expire
+                             1w )       ; Negative Cache TTL
+                NS      ns
+
+; Redirect Siri to SiriProxy
+                A       192.168.0.10
+
+; Aliases for servers (cannot use CNAME for nameservers)
+ns              A       192.168.0.10</code>
+
+Obviously `192.168.0.10` should be changed to the IP address of the machine running !SiriProxy.
+
+== Change the !SiriProxy Port Number ==
+
+If Apache is running on the same machine and has been configured to support SSL connections then it will be using port `443`. Unfortunately, Siri uses the same port number to connect to !SiriProxy. To resolve this conflict, `iptables` can be used to redirect connections from specific devices to an alternative port number.
+
+First, configure !SiriProxy to use a different port number by modifying the `port:` setting in the `~/.siriproxy/config.yml` file. In this example port number `8443` is used:
+<code language=sh>
+port: 8443</code>
+
+Ensure that any iOS devices on the local network have static IP addresses, e.g. by adding them explicitly to the DHCP server's configuration. This is necessary because the `iptables` routing is based on IP addresses rather than hostnames. Then configure `iptables` so that accesses from those addresses made to local port `443` are redirected to port `8443`. In this example the iOS devices are assumed to have addresses `192.168.0.100` and `192.168.0.101`:
+<code language=sh>
+sudo iptables -t nat -A PREROUTING -p tcp -s 192.168.0.100,192.168.0.101 --dport 443 -j REDIRECT --to-ports 8443</code>
+
+Note that this will also redirect SSL (`https:`) accesses from Safari.
+
+=== Update Plugins ===
+
+Add, remove and configure !SiriProxy plugins by modifying `~/.siriproxy/config.yml`. Following any changes ensure that the necessary files are installed by running (in a `bash` shell):
+<code language=sh>
+siriproxy bundle</code>
+
+Then restart !SiriProxy using:
+<code language=sh>
+sudo restart siriproxy</code>
