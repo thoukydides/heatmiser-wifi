@@ -1,4 +1,5 @@
 #summary Meanings of the different line styles and flags in the web interface
+#labels Phase-Deploy
 
 = Web Interface Legend =
 
