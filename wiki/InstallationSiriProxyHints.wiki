@@ -24,17 +24,17 @@ bash </code>
 To avoid needing to manually launch !SiriProxy configure it as a service managed by `upstart`.
 
 Put the following in `~/bin/siriproxy`:
-<code language=sh>
+<blockquote><pre>
 #!/bin/bash
 HOME=/home/USER
 PATH=$PATH:/usr/local/rvm/bin
 [[ -s "/usr/local/rvm/scripts/rvm" ]] && source "/usr/local/rvm/scripts/rvm"
 export rvmsudo_secure_path=1
-rvmsudo siriproxy server </code>
+rvmsudo siriproxy server </pre></blockquote>
 
 
 Put the following in `/etc/init/siriproxy.conf`:
-<code language=sh>description "SiriProxy server"
+<blockquote><pre>description "SiriProxy server"
 
 start on (started networking
           and filesystem)
@@ -45,7 +45,7 @@ stop on runlevel [!2345]
 
 respawn
 
-exec start-stop-daemon --start --make-pidfile --pidfile /var/run/siriproxy.pid --exec /home/USER/bin/siriproxy </code>
+exec start-stop-daemon --start --make-pidfile --pidfile /var/run/siriproxy.pid --exec /home/USER/bin/siriproxy </pre></blockquote>
 
 In both files replace `USER` by the name of the user account being used. The shell script can be placed in a different location by modifying the path in the `exec start-stop-daemon` line of the `siriproxy.conf` file appropriately.
 
@@ -73,15 +73,15 @@ However, recent versions of !SiriProxy make the process far simpler. Firstly, !S
 It is still possible to use a separate DNS server to redirect the connection to the Siri servers. The following example is for `BIND` (`named`).
 
 Add the following to `/etc/bind/named.conf.local`:
-<code language=sh>
+<blockquote><pre>
 zone "guzzoni.apple.com" {
         type master;
         file "/etc/bind/db.guzzoni.apple.com";
         forwarders { };
-};</code>
+};</pre></blockquote>
 
 Create `/etc/bind/db.guzzoni.apple.com`:
-<code language=sh>
+<blockquote><pre>
 ;
 ; BIND data file to redirect iOS devices to SiriProxy
 ;
@@ -96,10 +96,12 @@ $ORIGIN guzzoni.apple.com.
                 NS      ns
 
 ; Redirect Siri to SiriProxy
+
                 A       192.168.0.10
 
 ; Aliases for servers (cannot use CNAME for nameservers)
-ns              A       192.168.0.10</code>
+
+ns              A       192.168.0.10 </pre></blockquote>
 
 Obviously `192.168.0.10` should be changed to the IP address of the machine running !SiriProxy.
 
