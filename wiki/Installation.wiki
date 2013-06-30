@@ -1,5 +1,5 @@
+#summary Installation instructions
 #labels Phase-Deploy,Featured
-summary Installation instructions
 
 = Installation Introduction =
 
