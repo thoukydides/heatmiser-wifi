@@ -179,7 +179,7 @@ If a different `cgi-bin` directory was used then it will probably be necessary t
 
 Download the jQuery !JavaScript library to the same directory as the `index.html` file:
 <code language="sh">
-wget http://code.jquery.com/jquery-1.7.2.min.js -O ~/public_html/heatmiser-wifi/jquery-1.7.2.min.js</code>
+wget http://code.jquery.com/jquery-2.0.2.min.js -O ~/public_html/heatmiser-wifi/jquery-2.0.2.min.js</code>
 
 Also download the Highcharts Highstock !JavaScript library to the same directory:
 <code language="sh">
