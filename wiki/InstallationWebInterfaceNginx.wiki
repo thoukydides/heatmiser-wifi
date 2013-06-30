@@ -33,7 +33,7 @@ Create a folder structure to hold our UWSGI application and configuration:
 <code language="sh">
 mkdir -p /var/www/localhost/uwsgi/cgi/config</code>
 
-Create a configuration XML file for CGI proxying, this configuration file instructs UWSGI to listen on the loopback adapter on port 3128, to present a virtual `/cgi-bin` directory that serves the files located in `/var/www/localhost/cgi-bin`, and lastly, to only serve files that end with a `.cgi` or `.pl` extension:
+Create a configuration XML file for CGI proxying, this configuration file instructs UWSGI to listen on the loopback adapter on port `3128`, to present a virtual `/cgi-bin` directory that serves the files located in `/var/www/localhost/cgi-bin`, and lastly, to only serve files that end with a `.cgi` or `.pl` extension:
 <code language="sh">
 vi /var/www/localhost/uwsgi/cgi/config/config.xml</code>
 <code language="xml">
@@ -57,7 +57,7 @@ cp /etc/init.d/uwsgi /etc/init.d/uwsgi.cgi
 rc-update add uwsgi.cgi default
 rc-service uwsgi.cgi start</code>
 
-UWSGI should now be fully configured and functional, listening on port 3128 and serving any CGI files that are located in `/var/www/localhost/cgi-bin`.
+UWSGI should now be fully configured and functional, listening on port `3128` and serving any CGI files that are located in `/var/www/localhost/cgi-bin`.
 
 == Configuring NGINX to interface with UWSGI ==
 Update your NGINX configurations HTTP section to add the following alias and redirect:
@@ -85,9 +85,9 @@ From the `heatmiser-wifi/bin` directory, copy the `index.html` file to whatever 
 mkdir /var/www/localhost/htdocs/thermostat/
 cp theheatmiser-wifi/bin/index.html /var/www/localhost/htdocs/thermostat/index.html</code>
 
-And download the jquery and highstock javascript libraries:
+And download the jQuery and Highcharts Highstock JavaScript libraries:
 <code language="sh">
-wget http://code.jquery.com/jquery-1.7.2.min.js -O /var/www/localhost/htdocs/thermostat/jquery-1.7.2.min.js
+wget http://code.jquery.com/jquery-2.0.2.min.js -O /var/www/localhost/htdocs/thermostat/jquery-2.0.2.min.js
 wget http://www.highcharts.com/downloads/zips/Highstock-1.1.5.zip -O /tmp/highstock.zip
 unzip -j /tmp/highstock.zip js/highstock.js -d /var/www/localhost/htdocs/thermostat/</code>
 
