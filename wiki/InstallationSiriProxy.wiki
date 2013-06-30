@@ -1,4 +1,4 @@
-#summary !SiriProxy plugin installation instructions
+#summary SiriProxy plugin installation instructions
 #labels Phase-Deploy
 
 = Voice Control from an iPhone or iPad via !SiriProxy =
@@ -11,7 +11,7 @@ Pete Lamonica's [https://github.com/plamoni/SiriProxy SiriProxy] allows the conn
 
 == !SiriProxy Setup Hints ==
 
-Installing and configuring SiriProxy can be quite tricky. The easiest approach is to use Dave's prebuilt Raspberry Pi image (above). The following hints may be helpful if attempting to install it manually from scratch.
+Installing and configuring !SiriProxy can be quite tricky. The easiest approach is to use Dave's prebuilt Raspberry Pi image (above). The following hints may be helpful if attempting to install it manually from scratch.
 
 === Install Ruby as `root` ===
 
