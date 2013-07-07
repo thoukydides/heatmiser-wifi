@@ -3,7 +3,7 @@
 
 = !SiriProxy Setup Hints =
 
-Installing and configuring !SiriProxy can be quite tricky. The following hints may be helpful.
+Installing and configuring [https://github.com/plamoni/SiriProxy !SiriProxy] can be quite tricky. The following hints may be helpful.
 
 == Install Ruby as `root` ==
 
