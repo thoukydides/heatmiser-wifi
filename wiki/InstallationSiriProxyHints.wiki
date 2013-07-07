@@ -3,7 +3,7 @@
 
 = !SiriProxy Setup Hints =
 
-Installing and configuring !SiriProxy can be quite tricky. The easiest approach is to use [InstallationSiriProxy Dave Black's prebuilt Raspberry Pi image]. The following hints may be helpful if attempting to install it manually.
+Installing and configuring !SiriProxy can be quite tricky. The following hints may be helpful.
 
 == Install Ruby as `root` ==
 
@@ -125,6 +125,10 @@ Add, remove and configure !SiriProxy plugins by modifying `~/.siriproxy/config.y
 <code language=sh>
 siriproxy bundle</code>
 
-Then restart !SiriProxy using:
+Alternatively, to also update both !SiriProxy and its plugins to the latest versions run:
+<code language=sh>
+siriproxy update</code>
+
+Either way, then restart !SiriProxy using:
 <code language=sh>
 sudo restart siriproxy</code>
