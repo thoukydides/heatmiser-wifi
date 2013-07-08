@@ -37,7 +37,7 @@ sudo tail -f /var/log/upstart/siriproxy.log</code>
 
 === Configuration of Multiple Thermostats ===
 
-If there are multiple thermostats then it is helpful to configure friendly names that can be used in voice commands to specify the thermostat(s) to be controlled. This is also done in the `~/.siriproxy/config.yml` file:
+If there are multiple thermostats then define friendly names for them. These can then be used in voice commands to specify the thermostat(s) to be controlled. This configuration is also done in the `~/.siriproxy/config.yml` file:
 <blockquote><pre>    - name: 'HeatmiserWiFi'
       path: '~/heatmiser-wifi-read-only/siriproxy'
       thermostats:
@@ -47,7 +47,7 @@ If there are multiple thermostats then it is helpful to configure friendly names
         - 'bedroom'
         - 'my bedroom'</pre></blockquote>
 
-For each thermostat the hostname or IP address is given first followed by a list of aliases which may be used in voice commands. All of the hostnames and aliases should be enclosed within quotation marks.
+For each thermostat the hostname or IP address is given first followed by a list of aliases which may be used in voice commands. All of the hostnames and aliases should be enclosed within quotation marks. This example defines two thermostats: the first with hostname `heatmiser` and an alias of `hallway`, and the second with IP address `192.168.0.42` and two aliases `bedroom` and `my bedroom`.
 
 The hostnames should exactly match those listed on the `HOST` line of the `/etc/heatmiser.conf` file. he hostname is not automatically included in the aliases; if Siri should respond to that name in voice commands then explicitly list it as an alias.
 
