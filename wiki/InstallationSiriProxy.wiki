@@ -3,12 +3,120 @@
 
 = Voice Control from an iPhone or iPad via !SiriProxy =
 
-Pete Lamonica's [https://github.com/plamoni/SiriProxy SiriProxy] allows the connection between an iOS device and Apple's Siri servers to be intercepted. Plugins can then be used to locally extend the functionality of Siri.
+Pete Lamonica's [https://github.com/plamoni/SiriProxy SiriProxy] allows the connection between an iPhone or iPad and Apple's Siri servers to be intercepted. Plugins can then be used to locally extend the functionality of Siri. This project includes such a plugin to enable Heatmiser Wi-Fi thermostats to be interrogated and controled by voice from iOS devices. It supports multiple heterogeneous Wi-Fi thermostats with full control over both central heating and hot water settings.
 
-[http://thelifeofraspberrypi.blogspot.co.uk/ Dave Black] has produced a such a plugin allowing voice control of Heatmiser Wi-Fi thermostats using this project's Perl scripts. See his [http://thelifeofraspberrypi.blogspot.co.uk/2013/06/setting-up-siriproxy-to-heatmiser-image.html pre-prepared Raspberry Pi disk image and setup instructions] for more details.
+== !SiriProxy Setup ==
 
-<p align=center>[http://thelifeofraspberrypi.blogspot.co.uk/2013/06/setting-up-siriproxy-to-heatmiser-image.html http://blog.heatmiser.com/wp-content/uploads/2013/06/photo.png] </p>
+The first step is to install and configure !SiriProxy. This is beyond the scope of these instructions. The best place to start is with the [https://github.com/plamoni/SiriProxy#set-up-instructions official !SiriProxy Setup Instructions], but it may also help to read these [InstallationSiriProxyHints SiriProxy Setup Hints].
 
-== !SiriProxy Setup Hints ==
+Before continuing verify that !SiriProxy is correctly installed by starting Siri and asking it to:
+  * `Test Siri Proxy`
 
-See the [InstallationSiriProxyHints SiriProxy Setup Hints] if a manual installation is being attempted.
+If everything is working then it should respond with:
+<blockquote><pre>Siri Proxy is up and running!</pre></blockquote>
+
+== !HeatmiserWiFi !SiriProxy Plugin Configuration ==
+
+For systems that only have a single thermostat adding and configuring this plugin is very straightforward. Start by adding the following lines to the end of `~/.siriproxy/config.yml` file:
+<blockquote><pre>    - name: 'HeatmiserWiFi'
+      path: '~/heatmiser-wifi-read-only/siriproxy'</pre></blockquote>
+
+These can be copied from the included `~/heatmiser-wifi-read-only/siriproxy/config-info.yml` file.
+
+Next tell !SiriProxy to update the necessary gems:
+<code language=sh>
+siriproxy bundle</code>
+
+Finally, restart !SiriProxy to load the new plugin:
+<code language=sh>
+sudo restart siriproxy</code>
+
+It is a good idea to check the logging output from !SiriProxy to verify that the plugin is being loaded without any errors being reported:
+<code language=sh>
+sudo tail -f /var/log/upstart/siriproxy.log</code>
+
+=== Configuration of Multiple Thermostats ===
+
+If there are multiple thermostats then it is helpful to configure friendly names that can be used in voice commands to specify the thermostat(s) to be controlled. This is also done in the `~/.siriproxy/config.yml` file:
+<blockquote><pre>    - name: 'HeatmiserWiFi'
+      path: '~/heatmiser-wifi-read-only/siriproxy'
+      thermostats:
+        'heatmiser':
+        - 'hallway'
+        '192.168.0.42':
+        - 'bedroom'
+        - 'my bedroom'</pre></blockquote>
+
+For each thermostat the hostname or IP address is given first followed by a list of aliases which may be used in voice commands. All of the hostnames and aliases should be enclosed within quotation marks.
+
+The hostnames should exactly match those listed on the `HOST` line of the `/etc/heatmiser.conf` file. he hostname is not automatically included in the aliases; if Siri should respond to that name in voice commands then explicitly list it as an alias.
+
+The first alias listed for each tgermostat should be its preferred name; this will always be used to identify that thermostat in Siri's responses (with any occurence of `my` changed to `your`). Do not include `thermostat` as part of the aliases since that is added automatically.
+
+After editing the configuration file !SiriProxy should be restarted for the changes to take effect:
+<code language=sh>
+sudo restart siriproxy</code>
+
+== Supported Voice Commands ==
+
+This plugin supports a large number of commands, and is quite flexible about the phrasing and words used. The following are just examples to give an idea of what is possible; experiment or look at the [https://code.google.com/p/heatmiser-wifi/source/browse/trunk/siriproxy/lib/siriproxy-heatmiserwifi.rb source code] to see what other commands can be used.
+
+If a command that you would expect to work is unrecognised or behaves incorrectly then please [Contact contact the author].
+
+Queries:
+  * `What is the hallway thermostat status?`
+  * `Check the status of all thermostats.`
+
+Actions:
+  * `Switch the hallway and bedroom thermostats on.`
+  * `Turn off the Heatmiser thermostat.`
+  * ~~`Set the thermostat to holiday mode until 25 December.`~~ _(implementation not yet complete)_
+  * `Cancel all thermostats away mode.`
+  * `Cancel on holiday for bedroom thermostat.`
+
+=== Voice Commands for Heating ===
+
+Queries:
+  * `What is the interior temperature?`
+  * `How hot is it indoors?`
+  * `Is it cold inside?`
+  * `What is the thermostat temperature?`
+  * `What are the temperatures of the hallway and bedroom thermostats?`
+  * `Is the central heating enabled?`
+  * `Check the hallway heating status.`
+
+Actions:
+  * `Set the hallway and bedroom thermostats to 21°.`
+  * `Set the temperature to 15 Celsius.`
+  * `Increase target temperature by 2°.`
+  * `Lower bedroom temperature by 3° Centigrade.`
+  * `Hold the temperature for an hour.`
+  * `Hold the hallway thermostat at 21° for 20 minutes.`
+  * `Hold temperature at 20 Cesius for 2 hours.`
+  * `Set all thermostats target temperature to 19° and hold for an hour.`
+  * `Set temperature to 22 Centigrade and hold for 30 minutes.`
+  * `Cancel all thermostats temperature hold.`
+  * `Stop target temperature hold.`
+  * `Terminate holding bedroom temperature.`
+  * `Place all thermostats in frost protection mode.`
+  * `Put the thermostat in heating mode.`
+  * `Enable frost protect mode.`
+  * `Disable bedroom heating.`
+  * `Switch heating on.`
+  * `Turn off hallway and bedroom heating.`
+
+=== Voice Commands for Hot Water ===
+
+Queries:
+  * `Is hot water active?`
+  * `Interrogate the bedroom hot water status.`
+
+Actions:
+  * `Switch hot water on.`
+  * `Turn off bedroom hot water.`
+  * `Enable all hot water.`
+  * `Cancel the hot water override.`
+
+== A Simpler Alernative ==
+
+[http://thelifeofraspberrypi.blogspot.co.uk/ Dave Black] has produced his own !SiriProxy plugin that also builds on this project's Perl scripts. For [http://www.raspberrypi.org/ Raspberry Pi] owners it is much easier to setup because Dave has released a [http://thelifeofraspberrypi.blogspot.co.uk/2013/06/setting-up-siriproxy-to-heatmiser-image.html pre-prepared disk image]. However, its functionality is much more limited. In particular, it only supports a single thermostat and does not provide any support for controlling hot water.
