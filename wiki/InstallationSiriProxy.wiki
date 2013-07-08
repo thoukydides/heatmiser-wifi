@@ -49,9 +49,9 @@ If there are multiple thermostats then define friendly names for them. These can
 
 For each thermostat the hostname or IP address is given first followed by a list of aliases which may be used in voice commands. All of the hostnames and aliases should be enclosed within quotation marks. This example defines two thermostats: the first with hostname `heatmiser` and an alias of `hallway`, and the second with IP address `192.168.0.42` and two aliases `bedroom` and `my bedroom`.
 
-The hostnames should exactly match those listed on the `HOST` line of the `/etc/heatmiser.conf` file. he hostname is not automatically included in the aliases; if Siri should respond to that name in voice commands then explicitly list it as an alias.
+The hostnames should exactly match those listed on the `HOST` line of the `/etc/heatmiser.conf` file. The hostname is not automatically included in the aliases; explicitly list it as an alias if required.
 
-The first alias listed for each tgermostat should be its preferred name; this will always be used to identify that thermostat in Siri's responses (with any occurence of `my` changed to `your`). Do not include `thermostat` as part of the aliases since that is added automatically.
+The first alias listed for each thermostat should be its preferred name; this will always be used to identify that thermostat in Siri's responses (with any occurence of `my` changed to `your`). Do not include `thermostat` as part of the aliases since that is added automatically.
 
 After editing the configuration file !SiriProxy should be restarted for the changes to take effect:
 <code language=sh>
