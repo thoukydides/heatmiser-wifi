@@ -7,7 +7,7 @@ Pete Lamonica's [https://github.com/plamoni/SiriProxy SiriProxy] allows the conn
 
 == !SiriProxy Setup ==
 
-The first step is to install and configure !SiriProxy. This is beyond the scope of these instructions. The best place to start is with the [https://github.com/plamoni/SiriProxy#set-up-instructions official !SiriProxy Setup Instructions], but it may also help to read these [InstallationSiriProxyHints SiriProxy Setup Hints].
+The first step is to install and configure !SiriProxy in accordance with its [https://github.com/plamoni/SiriProxy#set-up-instructions Setup Instructions]. This can be quite tricky but some of these [InstallationSiriProxyHints SiriProxy Setup Hints] may be helpful.
 
 Before continuing verify that !SiriProxy is correctly installed by starting Siri and asking it to:
   * `Test Siri Proxy`
