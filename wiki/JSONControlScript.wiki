@@ -110,4 +110,4 @@ Note that only some of the settings can be written via the thermostat's Wi-Fi sy
 
 == Further Information ==
 
-Hopefully this provides sufficient information to be able to use this script for interrogating or controlling the thermostats from other lanugages. Refer to the [HeatmiserProtocol Heatmiser V3 System Protocol documentation] and [PerlDCBDataStructure Perl DCB data structure documentation] for details of all the settings and status that can be read or written.
+Hopefully this provides sufficient information to be able to use this script for interrogating or controlling the thermostats from other languages. The [https://code.google.com/p/heatmiser-wifi/source/browse/trunk/siriproxy/lib/thermostat.rb thermostat.rb] file from the !SiriProxy plugin gives an example of how it can be used from Ruby. Refer to the [HeatmiserProtocol Heatmiser V3 System Protocol documentation] and [PerlDCBDataStructure Perl DCB data structure documentation] for details of all the settings and status that can be read or written.
