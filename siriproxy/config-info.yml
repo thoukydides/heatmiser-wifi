@@ -1,0 +1,36 @@
+# This is an example set of configuration options that can be placed in
+# SiriProxy's main config.yml file for the plugin to control Heatmiser's range
+# of Wi-Fi thermostats via their iPhone interface.
+
+# Modifying the options in this file has no effect. They must be placed in
+# SiriProxy's main config.yml file (usually within ~/.siriproxy).
+# Run 'siriproxy bundle' after changing the plugin configurations.
+
+# Copyright © 2013 Alexander Thoukydides
+#
+# This file is part of the Heatmiser Wi-Fi project.
+# <http://code.google.com/p/heatmiser-wifi/>
+#
+# Heatmiser Wi-Fi is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# Heatmiser Wi-Fi is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
+
+
+    # Heatmiser Wi-Fi thermostat plugin
+    - name: 'HeatmiserWiFi'
+      path: '~/heatmiser-wifi-read-only/siriproxy'
+      thermostats:
+        'heatmiser':
+        - 'hallway'
+        '192.168.0.42':
+        - 'bedroom'
+        - 'my bedroom'
