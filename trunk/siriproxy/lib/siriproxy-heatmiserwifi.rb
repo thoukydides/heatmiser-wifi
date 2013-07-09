@@ -118,111 +118,127 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   RE_TIME = /\d\d:\d\d(?: ?(?:AM|PM))/i
   RE_DATETIME = /(#{RE_DATE}|#{RE_TIME}|#{RE_TIME} (?:on )#{RE_DATE})/i
 
+  # Allow more readable regexps for speech patterns
+
+  #   WORDS in capitals have 'RE_' prefixed to give constant name
+  #   [WORDS] in capitals surrounded by square brackets have 'RE_OPTIONAL_'
+  #     prefixed and the following space (if not at end of pattern) removed
+  def self.listen_for_phrase(pattern, &block)
+    flattened = pattern.gsub(/\[([A-Z_]+)\](?: |$)|([A-Z_]+)/) do |match|
+      if match =~ /\[(\w+)\]/
+        const_get("RE_OPTIONAL_#{$1}")
+      else
+        const_get("RE_#{match}")
+      end
+    end
+    # HERE - Consider requiring match to be at the end of the speech
+    listen_for /\b#{flattened}\b/i, &block
+  end
+
   # Queries that apply to all types of thermostat
 
-  listen_for(/\b#{RE_WHATIS} #{RE_THERMOSTATS} #{RE_STATUS}\b/i)\
+  listen_for_phrase('WHATIS THERMOSTATS STATUS')\
     { |thermostats| query_status thermostats }
-  listen_for(/\b#{RE_WHATIS} #{RE_STATUS} of #{RE_THERMOSTATS}\b/i)\
+  listen_for_phrase('WHATIS STATUS of THERMOSTATS')\
     { |thermostats| query_status thermostats }
 
   # Actions that apply to all types of thermostat
 
-  listen_for(/\b#{RE_SWITCH} #{RE_THERMOSTATS} #{RE_ONOFF}\b/i)\
+  listen_for_phrase('SWITCH THERMOSTATS ONOFF')\
     { |thermostats, onoff| action_onoff thermostats, onoff }
-  listen_for(/\b#{RE_SWITCH} #{RE_ONOFF} #{RE_THERMOSTATS}\b/i)\
+  listen_for_phrase('SWITCH ONOFF THERMOSTATS')\
     { |onoff, thermostats| action_onoff thermostats, onoff }
 
-  listen_for(/\b#{RE_SET} #{RE_THERMOSTATS} #{RE_AWAY} #{RE_RETURN} #{RE_DATETIME}\b/i)\
+  listen_for_phrase('SET THERMOSTATS AWAY RETURN DATETIME')\
     { |thermostats, datetime| action_holiday thermostats, datetime }
 
-  listen_for(/\b#{RE_CANCEL} #{RE_THERMOSTATS} #{RE_AWAY}\b/i)\
+  listen_for_phrase('CANCEL THERMOSTATS AWAY')\
     { |thermostats| action_holiday_cancel thermostats }
-  listen_for(/\b#{RE_CANCEL} #{RE_AWAY} for #{RE_THERMOSTATS}\b/i)\
+  listen_for_phrase('CANCEL AWAY for THERMOSTATS')\
     { |thermostats| action_holiday_cancel thermostats }
 
   # Queries that apply to thermostats with heating control
 
-  listen_for(/\b#{RE_WHATIS} #{RE_INTERIOR} #{RE_TEMPERATURE}\b/i)\
+  listen_for_phrase('WHATIS INTERIOR TEMPERATURE')\
     { query_temperature nil }
-  listen_for(/\bhow #{RE_HOTCOLD} is it #{RE_INTERIOR}\b/i)\
+  listen_for_phrase('how HOTCOLD is it INTERIOR')\
     { query_temperature nil }
-  listen_for(/\bis it #{RE_HOTCOLD} #{RE_INTERIOR}\b/i)\
+  listen_for_phrase('is it HOTCOLD INTERIOR')\
     { query_temperature nil }
-  listen_for(/\b#{RE_WHATIS} #{RE_THERMOSTATS} #{RE_TEMPERATURE}\b/i)\
+  listen_for_phrase('WHATIS THERMOSTATS TEMPERATURE')\
     { |thermostats| query_temperature thermostats }
-
-  listen_for(/\b#{RE_IS} #{RE_OPTIONAL_THERMOSTATS}#{RE_HEATING} #{RE_ACTIVATED}\b/i)\
+  listen_for_phrase('IS [THERMOSTATS] HEATING ACTIVATED')\
     { |thermostats| query_heating_status thermostats }
-  listen_for(/\b#{RE_WHATIS} #{RE_OPTIONAL_THERMOSTATS}#{RE_HEATING} #{RE_STATUS}\b/i)\
+  listen_for_phrase('WHATIS [THERMOSTATS] HEATING STATUS')\
     { |thermostats| query_heating_status thermostats }
-  listen_for(/\b#{RE_WHATIS} #{RE_STATUS} of #{RE_OPTIONAL_THERMOSTATS}#{RE_HEATING}\b/i)\
+  listen_for_phrase('WHATIS STATUS of [THERMOSTATS] HEATING')\
     { |thermostats| query_heating_status thermostats }
 
   # Actions that apply to thermostats with heating control
 
-  listen_for(/\b#{RE_HOLD} #{RE_OPTIONAL_THERMOSTATS}#{RE_TARGET} for #{RE_DURATION}\b/i)\
+  listen_for_phrase('HOLD [THERMOSTATS] TARGET for DURATION')\
     { |thermostats, duration| action_hold_temperature thermostats, duration }
 
-  listen_for(/\b#{RE_HOLD} #{RE_THERMOSTATS} #{RE_OPTIONAL_TARGET}#{RE_TO} #{RE_DEGREES} for #{RE_DURATION}\b/i)\
+  listen_for_phrase('HOLD THERMOSTATS [TARGET] TO DEGREES for DURATION')\
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
-  listen_for(/\b#{RE_HOLD} #{RE_OPTIONAL_THERMOSTATS}#{RE_TARGET} #{RE_TO} #{RE_DEGREES} for #{RE_DURATION}\b/i)\
+  listen_for_phrase('HOLD [THERMOSTATS] TARGET TO DEGREES for DURATION')\
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
-  listen_for(/\b#{RE_SET} #{RE_THERMOSTATS} #{RE_OPTIONAL_TARGET}#{RE_TO} #{RE_DEGREES} and #{RE_HOLD} for #{RE_DURATION}\b/i)\
+  listen_for_phrase('SET THERMOSTATS [TARGET] TO DEGREES and HOLD for DURATION')\
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
-  listen_for(/\b#{RE_SET} #{RE_OPTIONAL_THERMOSTATS}#{RE_TARGET} #{RE_TO} #{RE_DEGREES} and #{RE_HOLD} for #{RE_DURATION}\b/i)\
+  listen_for_phrase('SET [THERMOSTATS] TARGET TO DEGREES and HOLD for DURATION')\
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
 
-  listen_for(/\b#{RE_SET} #{RE_THERMOSTATS} #{RE_OPTIONAL_TARGET}#{RE_TO} #{RE_DEGREES}\b/i)\
+  listen_for_phrase('SET THERMOSTATS [TARGET] TO DEGREES')\
     { |thermostats, degrees| action_set_temperature thermostats, degrees }
-  listen_for(/\b#{RE_SET} #{RE_OPTIONAL_THERMOSTATS}#{RE_TARGET} #{RE_TO} #{RE_DEGREES}\b/i)\
+  listen_for_phrase('SET [THERMOSTATS] TARGET TO DEGREES')\
     { |thermostats, degrees| action_set_temperature thermostats, degrees }
 
-  listen_for(/\b#{RE_INCREASE} #{RE_OPTIONAL_THERMOSTATS}#{RE_TARGET} (?:by )?#{RE_DEGREES}\b/i)\
+  listen_for_phrase('INCREASE [THERMOSTATS] TARGET (?:by )?DEGREES')\
     { |thermostats, degrees| action_increase_temperature thermostats, degrees }
 
-  listen_for(/\b#{RE_DECREASE} #{RE_OPTIONAL_THERMOSTATS}#{RE_TARGET} (?:by )?#{RE_DEGREES}\b/i)\
+  listen_for_phrase('DECREASE [THERMOSTATS] TARGET (?:by )?DEGREES')\
     { |thermostats, degrees| action_decrease_temperature thermostats, degrees }
 
-  listen_for(/\b#{RE_CANCEL} #{RE_THERMOSTATS} #{RE_OPTIONAL_TARGET}#{RE_HOLD}\b/i)\
+  listen_for_phrase('CANCEL THERMOSTATS [TARGET] HOLD')\
     { |thermostats| action_cancel_hold thermostats }
-  listen_for(/\b#{RE_CANCEL} #{RE_OPTIONAL_THERMOSTATS}#{RE_TARGET} #{RE_HOLD}\b/i)\
+  listen_for_phrase('CANCEL [THERMOSTATS] TARGET HOLD')\
     { |thermostats| action_cancel_hold thermostats }
-  listen_for(/\b#{RE_CANCEL} #{RE_HOLD} #{RE_OPTIONAL_THERMOSTATS}#{RE_TARGET}\b/i)\
+  listen_for_phrase('CANCEL HOLD [THERMOSTATS] TARGET')\
     { |thermostats| action_cancel_hold thermostats }
 
-  listen_for(/\b#{RE_SET} #{RE_THERMOSTATS} #{RE_TO} #{RE_FROSTPROTECT}\b/i)\
+  listen_for_phrase('SET THERMOSTATS TO FROSTPROTECT')\
     { |thermostats| action_frost_protect_mode thermostats }
-  listen_for(/\b#{RE_ENABLEDISABLE} #{RE_OPTIONAL_THERMOSTATS}#{RE_FROSTPROTECT}\b/i)\
+  listen_for_phrase('ENABLEDISABLE [THERMOSTATS] FROSTPROTECT')\
     { |onoff, thermostats| action_frost_protect_mode thermostats, onoff }
 
-  listen_for(/\b#{RE_SET} #{RE_THERMOSTATS} #{RE_TO} #{RE_HEATING}\b/i)\
+  listen_for_phrase('SET THERMOSTATS TO HEATING')\
     { |thermostats| action_heating_mode thermostats }
-  listen_for(/\b#{RE_ENABLEDISABLE} #{RE_OPTIONAL_THERMOSTATS}#{RE_HEATING}\b/i)\
+  listen_for_phrase('ENABLEDISABLE [THERMOSTATS] HEATING')\
     { |onoff, thermostats| action_heating_mode thermostats, onoff }
-  listen_for(/\b#{RE_SWITCH} #{RE_OPTIONAL_THERMOSTATS}#{RE_HEATING} #{RE_ONOFF}\b/i)\
+  listen_for_phrase('SWITCH [THERMOSTATS] HEATING ONOFF')\
     { |thermostats, onoff| action_heating_mode thermostats, onoff }
-  listen_for(/\b#{RE_SWITCH} #{RE_ONOFF} #{RE_OPTIONAL_THERMOSTATS}#{RE_HEATING}\b/i)\
+  listen_for_phrase('SWITCH ONOFF [THERMOSTATS] HEATING')\
     { |onoff, thermostats| action_heating_mode thermostats, onoff }
 
   # Queries that apply to thermostats with hot water control
 
-  listen_for(/\b#{RE_IS} #{RE_OPTIONAL_THERMOSTATS}#{RE_HOTWATER} #{RE_ACTIVATED}\b/i)\
+  listen_for_phrase('IS [THERMOSTATS] HOTWATER ACTIVATED')\
     { |thermostats| query_hotwater_status thermostats }
-  listen_for(/\b#{RE_WHATIS} #{RE_OPTIONAL_THERMOSTATS}#{RE_HOTWATER} #{RE_STATUS}\b/i)\
+  listen_for_phrase('WHATIS [THERMOSTATS] HOTWATER STATUS')\
     { |thermostats| query_hotwater_status thermostats }
-  listen_for(/\b#{RE_WHATIS} #{RE_STATUS} of #{RE_OPTIONAL_THERMOSTATS}#{RE_HOTWATER}\b/i)\
+  listen_for_phrase('WHATIS STATUS of [THERMOSTATS] HOTWATER')\
     { |thermostats| query_hotwater_status thermostats }
 
   # Actions that apply to thermostats with hot water control
 
-  listen_for(/\b#{RE_SWITCH} #{RE_OPTIONAL_THERMOSTATS}#{RE_HOTWATER} #{RE_ONOFF}\b/i)\
+  listen_for_phrase('SWITCH [THERMOSTATS] HOTWATER ONOFF')\
     { |thermostats, onoff| action_hotwater_onoff thermostats, onoff }
-  listen_for(/\b#{RE_SWITCH} #{RE_ONOFF} #{RE_OPTIONAL_THERMOSTATS}#{RE_HOTWATER}\b/i)\
+  listen_for_phrase('SWITCH ONOFF [THERMOSTATS] HOTWATER')\
     { |onoff, thermostats| action_hotwater_onoff thermostats, onoff }
-  listen_for(/\b#{RE_ENABLEDISABLE} #{RE_OPTIONAL_THERMOSTATS}#{RE_HOTWATER}\b/i)\
+  listen_for_phrase('ENABLEDISABLE [THERMOSTATS] HOTWATER')\
     { |onoff, thermostats| action_hotwater_onoff thermostats, onoff }
 
-  listen_for(/\b#{RE_CANCEL} #{RE_OPTIONAL_THERMOSTATS}#{RE_HOTWATER} override\b/i)\
+  listen_for_phrase('CANCEL [THERMOSTATS] HOTWATER override')\
     { |thermostats| action_hotwater_timer thermostats }
 
   # Queries that apply to all types of thermostat
@@ -833,11 +849,7 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   end
 
   def cardinal_to_s(n)
-    cardinals = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
-                'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen',
-                'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen',
-                'nineteen']
-    cardinals.fetch(n) { |n| n.to_s }
+    DIGITS.fetch(n) { |n| n.to_s }
   end
 
   def ordinal_to_s(n)
