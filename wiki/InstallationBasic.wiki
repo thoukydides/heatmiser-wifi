@@ -105,4 +105,4 @@ Check correct operation again by running the script, but without the hostname an
 <code language="sh">
 ~/heatmiser-wifi-read-only/bin/heatmiser.pl</code>
 
-If everything is working properly then you can now setup the [InstallationWebInterface Web Interface] to log the thermostat's operation and plot charts of the temperature. Alternatively, setup [InstallationTimeSync Automatic Time Synchronisation] to keep your thermostat's clock accurate and automatically adjust to the start and end of summer (daylight saving) time.
+If everything is working properly then you can now setup the [InstallationWebInterface Web Interface] to log the thermostat's operation and plot charts of the temperature. Alternatively, setup [InstallationTimeSync Automatic Time Synchronisation] to keep your thermostat's clock accurate and automatically adjust to the start and end of summer (daylight saving) time. Or install the [InstallationSiriProxy SiriProxy Plugin] to enable voice Control from an iPhone or iPad.
