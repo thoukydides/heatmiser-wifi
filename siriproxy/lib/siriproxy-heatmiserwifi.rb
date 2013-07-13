@@ -51,11 +51,18 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   RE_OPTIONAL_TARGET = /(?:#{RE_TARGET} )?/
   RE_HOLD = /hold(?:ing)?|keep|maintain/i
   RE_HOTCOLD = /cold|cool|hot|warm/i
-  RE_WHATIS = /(?:what (?:is|are)|check|examine|interrogate|query)(?: the)?/i
+  RE_WHATIS = /(?:what (?:is|are)|what's|check|examine|interrogate|query)(?: the)?/i
   RE_SWITCH = /switch|turn|place|put/i
   RE_IS = /are|if|is/i
+  RE_ISIT = /is it/i
+  RE_HOW = /how/i
+  RE_FOR = /for/i
+  RE_OVERRIDE = /override|manual(?: control)?/i
   RE_SET = /place|put|set|#{RE_SWITCH} on/i
   RE_TO = /at|in|to|two/i # (Siri sometimes recognises 'to' as 'two')
+  RE_OPTIONAL_BY = /(?:by )?/i
+  RE_OPTIONAL_OF = /(?:of )?/i
+  RE_OPTIONAL_AND = /(?:and )?/i
   RE_INCREASE = /increase|raise/i
   RE_DECREASE = /decrease|reduce|lower/i
   RE_CANCEL = /abort|cancel|countermand|end|finish|rescind|revoke|stop|terminate/i
@@ -139,7 +146,7 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
 
   listen_for_phrase('WHATIS THERMOSTATS STATUS')\
     { |thermostats| query_status thermostats }
-  listen_for_phrase('WHATIS STATUS of THERMOSTATS')\
+  listen_for_phrase('WHATIS STATUS [OF] THERMOSTATS')\
     { |thermostats| query_status thermostats }
 
   # Actions that apply to all types of thermostat
@@ -154,16 +161,16 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
 
   listen_for_phrase('CANCEL THERMOSTATS AWAY')\
     { |thermostats| action_holiday_cancel thermostats }
-  listen_for_phrase('CANCEL AWAY for THERMOSTATS')\
+  listen_for_phrase('CANCEL AWAY FOR THERMOSTATS')\
     { |thermostats| action_holiday_cancel thermostats }
 
   # Queries that apply to thermostats with heating control
 
   listen_for_phrase('WHATIS INTERIOR TEMPERATURE')\
     { query_temperature nil }
-  listen_for_phrase('how HOTCOLD is it INTERIOR')\
+  listen_for_phrase('HOW HOTCOLD ISIT INTERIOR')\
     { query_temperature nil }
-  listen_for_phrase('is it HOTCOLD INTERIOR')\
+  listen_for_phrase('ISIT HOTCOLD INTERIOR')\
     { query_temperature nil }
   listen_for_phrase('WHATIS THERMOSTATS TEMPERATURE')\
     { |thermostats| query_temperature thermostats }
@@ -171,21 +178,21 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
     { |thermostats| query_heating_status thermostats }
   listen_for_phrase('WHATIS [THERMOSTATS] HEATING STATUS')\
     { |thermostats| query_heating_status thermostats }
-  listen_for_phrase('WHATIS STATUS of [THERMOSTATS] HEATING')\
+  listen_for_phrase('WHATIS STATUS [OF] [THERMOSTATS] HEATING')\
     { |thermostats| query_heating_status thermostats }
 
   # Actions that apply to thermostats with heating control
 
-  listen_for_phrase('HOLD [THERMOSTATS] TARGET for DURATION')\
+  listen_for_phrase('HOLD [THERMOSTATS] TARGET FOR DURATION')\
     { |thermostats, duration| action_hold_temperature thermostats, duration }
 
-  listen_for_phrase('HOLD THERMOSTATS [TARGET] TO DEGREES for DURATION')\
+  listen_for_phrase('HOLD THERMOSTATS [TARGET] TO DEGREES FOR DURATION')\
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
-  listen_for_phrase('HOLD [THERMOSTATS] TARGET TO DEGREES for DURATION')\
+  listen_for_phrase('HOLD [THERMOSTATS] TARGET TO DEGREES FOR DURATION')\
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
-  listen_for_phrase('SET THERMOSTATS [TARGET] TO DEGREES and HOLD for DURATION')\
+  listen_for_phrase('SET THERMOSTATS [TARGET] TO DEGREES [AND] HOLD FOR DURATION')\
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
-  listen_for_phrase('SET [THERMOSTATS] TARGET TO DEGREES and HOLD for DURATION')\
+  listen_for_phrase('SET [THERMOSTATS] TARGET TO DEGREES [AND] HOLD FOR DURATION')\
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
 
   listen_for_phrase('SET THERMOSTATS [TARGET] TO DEGREES')\
@@ -193,10 +200,10 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   listen_for_phrase('SET [THERMOSTATS] TARGET TO DEGREES')\
     { |thermostats, degrees| action_set_temperature thermostats, degrees }
 
-  listen_for_phrase('INCREASE [THERMOSTATS] TARGET (?:by )?DEGREES')\
+  listen_for_phrase('INCREASE [THERMOSTATS] TARGET [BY] DEGREES')\
     { |thermostats, degrees| action_increase_temperature thermostats, degrees }
 
-  listen_for_phrase('DECREASE [THERMOSTATS] TARGET (?:by )?DEGREES')\
+  listen_for_phrase('DECREASE [THERMOSTATS] TARGET [BY] DEGREES')\
     { |thermostats, degrees| action_decrease_temperature thermostats, degrees }
 
   listen_for_phrase('CANCEL THERMOSTATS [TARGET] HOLD')\
@@ -226,7 +233,7 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
     { |thermostats| query_hotwater_status thermostats }
   listen_for_phrase('WHATIS [THERMOSTATS] HOTWATER STATUS')\
     { |thermostats| query_hotwater_status thermostats }
-  listen_for_phrase('WHATIS STATUS of [THERMOSTATS] HOTWATER')\
+  listen_for_phrase('WHATIS STATUS [OF] [THERMOSTATS] HOTWATER')\
     { |thermostats| query_hotwater_status thermostats }
 
   # Actions that apply to thermostats with hot water control
@@ -238,7 +245,7 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   listen_for_phrase('ENABLEDISABLE [THERMOSTATS] HOTWATER')\
     { |onoff, thermostats| action_hotwater_onoff thermostats, onoff }
 
-  listen_for_phrase('CANCEL [THERMOSTATS] HOTWATER override')\
+  listen_for_phrase('CANCEL [THERMOSTATS] HOTWATER OVERRIDE')\
     { |thermostats| action_hotwater_timer thermostats }
 
   # Queries that apply to all types of thermostat
