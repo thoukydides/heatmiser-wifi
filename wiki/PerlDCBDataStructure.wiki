@@ -55,6 +55,7 @@ Data is transferred to or from the thermostat via a binary Device Control Block 
 == Hot Water Controllers ==
 
 || *Primary Key* || *Secondary Key* || *Read/Write* || *Description* ||
+|| `{hotwater}` || `{boost}` || R/W || Boost time in minutes (`#####`) ||
 || `{hotwater}` || `{on}` || R/W || Hot water off (`0`), on (`1`) or let timer run (`undef`, for W only) ||
 
 || *Primary Key* || *Secondary Key* || *Tertiary Key* || *Quaternary Key* || *Read/Write* || *Description* ||
