@@ -159,7 +159,8 @@ sub dcb_to_status
     if ($status->{product}->{model} =~ /(HW|TM1)$/)
     {
         # Status of hot water
-        $status->{hotwater} = { on => $dcb[43] };
+        $status->{hotwater} = { on => $dcb[43],
+                                boost => b2w(@dcb[41, 42]) };
     }
 
     # Program mode
@@ -253,30 +254,40 @@ sub status_to_text
 
     # Status of hot water
     push @text, 'Hot water is ' . ($status->{hotwater}->{on} ? 'ON' : 'OFF') if defined $status->{hotwater}->{on};
+    $text[-1] .= " boost for $status->{hotwater}->{boost} minutes" if $status->{hotwater}->{boost};
 
     # Feature table
     my @features =
     (
+        # Features 01 to 05 apply to all models
         ['Temperature format', $status->{config}->{units}],
         ['Switching differential', $status->{config}->{switchdiff}, $units],
         ['Frost protect', $status->{frostprotect}->{enabled}],
         ['Frost temperature', $status->{frostprotect}->{target}, $units],
         ['Output delay', $status->{config}->{outputdelay}, 'minutes'],
+        # Feature 06 on non-RF models or 06 to 10 on RF models
         ['Comms #', 'n/a'],
-        ['Temperature limit', $status->{config}->{locklimit}, $units],
+        # Feature 07 on non-RF models or 11 on RF models
+        ['Temperature limit', $status->{config}->{locklimit}, $units]
+    );
+    if ($status->{comfort} or $status->{timer})
+    {
+        # Features 08 to 12 on non RF or 12 to 16 on RF models, excludes DT-TS
+        push @features,
         ['Sensor selection', $status->{config}->{sensor}],
         ['Floor limit', $status->{floorlimit}->{floormax}, $units],
         ['Optimum start', $status->{config}->{optimumstart} || 'disabled', 'hours'],
         ['Rate of change', $status->{rateofchange}, 'minutes / deg C'],
-        ['Program mode', $status->{config}->{progmode}, 'day']
-    );
-    my $index = 1;
+        ['Program mode', $status->{config}->{progmode}, 'day'];
+    }
+    my ($index, $index2) = (1, 1);
     foreach my $feature (@features)
     {
+        $index2 += 4 if $index == 6;
         my ($desc, $value, $units) = @$feature;
         ($value, $units) = ('n/a', undef) unless defined $value;
-        push @text, sprintf "Feature %02i: %-23s %3s %s",
-                            $index++, $desc, $value, $units || '';
+        push @text, sprintf "Feature %02i (%02i): %-23s %3s %s",
+                            $index++, $index2++, $desc, $value, $units || '';
     }
 
     # Program entries
@@ -445,6 +456,8 @@ sub status_to_dcb
             # Status of hot water (values are different from those read)
             push @items, [42, [defined $value->{on}
                                ? ($value->{on} ? 1 : 2) : 0]] if exists $value->{on};
+            # HERE - Boost does not appear to work on PRTHW-TS WiFi RF v1.3
+            push @items, [41, [w2b($value->{boost})]] if exists $value->{boost};
         }
         elsif ($key eq 'comfort' and $model =~ /^PRT/)
         {
@@ -486,15 +499,16 @@ sub status_to_dcb
         }
         else
         {
+            # HERE - Need to add support for item 26 (TM1 countdown)
             # Other settings are not writable (including basic configuration)
-            # HERE - 25 (PRTHW boost) and 26 (TM1 countdown)
-            # Feature  1: $status->{config}->{units}
-            # Feature  2: $status->{config}->{switchdiff}
-            # Feature  5: $status->{config}->{outputdelay}
-            # Feature  7: $status->{config}->{locklimit}
-            # Feature  8: $status->{config}->{sensor}
-            # Feature 10: $status->{config}->{optimumstart}
-            # Feature 12: $status->{config}->{progmode}
+            # Feature 01: $status->{config}->{units}
+            # Feature 02: $status->{config}->{switchdiff}
+            # Feature 05: $status->{config}->{outputdelay}
+            # Feature 06 (06-10): Communications settings
+            # Feature 07 (11): $status->{config}->{locklimit}
+            # Feature 08 (12): $status->{config}->{sensor}
+            # Feature 10 (14): $status->{config}->{optimumstart}
+            # Feature 12 (16): $status->{config}->{progmode}
             die "Unsupported item identifier '$key' for writing\n";
         }
     }
