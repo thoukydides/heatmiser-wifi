@@ -8,7 +8,7 @@ Data is transferred to or from the thermostat via a binary Device Control Block 
 == All Thermostats ==
 
 || *Primary Key* || *Secondary Key* || *Read/Write* || *Description* ||
-|| `{config}` || `{progmode}` || R || Thermostat program mode (`5/2` or `7`) ||
+|| `{config}` || `{progmode}` || R || Feature 12 (or 16 for RF models): Thermostat program mode (`5/2` or `7`) ||
 || `{dcblength}` || ||R || Length of the DCB in octets ||
 || `{enabled}` || || R/W || Thermostat off (`0`) or on (`1`) ||
 || `{holiday}` || `{enabled}` || R/W || Home (`0`) or away (`1`) ||
@@ -23,10 +23,10 @@ Data is transferred to or from the thermostat via a binary Device Control Block 
 
 || *Primary Key* || *Secondary Key*  || *Read/Write* || *Description* ||
 || `{config}` || `{caloffset}` || R || Calibration offset (`#####`) ||
-|| `{config}` || `{locklimit}` || R || Feature 7: Temperature limit when locked (`0`...`10`) ||
-|| `{config}` || `{optimumstart}` || R || Feature 10: Optimum start disabled (`0`) or maximum hours (`1`...`3`) ||
+|| `{config}` || `{locklimit}` || R || Feature 7 (or 11 for RF models): Temperature limit when locked (`0`...`10`) ||
+|| `{config}` || `{optimumstart}` || R || Feature 10 (or 14 for RF models): Optimum start disabled (`0`) or maximum hours (`1`...`3`) ||
 || `{config}` || `{outputdelay}` || R || Feature 5: Output delay in minutes (`0`...`15`) ||
-|| `{config}` || `{sensor}` || R || Feature 8: Sensor selection (`internal`, `remote`, `floor`, `internal + floor` or `remote + floor`) ||
+|| `{config}` || `{sensor}` || R || Feature 8 (or 12 for RF models): Sensor selection (`internal`, `remote`, `floor`, `internal + floor` or `remote + floor`) ||
 || `{config}` || `{switchdiff}` || R || Feature 2: Switching hysteresis (`0.5`, `1.0` or `1.5`) ||
 || `{config}` || `{units}` || R || Feature 1: Temperature format (`C` or `F`) ||
 || `{errorcode}` || || R || Error code (`internal`, `floor`, or `remote`) or `undef` for none ||
@@ -35,7 +35,7 @@ Data is transferred to or from the thermostat via a binary Device Control Block 
 || `{heating}` || `{hold}` || R/W || Hold time in minutes (`#####`) ||
 || `{heating}` || `{on}` || R || Heating off (`0`) or on (`1`) ||
 || `{heating}` || `{target}` || R/W || Target heating temperature (`##`) ||
-|| `{rateofchange}` || || R || Feature 11: Learnt rate of temperature rise in minutes/°C (`###`) ||
+|| `{rateofchange}` || || R || Feature 11 (or 15 for RF models): Learnt rate of temperature rise in minutes/°C (`###`) ||
 || `{runmode}` || || R/W || Thermostat operating mode (`heating` or `frost`) ||
 || `{temperature}` || `{remote}` || R || Remote temperature (`##.#`) or `undef` ||
 || `{temperature}` || `{floor}` || R || Floor temperature (`##.#`) or `undef` ||
@@ -49,7 +49,7 @@ Data is transferred to or from the thermostat via a binary Device Control Block 
 == Underfloor Heating Controllers ==
 
 || *Primary Key* || *Secondary Key* || *Read/Write* || *Description* ||
-|| `{floorlimit}` || `{floormax}` || R/W || Feature 9: Floor temperature limit (`##`) ||
+|| `{floorlimit}` || `{floormax}` || R/W || Feature 9 (or 13 for RF models): Floor temperature limit (`##`) ||
 || `{floorlimit}` || `{limiting}` || R || In floor limit state (`1`) or not (`0`) ||
 
 == Hot Water Controllers ==
@@ -67,5 +67,5 @@ Data is transferred to or from the thermostat via a binary Device Control Block 
  * The Perl scripts represent dates and times as strings using the same format as SQL. Specifically, the current time and end of holiday are in `DATETIME` (`YYYY-MM-DD HH:MM:SS`) format, and programmed comfort levels and hot water timers are in `TIME` (`HH:MM:SS`) format.
  * Boolean values are represented by `0` (off/disabled) and `1` (on/enabled).
  * Enumerated values (other than boolean) are generally represented by text strings. However, if the DCB contains an unrecognised value then its raw numeric value is used instead.
- * Temperatures are specified in the configured units (Feature 1). The learnt rate of temperature change (Feature 11) is always in minutes/°C.
+ * Temperatures are specified in the configured units (Feature 1). The learnt rate of temperature change (Feature 11, or 15 for RF models) is always in minutes/°C.
  * Many settings (including most of the 'Features') cannot be set remotely; they must be adjusted via the thermostat's touchscreen.
