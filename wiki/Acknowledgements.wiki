@@ -6,9 +6,9 @@
 <table border=0>
 <tr><td>
 == Heatmiser ==
-This software is based on the [http://www.heatmiser.com/web/index.php/support/manuals-and-documents/viewcategory/27-network-protocol Heatmiser V3 System Protocol documentation].
+This software is based on the [http://www.heatmiser.com/index.php/support/manuals-and-documents/viewcategory/27-network-protocol Heatmiser V3 System Protocol documentation].
 <td>
-http://www.heatmiser.com/web/templates/theme995/images/logo/logo.png
+http://www.heatmiser.com/templates/theme995/images/logo/logo.png
 
 <tr><td>
 == Highstock ==
