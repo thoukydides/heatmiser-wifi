@@ -456,8 +456,7 @@ sub status_to_dcb
             # Status of hot water (values are different from those read)
             push @items, [42, [defined $value->{on}
                                ? ($value->{on} ? 1 : 2) : 0]] if exists $value->{on};
-            # HERE - Boost does not appear to work on PRTHW-TS WiFi RF v1.3
-            push @items, [41, [w2b($value->{boost})]] if exists $value->{boost};
+            push @items, [25, [w2b($value->{boost})]] if exists $value->{boost};
         }
         elsif ($key eq 'comfort' and $model =~ /^PRT/)
         {
