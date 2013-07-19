@@ -161,6 +161,9 @@ sub dcb_to_status
         # Status of hot water
         $status->{hotwater} = { on => $dcb[43],
                                 boost => b2w(@dcb[41, 42]) };
+
+        # Away mode
+        $status->{awaymode} = lookup($dcb[24], 0 => 'home', 1 => 'away');
     }
 
     # Program mode
@@ -232,7 +235,6 @@ sub status_to_text
 
     # General operating status
     push @text, 'Thermostat is ' . ($status->{enabled} ? 'ON' : 'OFF');
-    $text[-1] .= " ($status->{runmode} mode)" if $status->{enabled} and $status->{runmode};
     push @text, "Key lock active" if $status->{keylock};
     push @text, "Time $status->{time}";
 
@@ -251,10 +253,12 @@ sub status_to_text
     push @text, "Target $status->{heating}->{target} $units" if $status->{heating}->{target};
     $text[-1] .= " hold for $status->{heating}->{hold} minutes" if $status->{heating}->{hold};
     push @text, 'Heating is ' . ($status->{heating}->{on} ? 'ON' : 'OFF') if defined $status->{heating}->{on};
+    $text[-1] .= " ($status->{runmode} mode)" if $status->{enabled} and $status->{runmode};
 
     # Status of hot water
     push @text, 'Hot water is ' . ($status->{hotwater}->{on} ? 'ON' : 'OFF') if defined $status->{hotwater}->{on};
     $text[-1] .= " boost for $status->{hotwater}->{boost} minutes" if $status->{hotwater}->{boost};
+    $text[-1] .= " ($status->{awaymode} mode)" if $status->{enabled} and $status->{awaymode};
 
     # Feature table
     my @features =
@@ -434,6 +438,11 @@ sub status_to_dcb
         {
             # Run mode (frost a.k.a. away)
             push @items, [23, [$value eq 'frost' ? 1 : 0]];
+        }
+        elsif ($key eq 'awaymode' and $model =~ /(HW|TM1)$/)
+        {
+            # Away mode (disables hot water and heating)
+            push @items, [31, [$value eq 'away' ? 1 : 0]];
         }
         elsif ($key eq 'frostprotect' and $model ne 'TM1')
         {
