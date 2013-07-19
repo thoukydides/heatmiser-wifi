@@ -7,10 +7,11 @@ Heatmiser Wi-Fi thermostats expose two interfaces accessible via TCP/IP: an embe
 
 [http://www.heatmiser.com/index.php/support/manuals-and-documents/viewcategory/27-network-protocol Heatmiser V3 System Protocol documentation]
 
-== Documentation Errors ==
+== Documentation Clarifications ==
 
-The original version (V3.1) of Heatmiser's System Protocol documentation contained many errors and ambiguities. Most of these have been rectified in the current version (V3.9), but a few remain in the details of the "DCB structure" that provides the thermostat's configuration and status. The correct details were determined by analysing the data returned by PRT-TS !WiFi, PRTHW-TS !WiFi and PRTHW-TS !WiFi RF thermostats. There are presumably similar errors in the documentation for other models.
- * When multi-octet values are read (notably the length and temperature measurements) the less significant octet appears first. For all such values, except the DCB length field, the more significant octet appears at the address stated in the documentation with the less significant octet at the preceding address. There is a note in the documentation that "the Wi-Fi thermostat is little-endian" but this is not reflected in the DCB format descriptions.
+The original version (V3.1) of Heatmiser's System Protocol documentation contained many errors and ambiguities. Most of these have been rectified in the current version (V3.9), but a few remain in the details of the "DCB structure" that provides the thermostat's configuration and status:
+ * When the whole DCB is read the individual parameters appear at the offset listed in the "Index in DCB" column of the documentation. Multi-octet values such as temperatures are little endian (less significant octet first), which is generally the reverse of the format stated in the DCB descriptions.
+ * When individual parameters are written to the thermostat the address in the "Unique address" column of the documentation should be used. Multi-octet values such as the hold time are big endian (most significant octet first), which again is the opposite of what the DCB descriptions state.
  * The switching differential is specified as being in the range 1-3, but is actually in the range 1-6 in units of 0.5°C.
 
 Additional corrections, especially for other models (DT-TS Wi-Fi and TM1-TS Wi-Fi), will be gratefully received.
