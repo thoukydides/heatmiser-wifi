@@ -36,7 +36,7 @@ Data is transferred to or from the thermostat via a binary Device Control Block 
 || `{heating}` || `{on}` || R || Heating off (`0`) or on (`1`) ||
 || `{heating}` || `{target}` || R/W || Target heating temperature (`##`) ||
 || `{rateofchange}` || || R || Feature 11 (or 15 for RF models): Learnt rate of temperature rise in minutes/°C (`###`) ||
-|| `{runmode}` || || R/W || Thermostat operating mode (`heating` or `frost`) ||
+|| `{runmode}` || || R/W || Heating operating mode (`heating` or `frost`) ||
 || `{temperature}` || `{remote}` || R || Remote temperature (`##.#`) or `undef` ||
 || `{temperature}` || `{floor}` || R || Floor temperature (`##.#`) or `undef` ||
 || `{temperature}` || `{internal}` || R || Internal air temperature (`##.#`) or `undef` ||
@@ -55,7 +55,7 @@ Data is transferred to or from the thermostat via a binary Device Control Block 
 == Hot Water Controllers ==
 
 || *Primary Key* || *Secondary Key* || *Read/Write* || *Description* ||
-|| `{awaymode}` || || R/W || Thermostat operating mode (`home` or `away`) ||
+|| `{awaymode}` || || R/W || Hot water operating mode (`home` or `away`) ||
 || `{hotwater}` || `{boost}` || R/W || Boost time in minutes (`#####`) ||
 || `{hotwater}` || `{on}` || R/W || Hot water off (`0`), on (`1`) or let timer run (`undef`, for W only) ||
 
