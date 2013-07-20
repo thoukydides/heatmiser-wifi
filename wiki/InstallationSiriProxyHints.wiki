@@ -107,7 +107,9 @@ Obviously `192.168.0.10` should be changed to the IP address of the machine runn
 
 == Change the !SiriProxy Port Number ==
 
-If Apache is running on the same machine and has been configured to support SSL connections then it will be using port `443`. Unfortunately, Siri uses the same port number to connect to !SiriProxy. To resolve this conflict, `iptables` can be used to redirect connections from specific devices to an alternative port number.
+If Apache is running on the same machine and has been configured to support SSL connections then it will be using port `443`. Unfortunately, Siri uses the same port number to connect to !SiriProxy. To resolve this conflict, `iptables` can be used to redirect connections from specific devices to an alternative port number. Ensure that it is installed using:
+<code language=sh>
+sudo apt-get install iptables iptables-persistent</code>
 
 First, configure !SiriProxy to use a different port number by modifying the `port:` setting in the `~/.siriproxy/config.yml` file. In this example port number `8443` is used:
 <code language=sh>
@@ -118,6 +120,11 @@ Ensure that any iOS devices on the local network have static IP addresses, e.g. 
 sudo iptables -t nat -A PREROUTING -p tcp -s 192.168.0.100,192.168.0.101 --dport 443 -j REDIRECT --to-ports 8443</code>
 
 Note that this will also redirect SSL (`https:`) accesses from Safari.
+
+The `iptables-persistent` package loads the `iptables` rules from configuration files at system start-up. These files should be updated following any reconfiguration using:
+<code language=sh>
+sudo sh -c "iptables-save > /etc/iptables/rules.v4"
+sudo sh -c "ip6tables-save > /etc/iptables/rules.v6"</code>
 
 == Update Plugins ==
 
