@@ -25,7 +25,7 @@ The reason for changes to the target room temperature are indicated by circular 
 || *Flag* || *Description* ||
 || http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-off.png  || The thermostat is switched off ||
 || http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-holiday.png || Holiday mode, frost protection enabled until return date ||
-|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-away.png || Away mode, frost protection enabled indefinitely ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-away.png || Summer mode, frost protection enabled indefinitely ||
 || http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-hold.png || Temperature hold, for selected duration ||
 || http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-heating-manual.png || Temperature adjusted manually, until next programmed comfort level ||
 
@@ -39,7 +39,10 @@ Two additional flags for normal timer operation are currently disabled, but can 
 If the thermostat also controls hot water then changes to its state are indicated by square flags at the bottom of the chart:
 || *Flag* || *Description* ||
 || http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-off.png || The thermostat is switched off ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-holiday-off.png || Holiday mode, hot water disabled ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-away-off.png || Away mode, hot water disabled ||
 || http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-timer-on.png || Hot water is on, controlled by timer ||
 || http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-timer-off.png || Hot water is off, controlled by timer ||
+|| http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-boost-on.png || Hot water is on, manual boost ||
 || http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-manual-on.png || Hot water is on, manual override ||
 || http://heatmiser-wifi.googlecode.com/svn/wiki/legend-flag-hotwater-manual-off.png || Hot water is off, manual override ||
