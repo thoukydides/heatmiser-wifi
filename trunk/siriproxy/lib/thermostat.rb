@@ -137,7 +137,7 @@ class Thermostat
   # Control features specific to thermostats with heating control
 
   def hold(minutes, degrees = nil) # and force normal heating mode
-    dcb_items = {enabled: true, runmode: 'heating', holiday: {enabled: false},
+    dcb_items = {enabled: true, holiday: {enabled: false}, runmode: 'heating',
                  heating: {hold: minutes}}
     dcb_items[:heating][:target] = degrees.round(0) if degrees
     write(dcb_items)
@@ -148,12 +148,12 @@ class Thermostat
   end
 
   def target_temperature=(degrees) # and force normal heating mode
-    write(enabled: true, runmode: 'heating', holiday: {enabled: false},
+    write(enabled: true, holiday: {enabled: false}, runmode: 'heating',
           heating: {target: degrees.round(0)})
   end
 
   def heating_mode # and force thermostat to be enabled and not on holiday
-    write(enabled: true, runmode: 'heating', holiday: {enabled: false})
+    write(enabled: true, holiday: {enabled: false}, runmode: 'heating')
   end
 
   def frost_protect_mode # and force thermostat to be enabled
@@ -162,15 +162,45 @@ class Thermostat
 
   # Query cached information specific to thermostats with hot water control
 
+  def home_mode?
+    on? and @dcb[:awaymode] == 'home'
+  end
+
   def hotwater_active?
     @dcb[:hotwater][:on] != 0
   end
 
+  def boost?
+    @dcb[:hotwater][:boost] != 0
+  end
+
+  def boost_minutes
+    @dcb[:hotwater][:boost]
+  end
+
   # Control features specific to thermostats with hot water control
 
+  def home_mode # and force thermostat to be enabled and not on holiday
+    write(enabled: true, holiday: {enabled: false}, awaymode: 'home')
+  end
+
+  def away_mode
+    write(awaymode: 'away')
+  end
+
   def hotwater=(enabled = nil) # or nil to return to program
-     # Also forces thermostat to be enabled and not on holiday
-    write(enabled: true, holiday: {enabled: false}, hotwater: {on: enabled})
+     # Also force normal hot water mode
+    write(enabled: true, holiday: {enabled: false}, awaymode: 'home',
+          hotwater: {on: enabled})
+  end
+
+  def boost(minutes) # and force normal hot water mode
+    write(enabled: true, holiday: {enabled: false}, awaymode: 'home',
+          hotwater: {boost: minutes})
+  end
+
+  def cancel_boost
+    write(hotwater: {boost: 0})
   end
 
   private
