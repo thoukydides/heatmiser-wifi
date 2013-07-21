@@ -437,7 +437,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
           off:          ['-', 'Thermostat off',   'rgba(0, 0, 0, 1)'],
           // Frost protection
           holiday:      ['H*', 'Holiday (frost)', 'rgba(0, 255, 255, 1)'],
-          away:         ['A*', 'Away (frost)',    'rgba(0, 255, 255, 1)'],
+          away:         ['S*', 'Summer (frost)',  'rgba(0, 255, 255, 1)'],
           // Normal (suppress normal programmed comfort levels)
           hold:         ['H', 'Hold',             'rgba(0, 255, 0, 1)'],
           manual:       ['M', 'Manual',           'rgba(0, 255, 0, 1)']
@@ -462,8 +462,14 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
       {
         // Map the event to a display format
         var flagTypes = {
+          // Thermostat off
           off:      ['-', '-', 'thermostat off'],
+          // Hot water disabled
+          holiday:  ['H', 'h', 'holiday'],
+          away:     ['A', 'a', 'away'],
+          // Normal (includes overrides)
           timer:    ['T', 't', 'timer program'],
+          boost:    ['B', 'b', 'manual boost'],
           override: ['M', 'm', 'manual override']
         };
         var type = flagTypes[event[1]];
