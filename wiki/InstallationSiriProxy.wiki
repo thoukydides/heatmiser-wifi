@@ -91,10 +91,15 @@ Actions:
   * `Increase target temperature by 2°.`
   * `Lower bedroom temperature by 3° Centigrade.`
   * `Hold the temperature for an hour.`
+  * `Maintain the bedroom temperature until 9 o'clock.`
   * `Hold the hallway thermostat at 21° for 20 minutes.`
   * `Hold temperature at 20 Cesius for 2 hours.`
   * `Set all thermostats target temperature to 19° and hold for an hour.`
   * `Set temperature to 22 Centigrade and hold for 30 minutes.`
+  * `Hold the bedroom and hallway thermostats at 70° Fahrenheit until 9:30 PM.`
+  * `Keep temperature at 18° Celsius until 5 PM.`
+  * `Set hallway thermostat target temperature to 20 Celsius and hold until 7 o'clock.`
+  * `Set temperature to 22° and maintain until 7:30 AM.`
   * `Cancel all thermostats temperature hold.`
   * `Stop target temperature hold.`
   * `Terminate holding bedroom temperature.`
@@ -115,6 +120,10 @@ Actions:
   * `Switch hot water on.`
   * `Turn off bedroom hot water.`
   * `Enable all hot water.`
+  * `Extend hot water for 1 hour.`
+  * `Boost bathroom thermostat for 30 minutes.`
+  * `Boost hot water until 8 o'clock.`
+  * `Boost all thermostats until 9:20 PM.`
   * `Cancel the hot water override.`
 
 == A Simpler Alernative ==
