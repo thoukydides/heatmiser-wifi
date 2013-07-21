@@ -80,7 +80,7 @@ The details of the information recorded for each event depend on the `class`:
 || *Class* || *State* || *Temperature* ||
 || `heating` || Heating off (`0`) or on (`1`) || n/a (`NULL`) ||
 || `target` || Cause (`off`, `holiday`, `away`, `comfortlevel`, `optimumstart`, `hold` or `manual`) || Target heating temperature (`##`) ||
-|| `hotwater` || Cause (`off`, `timer` or `override`) || Hot water off (`0`) or on (`1`) ||
+|| `hotwater` || Cause (`off`, `holiday`, `away`, `timer`, `boost` or `override`) || Hot water off (`0`) or on (`1`) ||
 
 == Table `weather` ==
 
