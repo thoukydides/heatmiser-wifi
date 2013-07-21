@@ -9,7 +9,7 @@
 # - Switching differential is actually in the range 1-6 in units of 0.5C
 # - Multi-byte values (length and temperatures) have LSB at the preceding index
 
-# Copyright © 2011, 2012 Alexander Thoukydides
+# Copyright © 2011, 2012, 2013 Alexander Thoukydides
 
 # This file is part of the Heatmiser Wi-Fi project.
 # <http://code.google.com/p/heatmiser-wifi/>
@@ -436,12 +436,12 @@ sub status_to_dcb
         }
         elsif ($key eq 'runmode' and $model ne 'TM1')
         {
-            # Run mode (frost a.k.a. away)
+            # Run mode (controls heating)
             push @items, [23, [$value eq 'frost' ? 1 : 0]];
         }
         elsif ($key eq 'awaymode' and $model =~ /(HW|TM1)$/)
         {
-            # Away mode (disables hot water and heating)
+            # Away mode (controls hot water)
             push @items, [31, [$value eq 'away' ? 1 : 0]];
         }
         elsif ($key eq 'frostprotect' and $model ne 'TM1')
