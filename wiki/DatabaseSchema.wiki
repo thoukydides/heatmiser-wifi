@@ -21,7 +21,8 @@ The following settings are currently stored:
 || `vendor` || Thermostat manufacturer (`Heatmiser` or `OEM`) ||
 || `version` || Thermostat version number (`#.#`) ||
 || `model` || Thermostat model (`DT`, `DT-E`, `PRT`, `PRT-E`, `PRTHW`, or `TM1`) ||
-|| `mode` || Thermostat operating mode (`off`, `on`, `frost` or `heating`) ||
+|| `heating` || Heating operating mode (`off`, `frost`, `heating` or `n/a`) ||
+|| `hotwater` || Hot water operating mode (`off`, `hotwater` or `n/a`) ||
 || `units` || Temperature units (`C` or `F`) ||
 || `holiday` || End of holiday (`YYYY-MM-DD hh:mm:ss`) or zero length string if not enabled ||
 || `progmode` || Thermostat program mode (`5/2` or `7`) ||
