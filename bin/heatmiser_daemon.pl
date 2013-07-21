@@ -8,7 +8,7 @@
 # '/var/run/heatmiser_daemon.pl.pid'. On most systems this probably means that
 # it needs to be run as root.
 
-# Copyright © 2011, 2012 Alexander Thoukydides
+# Copyright © 2011, 2012, 2013 Alexander Thoukydides
 #
 # This file is part of the Heatmiser Wi-Fi project.
 # <http://code.google.com/p/heatmiser-wifi/>
@@ -210,7 +210,7 @@ sub action_heat
 
     # Consider influences in decreasing order of importance
     my ($target, $cause);
-    unless (defined $status->{heating})
+    unless (exists $status->{heating})
     {
         # Thermostat does not control heating
         $target = 0;
@@ -224,7 +224,7 @@ sub action_heat
     }
     elsif ($status->{runmode} eq 'frost')
     {
-        # Frost protection mode (includes holiday)
+        # Frost protection mode (includes away/summer and holiday)
         $target = $status->{frostprotect}->{enabled}
                   ? $status->{frostprotect}->{target} : 0;
         $cause = $status->{holiday}->{enabled} ? 'holiday' : 'away';
@@ -255,24 +255,46 @@ sub action_hotwater
 
     # Consider influences in decreasing order of importance
     my ($state, $cause);
-    unless (defined $status->{hotwater})
+    unless (exists $status->{hotwater})
     {
         # Thermostat does not control hot water
         $state = 0;
         $cause = '';
     }
-    elsif (not $status->{enabled})
-    {
-        # Thermostat switched off
-        $state = 0;
-        $cause = 'off';
-    }
     else
     {
-        # Normal control mode (includes manual override)
+        # Hot water is being controlled so determine influence
         $state = $status->{hotwater}->{on};
-        $cause = $status->{hotwater}->{on} == $timer
-                 ? 'timer' : 'override';
+        unless ($status->{enabled})
+        {
+            # Thermostat switched off
+            $cause = 'off';
+        }
+        elsif ($status->{holiday}->{enabled})
+        {
+            # Holiday
+            $cause = 'holiday';
+        }
+        elsif ($status->{awaymode} eq 'away')
+        {
+            # Away mode
+            $cause = 'away';
+        }
+        elsif ($status->{hotwater}->{boost})
+        {
+            # Hot water boost
+            $cause = 'boost';
+        }
+        elsif ($status->{hotwater}->{on} == $timer)
+        {
+            # Timer control
+            $cause = 'timer';
+        }
+        else
+        {
+            # Manual override
+            $cause = 'override';
+        }
     }
 
     # Return the result
@@ -290,8 +312,15 @@ sub log_config
                          vendor   => $status->{product}->{vendor},
                          version  => $status->{product}->{version},
                          model    => $status->{product}->{model},
-                         mode     => $status->{enabled}
-                                     ? ($status->{runmode} || 'on') : 'off',
+                         heating  => exists $status->{heating}
+                                     ? ($status->{enabled}
+                                        ? $status->{runmode} : 'off')
+                                     : 'n/a',
+                         hotwater => exists $status->{hotwater}
+                                     ? ($status->{enabled}
+                                        && $status->{awaymode} eq 'home'
+                                        ? 'hotwater' : 'off')
+                                     : 'n/a',
                          units    => $status->{config}->{units},
                          holiday  => $status->{holiday}->{enabled}
                                      ? $status->{holiday}->{time} : '',
