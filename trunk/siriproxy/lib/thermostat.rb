@@ -138,7 +138,7 @@ class Thermostat
 
   def hold(minutes, degrees = nil) # and force normal heating mode
     dcb_items = {enabled: true, holiday: {enabled: false}, runmode: 'heating',
-                 heating: {hold: minutes}}
+                 heating: {hold: minutes.round(0)}}
     dcb_items[:heating][:target] = degrees.round(0) if degrees
     write(dcb_items)
   end
@@ -191,12 +191,12 @@ class Thermostat
   def hotwater=(enabled = nil) # or nil to return to program
      # Also force normal hot water mode
     write(enabled: true, holiday: {enabled: false}, awaymode: 'home',
-          hotwater: {on: enabled})
+          hotwater: {boost: 0, on: enabled})
   end
 
   def boost(minutes) # and force normal hot water mode
     write(enabled: true, holiday: {enabled: false}, awaymode: 'home',
-          hotwater: {boost: minutes})
+          hotwater: {boost: minutes.round(0)})
   end
 
   def cancel_boost
