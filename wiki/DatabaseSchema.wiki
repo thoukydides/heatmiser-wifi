@@ -1,4 +1,4 @@
-#summary Acknowledgements
+#summary Description of the MySQL database tables
 #labels Phase-Design,Phase-Implementation
 
 = Database Schema =
