@@ -9,7 +9,7 @@
 #   CREATE USER 'heatmiser'@'localhost';
 #   GRANT ALL ON heatmiser.* TO 'heatmiser'@'localhost';
 
-# Copyright © 2011, 2012 Alexander Thoukydides
+# Copyright © 2011, 2012, 2013 Alexander Thoukydides
 
 # This file is part of the Heatmiser Wi-Fi project.
 # <http://code.google.com/p/heatmiser-wifi/>
@@ -206,7 +206,7 @@ sub settings_update
         # Prepare the SQL statements to modify settings table entries
         my $replace = $db->prepare_cached('REPLACE settings (thermostat, name, value) VALUES (?,?,?)');
         my $names = $db->prepare_cached("SELECT name FROM settings WHERE (thermostat='" . $thermostat . "')");
-        my $delete = $db->prepare_cached('DELETE FROM settings WHERE (htermostat=?) AND (name=?)');
+        my $delete = $db->prepare_cached('DELETE FROM settings WHERE (thermostat=?) AND (name=?)');
 
         # Update all specified settings entries
         $db->{AutoCommit} = 0;
@@ -229,9 +229,10 @@ sub settings_update
     if ($@)
     {
         # Rollback the incomplete changes
+        my $error = $@;
         eval { $db->rollback };
         $db->{AutoCommit} = 1;
-        die "Settings update transaction aborted: $@\n";
+        die "Settings update transaction aborted: $error\n";
     }
 }
 
@@ -274,9 +275,10 @@ sub comfort_update
     if ($@)
     {
         # Rollback the incomplete changes
+        my $error = $@;
         eval { $db->rollback };
         $db->{AutoCommit} = 1;
-        die "Comfort levels update transaction aborted: $@\n";
+        die "Comfort levels update transaction aborted: $error\n";
     }
 }
 
@@ -319,9 +321,10 @@ sub timer_update
     if ($@)
     {
         # Rollback the incomplete changes
+        my $error = $@;
         eval { $db->rollback };
         $db->{AutoCommit} = 1;
-        die "Timer program update transaction aborted: $@\n";
+        die "Timer program update transaction aborted: $error\n";
     }
 }
 
