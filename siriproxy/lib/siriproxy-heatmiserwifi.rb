@@ -23,6 +23,7 @@ require 'cora'
 require 'date'
 require 'set'
 require 'siri_objects'
+require 'time'
 require_relative 'thermostat'
 
 
@@ -50,6 +51,7 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   RE_TARGET = /(?:target )?temperature|target/i
   RE_OPTIONAL_TARGET = /(?:#{RE_TARGET} )?/
   RE_HOLD = /hold(?:ing)?|keep|maintain/i
+  RE_BOOST = /boost|continue|extend|lengthen|prolong/i
   RE_HOTCOLD = /cold|cool|hot|warm/i
   RE_WHATIS = /(?:what (?:is|are)|what's|check|examine|interrogate|query)(?: the)?/i
   RE_SWITCH = /switch|turn|place|put/i
@@ -57,7 +59,7 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   RE_ISIT = /is it/i
   RE_HOW = /how/i
   RE_FOR = /for/i
-  RE_OVERRIDE = /override|manual(?: control)?/i
+  RE_OVERRIDE = /boost|override|manual(?: control)?/i
   RE_SET = /place|put|set|#{RE_SWITCH} on/i
   RE_TO = /at|in|to|two/i # (Siri sometimes recognises 'to' as 'two')
   RE_OPTIONAL_BY = /(?:by )?/i
@@ -67,7 +69,7 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   RE_DECREASE = /decrease|reduce|lower/i
   RE_CANCEL = /abort|cancel|countermand|end|finish|rescind|revoke|stop|terminate/i
   RE_AWAY = /(?:(?:in|on|to) )?(?:holiday|away)(?: (?:mode|state))?/i
-  RE_RETURN =/until|return(?:ing)?(?: (?:on|at))?/i
+  RE_UNTIL = /until|return(?:ing)?(?: (?:on|at))?/i
   RE_ON = /on/i
   RE_OFF = /off/i
   RE_ONOFF = /(#{RE_ON}|#{RE_OFF})/
@@ -121,9 +123,12 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   RE_YEAR = /\d\d\d\d/
   RE_DATE_UK = /#{RE_DAY} (?:of )?#{RE_MONTH}(?: #{RE_YEAR})?/i
   RE_DATE_US = /#{RE_MONTH} #{RE_DAY}(?: #{RE_YEAR})?/i
-  RE_DATE = /#{RE_DATE_UK}|#{RE_DATE_US}/
-  RE_TIME = /\d\d:\d\d(?: ?(?:AM|PM))/i
-  RE_DATETIME = /(#{RE_DATE}|#{RE_TIME}|#{RE_TIME} (?:on )#{RE_DATE})/i
+  RE_DATE_PART = /#{RE_DATE_UK}|#{RE_DATE_US}/
+  RE_TIME_HOURS = /\d?\d ?(?:AM|PM|o'clock)/i
+  RE_TIME_FULL = /\d?\d:\d\d(?: ?(?:AM|PM))/i
+  RE_TIME_PART = /#{RE_TIME_HOURS}|#{RE_TIME_FULL}/
+  RE_TIME = /(#{RE_TIME_PART})/
+  RE_DATETIME = /(#{RE_DATE_PART}|#{RE_TIME_PART}|#{RE_TIME_PART} (?:on )#{RE_DATE_PART})/i
 
   # Allow more readable regexps for speech patterns
 
@@ -156,13 +161,15 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   listen_for_phrase('SWITCH ONOFF THERMOSTATS')\
     { |onoff, thermostats| action_onoff thermostats, onoff }
 
-  listen_for_phrase('SET THERMOSTATS AWAY RETURN DATETIME')\
+  listen_for_phrase('SET THERMOSTATS AWAY UNTIL DATETIME')\
     { |thermostats, datetime| action_holiday thermostats, datetime }
 
   listen_for_phrase('CANCEL THERMOSTATS AWAY')\
     { |thermostats| action_holiday_cancel thermostats }
   listen_for_phrase('CANCEL AWAY FOR THERMOSTATS')\
     { |thermostats| action_holiday_cancel thermostats }
+
+  # HERE - Add 'SET THERMOSTATS TO SUMMERWINTER MODE'
 
   # Queries that apply to thermostats with heating control
 
@@ -185,6 +192,8 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
 
   listen_for_phrase('HOLD [THERMOSTATS] TARGET FOR DURATION')\
     { |thermostats, duration| action_hold_temperature thermostats, duration }
+  listen_for_phrase('HOLD [THERMOSTATS] TARGET UNTIL TIME')\
+    { |thermostats, time| action_hold_temperature thermostats, time }
 
   listen_for_phrase('HOLD THERMOSTATS [TARGET] TO DEGREES FOR DURATION')\
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
@@ -194,6 +203,14 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
   listen_for_phrase('SET [THERMOSTATS] TARGET TO DEGREES [AND] HOLD FOR DURATION')\
     { |thermostats, degrees, duration| action_hold_temperature thermostats, duration, degrees }
+  listen_for_phrase('HOLD THERMOSTATS [TARGET] TO DEGREES UNTIL TIME')\
+    { |thermostats, degrees, time| action_hold_temperature thermostats, time, degrees }
+  listen_for_phrase('HOLD [THERMOSTATS] TARGET TO DEGREES UNTIL TIME')\
+    { |thermostats, degrees, time| action_hold_temperature thermostats, time, degrees }
+  listen_for_phrase('SET THERMOSTATS [TARGET] TO DEGREES [AND] HOLD UNTIL TIME')\
+    { |thermostats, degrees, time| action_hold_temperature thermostats, time, degrees }
+  listen_for_phrase('SET [THERMOSTATS] TARGET TO DEGREES [AND] HOLD UNTIL TIME')\
+    { |thermostats, degrees, time| action_hold_temperature thermostats, time, degrees }
 
   listen_for_phrase('SET THERMOSTATS [TARGET] TO DEGREES')\
     { |thermostats, degrees| action_set_temperature thermostats, degrees }
@@ -238,12 +255,23 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
 
   # Actions that apply to thermostats with hot water control
 
+  # HERE - Add 'SET THERMOSTATS TO HOMEAWAY'
+
   listen_for_phrase('SWITCH [THERMOSTATS] HOTWATER ONOFF')\
     { |thermostats, onoff| action_hotwater_onoff thermostats, onoff }
   listen_for_phrase('SWITCH ONOFF [THERMOSTATS] HOTWATER')\
     { |onoff, thermostats| action_hotwater_onoff thermostats, onoff }
   listen_for_phrase('ENABLEDISABLE [THERMOSTATS] HOTWATER')\
     { |onoff, thermostats| action_hotwater_onoff thermostats, onoff }
+
+  listen_for_phrase('BOOST [THERMOSTATS] HOTWATER FOR DURATION')\
+    { |thermostats, duration| action_hotwater_boost thermostats, duration }
+  listen_for_phrase('BOOST THERMOSTATS FOR DURATION')\
+    { |thermostats, duration| action_hotwater_boost thermostats, duration }
+  listen_for_phrase('BOOST [THERMOSTATS] HOTWATER UNTIL TIME')\
+    { |thermostats, time| action_hotwater_boost thermostats, time }
+  listen_for_phrase('BOOST THERMOSTATS UNTIL TIME')\
+    { |thermostats, time| action_hotwater_boost thermostats, time }
 
   listen_for_phrase('CANCEL [THERMOSTATS] HOTWATER OVERRIDE')\
     { |thermostats| action_hotwater_timer thermostats }
@@ -442,9 +470,11 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   def action_hotwater_onoff(thermostats, onoff)
     hotwater_on = speech_to_on(onoff)
     action_with_thermostats_controlling_hotwater(thermostats) do |ts|
-      action_precondition_active(ts, 'turning the hot water on') if hotwater_on
+      if hotwater_on
+        action_precondition_hotwater(ts, 'turning the hot water on')
+      end
       ts.each do |t|
-        if hotwater_on or action_active?(t)
+        if hotwater_on or action_hotwater?(t)
           if t.hotwater_active? == hotwater_on
             add_response nil, t,
                          "hot water was already #{onoff_to_s(hotwater_on)}"
@@ -454,6 +484,17 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
                          "hot water #{onoff_to_s(t.hotwater_active?)}"
           end
         end
+      end
+    end
+  end
+
+  def action_hotwater_boost(thermostats, duration)
+    action_with_thermostats_controlling_hotwater(thermostats) do |ts|
+      action_precondition_hotwater(ts, 'turning the hot water on')
+      ts.each do |t|
+        minutes = speech_to_minutes(duration)
+        t.boost(minutes) # Set the hot water boost
+        add_response nil, t, *status_items_hotwater(t)
       end
     end
   end
@@ -513,11 +554,17 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
   end
 
   def status_items_hotwater(t)
+    status = []
     if t.on? and not t.holiday?
-      ["hot water is #{onoff_to_s(t.hotwater_active?)}"]
-    else
-      []
+      if not t.home_mode?
+        status << 'is in away mode'
+      end
+      status << "hot water is #{onoff_to_s(t.hotwater_active?)}"
+      if t.boost?
+        status.last << " being boosted for #{minutes_to_s(t.boost_minutes)}"
+      end
     end
+    status
   end
 
   # Common operations in actions
@@ -526,6 +573,16 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
     action_precondition_active(ts, description) do |t|
       if not t.heating_mode?
         add_response nil, t, 'has heating switched off'
+      else
+        yield t if block_given?
+      end
+    end
+  end
+
+  def action_precondition_hotwater(ts, description) #, [yield]
+    action_precondition_active(ts, description) do |t|
+      if not t.home_mode?
+        add_response nil, t, 'is in away mode'
       else
         yield t if block_given?
       end
@@ -557,6 +614,17 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
     if action_active?(t)
       if not t.heating_mode?
         add_response 'I have left', t, 'heating switched off'
+      else
+        return true
+      end
+    end
+    return false
+  end
+
+  def action_hotwater?(t)
+    if action_active?(t)
+      if not t.home_mode?
+        add_response 'I have left', t, 'in away mode'
       else
         return true
       end
@@ -820,7 +888,18 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
     (fahrenheit - (interval ? 0 : 32)) * 5.0 / 9
   end
 
-  def speech_to_minutes(duration)
+  def speech_to_minutes(duration_or_time)
+    case duration_or_time
+    when RE_DURATION
+      speech_duration_to_minutes(duration_or_time)
+    when RE_TIME
+      speech_time_to_minutes(duration_or_time)
+    else
+      raise "Unrecognised duration \"#{duration_or_time}\""
+    end
+  end
+
+  def speech_duration_to_minutes(duration)
     number = speech_to_i duration
     multiplier = case duration
                  when /#{RE_DURATION_UNITS_MINUTES}$/
@@ -833,6 +912,15 @@ class SiriProxy::Plugin::HeatmiserWiFi < SiriProxy::Plugin
                    60 * 24 * 7
                  end
     number * multiplier
+  end
+
+  def speech_time_to_minutes(time)
+    time.sub!(/\s*o'clock$/i, ':00')
+    t_now = Time.now
+    t_end = Time.parse(time, t_now)
+    seconds = t_end - t_now
+    hours_range = time =~ /AM|PM/i || 12 <= t_end.hour ? 24 : 12
+    (seconds / 60) % (hours_range * 60)
   end
 
   def date_to_s(date)
