@@ -462,10 +462,10 @@ sub status_to_dcb
         }
         elsif ($key eq 'hotwater' and $model =~ /(HW|TM1)$/)
         {
+            push @items, [25, [w2b($value->{boost})]] if exists $value->{boost};
             # Status of hot water (values are different from those read)
             push @items, [42, [defined $value->{on}
                                ? ($value->{on} ? 1 : 2) : 0]] if exists $value->{on};
-            push @items, [25, [w2b($value->{boost})]] if exists $value->{boost};
         }
         elsif ($key eq 'comfort' and $model =~ /^PRT/)
         {
