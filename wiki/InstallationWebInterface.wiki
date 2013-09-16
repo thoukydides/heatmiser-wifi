@@ -183,7 +183,7 @@ wget http://code.jquery.com/jquery-2.0.2.min.js -O ~/public_html/heatmiser-wifi/
 
 Also download the Highcharts Highstock !JavaScript library to the same directory:
 <code language="sh">
-wget http://code.highcharts.com/stock/1.3.2/highstock.js -O ~/public_html/heatmiser-wifi</code>
+wget http://code.highcharts.com/stock/1.3.2/highstock.js -O ~/public_html/heatmiser-wifi/highstock.js</code>
 
 == View Web Page ==
 
