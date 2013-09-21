@@ -5,6 +5,8 @@
 
 Pete Lamonica's [https://github.com/plamoni/SiriProxy SiriProxy] allows the connection between an iPhone or iPad and Apple's Siri servers to be intercepted. Plugins can then be used to locally extend the functionality of Siri. This project includes such a plugin to enable Heatmiser Wi-Fi thermostats to be interrogated and controled by voice from iOS devices. It supports multiple heterogeneous Wi-Fi thermostats with full control over both central heating and hot water settings.
 
+<font color="red"><b>Note: !SiriProxy does not currently work with iOS 7.</b></font>
+
 == !SiriProxy Setup ==
 
 The first step is to install and configure !SiriProxy in accordance with its [https://github.com/plamoni/SiriProxy#set-up-instructions Setup Instructions]. This can be quite tricky but some of these [InstallationSiriProxyHints SiriProxy Setup Hints] may be helpful.
