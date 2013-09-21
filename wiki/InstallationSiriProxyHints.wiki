@@ -5,6 +5,8 @@
 
 Installing and configuring [https://github.com/plamoni/SiriProxy SiriProxy] prior to using [InstallationSiriProxy this project's plugin] can be quite tricky. The following hints may be helpful.
 
+<font color="red"><b>Note: !SiriProxy does not currently work with iOS 7.</b></font>
+
 == Install Ruby as `root` ==
 
 Follow the [https://github.com/plamoni/SiriProxy#set-up-instructions SiriProxy setup instructions] for Ruby and RVM as `root`. This ensures that Ruby will be installed system-wide, and makes it much easier to automatically launch !SiriProxy as a service. The easiest way to do this is to start a new shell before starting the setup:
