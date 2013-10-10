@@ -339,9 +339,12 @@ sub log_status
         $timer, $hotwater_state, $hotwater_cause) = @_;
 
     # Store the current status
+    my $air = $status->{temperature}->{remote}
+              || $status->{temperature}->{internal}
+              || $status->{temperature}->{floor};
     $db->log_insert($thermostat,
                     time    => $status->{time},
-                    air     => $status->{temperature}->{internal},
+                    air     => $air,
                     target  => $heat_target,
                     comfort => $comfort);
 
@@ -352,7 +355,7 @@ sub log_status
         printf "%s: %s Air=%.1f$u Target=%i$u Cause=%s Comfort=%i$u Heating=%s HotWater=%s Cause=%s Timer=%s\n",
                $thermostat,
                $status->{time},
-               $status->{temperature}->{internal},
+               $air,
                $heat_target,
                $heat_cause,
                $comfort,
