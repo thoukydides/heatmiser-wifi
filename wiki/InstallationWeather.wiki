@@ -109,7 +109,7 @@ If your thermostats are configured to display temperatures in Fahrenheit  then i
 Restart the daemon manually using:
 
 <code language="sh">
-sudo /etc/init.d/heatmiser_daemon restart</code>
+sudo reload heatmiser_daemon</code>
 
 Check the `/var/log/heatmiser` file for any errors.
 
