@@ -61,15 +61,17 @@ QUIT;</code>
 
 == Install the Daemon ==
 
-Create symbolic links to the daemon script and the `init` script used to control it:
+Create symbolic links to the daemon script and the `upstart` configuration used to control it:
 <code language="sh">
-sudo ln -s ~/heatmiser-wifi-read-only/bin/init /etc/init.d/heatmiser_daemon
-sudo ln -s ~/heatmiser-wifi-read-only/bin/heatmiser_daemon.pl /usr/local/bin/heatmiser_daemon</code>
+sudo ln -s ~/heatmiser-wifi-read-only/bin/heatmiser_daemon.conf /etc/init/heatmiser_daemon.conf
+sudo ln -s /lib/init/upstart-job /etc/init.d/heatmiser_daemon
+sudo ln -s ~/heatmiser-wifi-read-only/bin/heatmiser_daemon.pl /usr/local/bin/heatmiser_daemon
+sudo initctl reload-configuration</code>
 
 Start the daemon manually using:
 
 <code language="sh">
-sudo /etc/init.d/heatmiser_daemon start</code>
+sudo start heatmiser_daemon</code>
 
 If this worked successfully then the `/var/log/heatmiser` file should contain:
 <blockquote><pre>
