@@ -61,6 +61,11 @@ QUIT;</code>
 
 == Install the Daemon ==
 
+Ensure that Upstart is installed using:
+<code language=sh>
+sudo apt-get update
+sudo apt-get install upstart</code>
+
 Create symbolic links to the daemon script and the `upstart` configuration used to control it:
 <code language="sh">
 sudo ln -s ~/heatmiser-wifi-read-only/bin/heatmiser_daemon.conf /etc/init/heatmiser_daemon.conf
