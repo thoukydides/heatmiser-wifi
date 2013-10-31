@@ -66,6 +66,8 @@ Ensure that Upstart is installed using:
 sudo apt-get update
 sudo apt-get install upstart</code>
 
+If Upstart was not previously installed then reboot the computer before continuing.
+
 Create symbolic links to the daemon script and the `upstart` configuration used to control it:
 <code language="sh">
 sudo ln -s ~/heatmiser-wifi-read-only/bin/heatmiser_daemon.conf /etc/init/heatmiser_daemon.conf
