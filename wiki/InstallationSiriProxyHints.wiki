@@ -5,7 +5,7 @@
 
 Installing and configuring [https://github.com/plamoni/SiriProxy SiriProxy] prior to using [InstallationSiriProxy this project's plugin] can be quite tricky. The following hints may be helpful.
 
-<font color="red"><b>Note: !SiriProxy does not currently work with iOS 7.</b></font>
+<font color="red"><b>Note: !SiriProxy does not currently work with iOS 7; see [https://github.com/plamoni/SiriProxy/issues/542 SiriProxy issue 542 on GitHub] for details.</b></font>
 
 == Install Ruby as `root` ==
 
