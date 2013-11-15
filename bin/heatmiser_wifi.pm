@@ -592,7 +592,13 @@ sub open
 
     # Open a socket to the server
     $self->{socket} = IO::Socket::INET->new(PeerAddr => $self->{host}, PeerPort => $self->{port}, Proto => 'tcp', Timeout => $self->{timeout});
-    die "Unable to create socket: $!\n" unless $self->{socket};
+    unless ($self->{socket})
+    {
+        my $err = $!;
+        $err .= ' (something else may be connected, e.g. the mobile app)'
+            if $err eq 'Connection timed out';
+        die "Unable to connect to thermostat '$self->{host}': $err\n";
+    }
     $self->{socket}->setsockopt(SOL_SOCKET, SO_RCVTIMEO, pack('L!L!', $self->{timeout}, 0));
     return 1;
 }
