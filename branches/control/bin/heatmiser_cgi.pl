@@ -37,10 +37,12 @@ use lib (dirname(abs_path $0) =~ /^(.*)$/)[0]; # (clear taintedness)
 
 # Useful libraries
 use CGI;
-use JSON;
+use CGI::Carp 'fatalsToBrowser';
+use JSON::PP;
 use Time::HiRes qw(time sleep);
 use heatmiser_config;
 use heatmiser_db;
+use heatmiser_wifi;
 
 
 # Performance profiling
@@ -55,13 +57,15 @@ my $cgi = CGI->new;
 # Decode the script's parameters
 my $thermostat = $cgi->param('thermostat');
 my $type = $cgi->param('type') || 'log';
+my $method=$cgi->request_method;
 my %range = (from => scalar $cgi->param('from'),
-             to => scalar $cgi->param('to'),
-             days => scalar $cgi->param('days'));
+to => scalar $cgi->param('to'),
+days => scalar $cgi->param('days'));
 my %wrange = %range;
 $wrange{from} = scalar $cgi->param('wfrom') if $cgi->param('wfrom');
 $wrange{to} = scalar $cgi->param('wto') if $cgi->param('wto');
 my $timeout = time() + ($cgi->param('timeout') || 10);
+my $value = $cgi->param('value');
 
 # Trap any errors that occur while interrogating the database
 my (%results, $db);
@@ -69,87 +73,141 @@ eval
 {
     # Check range values are numeric (to guard against SQL injection attacks)
     die "Illegal range specified\n" if grep { defined $_ and !/^\d+(?:\.\d+)?$/ } (values %range, values %wrange);
-
+    
     # Provide a list of thermostats, default to the first if none specified
     $results{thermostats} = heatmiser_config::get_item('host');
     $thermostat = $results{thermostats}->[0] unless $thermostat;
+    if ($thermostat=~ /^([-\@\w.]+)$/) {
+        $thermostat = $1; 			# $data now untainted
+    } else {
+        die "Bad data in '$thermostat'"; 	# log this somewhere
+    }
     die "Unknown thermostat specified in request\n"
-        unless grep { $thermostat eq $_ } @{$results{thermostats}};
-
+    unless grep { $thermostat eq $_ } @{$results{thermostats}};
     # Connect to the database (requesting dates as milliseconds since epoch)
     $db = new heatmiser_db(heatmiser_config::get(qw(dbsource dbuser dbpassword)), dateformat => 'javascript');
-    time_log('Database connection');
-
-    # Always retrieve the thermostat's settings
-    $results{settings} = { $db->settings_retrieve($thermostat) };
-    time_log('Database settings query');
-
-    # If requesting new data then wait for up to the timeout value
-    if (defined $range{from} and not defined $range{to})
+    $results{method}=$method;
+    if ($method eq 'POST')
     {
-        while (time() < $timeout)
+        $results{type}=$type;
+        if ($type eq 'temperature')
         {
-            my $latest = $db->log_retrieve_latest($thermostat, ['time'])->[0];
-            last if $range{from} < $latest;
-            sleep(1);
+            my $heatmiser = new heatmiser_wifi(host=>$thermostat,  heatmiser_config::get(qw(pin)));
+            my @pre_dcb = $heatmiser->read_dcb();
+            my $pre_status = $heatmiser->dcb_to_status(@pre_dcb);
+            $results{pre}=$pre_status;
+            $results{pin}=heatmiser_config::get(qw(pin));
+            $results{thermo}=$thermostat;
+            my @items = $heatmiser->status_to_dcb($pre_status,
+            enabled => 1,
+            runmode => 'heating',
+            holiday => { enabled => 0 },
+            heating => { target => $value });
+            my @post_dcb = $heatmiser->write_dcb(@items);
+            my $post_status = $heatmiser->dcb_to_status(@post_dcb);
+            $results{post}=$post_status;
+            $heatmiser->close();
+            # log into database
+            $db->event_insert($thermostat, time=>$post_status->{time}, class=>'target',state=>'override',temperature=>$value);
         }
-        time_log('Wait for new data');
-    }
-
-    # Retrieve the requested data
-    if ($type eq 'log')
-    {
-        # Retrieve temperature logs
-        my $temperatures = $db->log_retrieve($thermostat,
-                                             [qw(time air target comfort)],
-                                             \%range);
-        time_log('Database temperatures query');
-        $results{temperatures} = fixup_uniq($temperatures);
-        time_log('Data conversion');
-
-        # Retrieve the heating activity log
-        my $heating = $db->events_retrieve($thermostat, [qw(time state)],
-                                           'heating', \%range);
-        $results{heating} = fixup($heating);
-        time_log('Database heating query');
-
-        # Retrieve the target temperature log
-        my $target = $db->events_retrieve($thermostat,
-                                          [qw(time state temperature)],
-                                          'target', \%range);
-        $results{target} = fixup($target, sub { ($_[0]+0, $_[1], $_[2]+0) } );
-        time_log('Database target query');
-
-        # Retrieve the hot water log
-        my $hotwater = $db->events_retrieve($thermostat,
-                                            [qw(time state temperature)],
-                                            'hotwater', \%range);
-        $results{hotwater} = fixup($hotwater, sub { ($_[0]+0, $_[1], $_[2]+0) } );
-        time_log('Database hot water query');
-
-        # Retrieve the weather log
-        my $weather = $db->weather_retrieve([qw(time external)], \%wrange);
-        time_log('Database weather query');
-        $results{weather} = fixup_uniq($weather);
-        time_log('Data conversion');
-    }
-    elsif ($type eq 'minmax')
-    {
-        # Retrieve daily temperature range
-        my $temperatures = $db->log_daily_min_max($thermostat, \%range);
-        time_log('Database temperatures query');
-        $results{temperatures_minmax} = fixup_uniq($temperatures);
-        time_log('Data conversion');
-
-        # Retrieve daily weather range
-        my $weather = $db->weather_daily_min_max(\%wrange);
-        time_log('Database weather query');
-        $results{weather_minmax} = fixup_uniq($weather);
-        time_log('Data conversion');
+        elsif ($type eq 'water')
+        {
+            my $heatmiser = new heatmiser_wifi(host=>$thermostat,  heatmiser_config::get(qw(pin)));
+            my @pre_dcb = $heatmiser->read_dcb();
+            my $pre_status = $heatmiser->dcb_to_status(@pre_dcb);
+            $results{pre}=$pre_status;
+            $results{pin}=heatmiser_config::get(qw(pin));
+            $results{thermo}=$thermostat;
+            my @items = $heatmiser->status_to_dcb($pre_status,
+            enabled => 1,
+            runmode => 'heating',
+            holiday => { enabled => 0 },
+            hotwater => { on => $value });
+            my @post_dcb = $heatmiser->write_dcb(@items);
+            my $post_status = $heatmiser->dcb_to_status(@post_dcb);
+            $results{post}=$post_status;
+            $heatmiser->close();
+            # log into database
+            $db->event_insert($thermostat, time=>$post_status->{time}, class=>'target',state=>'override',temperature=>$value);
+        }
     }
     else
     {
-        die "Unsupported type specified in request\n";
+        
+        
+        time_log('Database connection');
+        
+        # Always retrieve the thermostat's settings
+        $results{settings} = { $db->settings_retrieve($thermostat) };
+        time_log('Database settings query');
+        
+        # If requesting new data then wait for up to the timeout value
+        if (defined $range{from} and not defined $range{to})
+        {
+            while (time() < $timeout)
+            {
+                my $latest = $db->log_retrieve_latest($thermostat, ['time'])->[0];
+                last if $range{from} < $latest;
+                sleep(1);
+            }
+            time_log('Wait for new data');
+        }
+        
+        # Retrieve the requested data
+        if ($type eq 'log')
+        {
+            # Retrieve temperature logs
+            my $temperatures = $db->log_retrieve($thermostat,
+            [qw(time air target comfort)],
+            \%range);
+            time_log('Database temperatures query');
+            $results{temperatures} = fixup_uniq($temperatures);
+            time_log('Data conversion');
+            
+            # Retrieve the heating activity log
+            my $heating = $db->events_retrieve($thermostat, [qw(time state)],
+            'heating', \%range);
+            $results{heating} = fixup($heating);
+            time_log('Database heating query');
+            
+            # Retrieve the target temperature log
+            my $target = $db->events_retrieve($thermostat,
+            [qw(time state temperature)],
+            'target', \%range);
+            $results{target} = fixup($target, sub { ($_[0]+0, $_[1], $_[2]+0) } );
+            time_log('Database target query');
+            
+            # Retrieve the hot water log
+            my $hotwater = $db->events_retrieve($thermostat,
+            [qw(time state temperature)],
+            'hotwater', \%range);
+            $results{hotwater} = fixup($hotwater, sub { ($_[0]+0, $_[1], $_[2]+0) } );
+            time_log('Database hot water query');
+            
+            # Retrieve the weather log
+            my $weather = $db->weather_retrieve([qw(time external)], \%wrange);
+            time_log('Database weather query');
+            $results{weather} = fixup_uniq($weather);
+            time_log('Data conversion');
+        }
+        elsif ($type eq 'minmax')
+        {
+            # Retrieve daily temperature range
+            my $temperatures = $db->log_daily_min_max($thermostat, \%range);
+            time_log('Database temperatures query');
+            $results{temperatures_minmax} = fixup_uniq($temperatures);
+            time_log('Data conversion');
+            
+            # Retrieve daily weather range
+            my $weather = $db->weather_daily_min_max(\%wrange);
+            time_log('Database weather query');
+            $results{weather_minmax} = fixup_uniq($weather);
+            time_log('Data conversion');
+        }
+        else
+        {
+            die "Unsupported type specified in request\n";
+        }
     }
 };
 if ($@)
@@ -185,7 +243,7 @@ exit;
 sub fixup_uniq
 {
     my ($in) = @_;
-
+    
     # Process every row
     my ($out, $values, $prev_values) = ([], '', '');
     foreach my $row (@$in)
@@ -193,11 +251,11 @@ sub fixup_uniq
         # Skip over duplicates (ignoring the time field), except last entry
         ($prev_values, $values) = ($values, join(',', @$row[1 .. $#$row]));
         next if $values eq $prev_values and $row->[0] != $in->[-1]->[0];
-
+        
         # Convert all values to numbers
         push @$out, [map { $_ + 0 } @$row];
     }
-
+    
     # Return the result
     return $out;
 }
@@ -206,10 +264,10 @@ sub fixup_uniq
 sub fixup
 {
     my ($in, $sub) = @_;
-
+    
     # Default is to fix every column
     $sub = sub { map { $_ + 0 } @_ } unless defined $sub;
-
+    
     # Process every row and return the result
     return [map {[ $sub->(@$_) ]} @$in];
 }

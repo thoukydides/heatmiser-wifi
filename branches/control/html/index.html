@@ -1,555 +1,919 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <!--
-This is a web page to display the data logged from the iPhone interface of
-Heatmiser's range of Wi-Fi enabled thermostats. A symbolic link to this file
-should be created from a suitable public_html directory or subdirectory.
-
-The jQuery JavaScript library from <http://code.jquery.com/jquery-2.0.2.min.js>
-should be placed in the same directory,
-as should the "highstock.js" file from the "js" subdirectory of
-<http://www.highcharts.com/downloads/zips/Highstock-1.3.2.zip>.
-
-Copyright © 2011, 2012, 2013 Alexander Thoukydides
-
-This file is part of the Heatmiser Wi-Fi project.
-<http://code.google.com/p/heatmiser-wifi/>
-
-Heatmiser Wi-Fi is free software: you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the Free
-Software Foundation, either version 3 of the License, or (at your option)
-any later version.
-
-Heatmiser Wi-Fi is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-more details.
-
-You should have received a copy of the GNU General Public License
-along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
--->
+ This is a web page to display the data logged from the iPhone interface of
+ Heatmiser's range of Wi-Fi enabled thermostats. A symbolic link to this file
+ should be created from a suitable public_html directory or subdirectory.
+ 
+ The jQuery JavaScript library from <http://code.jquery.com/jquery-2.0.2.min.js>
+ should be placed in the same directory,
+ as should the "highstock.js" file from the "js" subdirectory of
+ <http://www.highcharts.com/downloads/zips/Highstock-1.3.2.zip>.
+ 
+ This page also requires justgage http://justgage.com/justGage.1.0.1.zip
+ and
+ https://github.com/aterrien/jQuery-Knob (copy into root of the page along with the other scripts)
+ 
+ 
+ Copyright © 2011, 2012, 2013 Alexander Thoukydides
+ 
+ This file is part of the Heatmiser Wi-Fi project.
+ <http://code.google.com/p/heatmiser-wifi/>
+ 
+ Heatmiser Wi-Fi is free software: you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the Free
+ Software Foundation, either version 3 of the License, or (at your option)
+ any later version.
+ 
+ Heatmiser Wi-Fi is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
+ -->
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-    <meta content="yes" name="apple-mobile-web-app-capable" />
-    <meta content="user-scalable=no" name="viewport" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-
-    <title>Wi-Fi Thermostat Temperature Log</title>
-
-    <style type="text/css">
-      label {
-        font-family:"Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
-        font-size:12px;
-      }
-    </style>
-
-    <script src="jquery-2.0.2.min.js" type="text/javascript"></script>
-    <script src="highstock.js" type="text/javascript"></script>
-    <script type="text/javascript">
-    <!--
-      // URL for server side script
-      var url = "/cgi-bin/heatmiser/ajax.pl";
-
-      // Amount of data to fetch and display
-      var fetchInitDays = 7;
-      var fetchExtraDays = 30;
-      var fetchFinalDays = 365 * 2;
-      var fetchExtraDelayMilliseconds = 100;
-      var fetchRetryDelaySeconds = 10;
-      var fetchPollTimeoutSeconds = 90;
-      var showInitDays = 2;
-      var autoScrollPercent = 5;
-
-      // Thermostat data
-      var thermostatId = '';
-      var thermostatName = '';
-      var thermostatUnits = '';
-      var thermostatTemperatures = [];
-      var thermostatWeather = [];
-      var thermostatHeating = [];
-      var thermostatTarget = [];
-      var thermostatHotWater = [];
-      var thermostatDays = 0;
-
-      // Global chart
-      var chart;
-
-      // Distinguish between AJAX errors and the user navigating away
-      var running = true;
-
-      // Don't do anything until the page has finshed loading
-      $(document).ready(function() {
-
-        // Decode any URL parameters
-        $.each(window.location.search.substring(1).split('&'), function(i, pair) {
-          var s = pair.split('=');
-          if (s[0] == 'thermostat') thermostatId = s[1];
-        });
-
-        // Hide unused parts of the page
-        $('#thermostats').parent().hide();
-
-        // Warn if the version of the Highstock JS library is too old
-        if (Highcharts.version < '1.3.2') alert('This web page is designed to work with Highstock JS version 1.3.2, but the currently installed version is ' + Highcharts.version + '.\nDownload the latest version from http://www.highcharts.com/download\n');
-
-        // Create an empty chart
-        chart = new Highcharts.StockChart({
-          chart: {
-            renderTo: 'chart',
-            zoomType: 'x'
-          },
-          credits: {
-            enabled: false
-          },
-          rangeSelector : {
-            buttons: [{ type: 'all',              text: 'All' },
-                      { type: 'month', count: 1,  text: 'Mn' },
-                      { type: 'week',  count: 1,  text: 'Wk' },
-                      { type: 'day',   count: 2,  text: '2Dy' },
-                      { type: 'day',   count: 1,  text: '1Dy' },
-                      { type: 'hour',  count: 12, text: '½Dy' }],
-            inputDateFormat: '%e %b %Y'
-          },
-          xAxis: {
-            maxZoom: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
-            ordinal: false
-          },
-          yAxis: {
-            labels: {
-              align: 'right',
-              x: -2,
-              y: 3
-            },
-            tickInterval: 1,
-            title: { text: 'Temperature' }
-          },
-          title: { text: '© 2011, 2012, 2013 Alexander Thoukydides' },
-          subtitle: { text: document.title },
-          series: [
-            // Normal chart data
-            {
-              name: 'Current temperature',
-              type: 'areaspline',
-              threshold: null,
-              zIndex: 2,
-              color: 'rgba(255, 0, 0, 1)',
-              fillColor: {
-                linearGradient: [0, 0, 0, 400],
-                stops: [[0,   'rgba(255, 0, 0, 0.5)'],
-                        [0.5, 'rgba(255, 255, 255, 0.3)'],
-                        [1,   'rgba(100, 100, 255, 0.3)']]
-              },
-              lineWidth: 1,
-              states: { hover: { lineWidth: 1 } },
-              tooltip : { valueDecimals : 1 },
-              data: [[]]
-            },{
-              name: 'Target temperature',
-              id: 'target',
-              color: 'rgba(0, 0, 255, 1)',
-              dashStyle: 'ShortDot',
-              step: true,
-              dataGrouping: { approximation: 'high' }
-            },{
-              name: 'Comfort level',
-              color: 'rgba(0, 0, 255, 1)',
-              step: true,
-              dataGrouping: { approximation: 'high' }
-            },{
-              name: 'External temperature',
-              type: 'spline',
-              color: 'rgba(0, 0, 0, 1)',
-              lineWidth: 1,
-              dashStyle: 'Dash',
-              states: { hover: { lineWidth: 1 } },
-              tooltip : { valueDecimals : 1 }
-            },{
-              name: 'Flags',
-              type: 'flags',
-              onSeries: 'target',
-              shape: 'circlepin',
-              shadow: true,
-              width: 16,
-              zIndex: 3,
-              dataGrouping: { groupPixelWidth: 2 }
-            },{
-              name: 'Hot Water',
-              type: 'flags',
-              shape: 'squarepin',
-              shadow: true,
-              width: 16,
-              zIndex: 3,
-              dataGrouping: { groupPixelWidth: 2 }
+    <head>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+        <meta content="yes" name="apple-mobile-web-app-capable" />
+        <meta content="user-scalable=no" name="viewport" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        
+        <title>Wi-Fi Thermostat Temperature Log</title>
+        
+        <style type="text/css">
+            label {
+                font-family:arial, verdana, sans-serif;
+                font-size:12px;
             }
-          ]
-        });
-        chart.series[3].noSharedTooltip = true;
-
-        // Hide the URL bar when the page is first loaded
-        updateOrientation();
-
-        // Show a message while waiting for the data to be fetched
-        chart.showLoading();
-
-        // Ensure that AJAX errors are always reported properly
-        $(window).bind('beforeunload', function() { running = false; });
-        $(window).bind('unload', function() { running = false; });
-
-        // Fetch the recent temperature data
-        $.ajaxSetup({ cache: false });
-        fetchData();
-      });
-
-      // Use AJAX to retrieve temperature data from the server
-      function fetchData()
-      {
-        // Give up if the user has navigated away from the page
-        if (!running) return;
-
-        // Choose the query parameters
-        var data = { thermostat: thermostatId, type: 'log' };
-        if (thermostatDays == 0) {
-          // First fetch retrieves thermostat's information and recent data
-          data.days = fetchInitDays;
-        } else if (!thermostatTemperatures.length) {
-          // Give up if no data was retrieved by the initial fetch
-          return;
-        } else if (thermostatDays < fetchFinalDays) {
-          // Incrementally fetch older data
-          data.days = thermostatDays + fetchExtraDays;
-          data.to = thermostatTemperatures[0][0];
-          if (thermostatWeather.length) data.wto = thermostatWeather[0][0];
-        } else {
-          // Poll for newer data
-          data.from = thermostatTemperatures[thermostatTemperatures.length - 1][0];
-          if (thermostatWeather.length) data.wfrom = thermostatWeather[thermostatWeather.length - 1][0];
-          data.timeout = fetchPollTimeoutSeconds;
+        .sliderLabel {
+            border: 1px solid #a2a2a2;
+            font-size:10px;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+            cursor: pointer;
+            display: inline-block;
+            height: 15px;
+            margin: 40px;
+            overflow: hidden;
+            position: relative;
+            width: 49px;
         }
-
-        // Issue the request
-        $.getJSON(url, data, fetchDataSuccess).error(fetchDataError);
-      }
-
-      // Data has been successfully retrieved from the server
-      function fetchDataSuccess(data)
-      {
-        // Dispatch the fetched data and update the number of days fetched
-        if (thermostatDays == 0) {
-          // First fetch
-          thermostatDays = fetchInitDays;
-          initialiseChartData(data);
-        } else if (thermostatDays < fetchFinalDays) {
-          // Incrementally fetched older data
-          thermostatDays = data.temperatures.length
-                           ? thermostatDays + fetchExtraDays : fetchFinalDays;
-          prefixChartData(data);
-        } else {
-          // Newer data
-          postfixChartData(data);
+        
+        .sliderLabel input {
+            display: none;
         }
-
-        // Set the chart's subtitle to hide any previous error report
-        chart.hideLoading();
-        chart.setTitle({ text: thermostatName }, { text: document.title });
-
-        // Fetch additional data after a short delay
-        setTimeout("fetchData()", fetchExtraDelayMilliseconds);
-      }
-
-      // Failed to retrieve data from the server
-      function fetchDataError(jqXHR, textStatus, errorThrown)
-      {
-        // Convert the error into a friendly description
-        var msg;
-        if (!running && (jqXHR.readyState == 0 || jqXHR.status === 0)) {
-          return; // Page is probably being reloaded
-        } else if (jqXHR.status === 0) {
-          msg = 'Could not connect to server; verify network connection';
-        } else if (jqXHR.status == 404) {
-          msg = 'CGI script not found on server (has it been installed?)';
-        } else if (jqXHR.status == 500) {
-          msg = 'Server returned an error';
-          if (errorThrown != null) msg += ': ' + errorThrown;
-        } else if (textStatus === 'parsererror') {
-          msg = 'Response from server was not in JSON format';
-        } else if (textStatus === 'timeout') {
-          msg = 'No response received from server';
-        } else if (textStatus === 'abort') {
-          msg = 'AJAX request was aborted';
-        } else {
-          var response = $(jqXHR.responseText).text();
-          if (response == '') response = jqXHR.responseText;
-          msg = 'Unexpected error: ' + response.trim().replace(/\n+/g, ', ');
+        
+        .sliderLabel input:checked + .slider {
+            left: 0px;
         }
-
-        // Display the error description as the chart's subtitle
-        chart.hideLoading();
-        chart.setTitle({ text: thermostatName },
-                       { text: msg, style: { color: 'rgba(255, 0, 0, 1)' }});
-
-        // Retry the request after a short delay
-        setTimeout("fetchData()", fetchRetryDelaySeconds * 1000);
-      }
-
-      // Initialise the chart when thermostat's information has been received
-      function initialiseChartData(data)
-      {
-        // Extract interesting settings
-        thermostatName = data.settings.vendor + ' ' + data.settings.model
-                         + ' (' + data.settings.host + ')';
-        thermostatUnits = '°' + data.settings.units;
-        $.each(chart.series, function(i, series) {
-          series.tooltipOptions.valueSuffix = thermostatUnits;
-        });
-
-        // Construct a list of thermostats (when there is more than one)
-        if (thermostatId == '') thermostatId = data.settings.host;
-        $.each(data.thermostats, function(i, thermostat) {
-          $('#thermostats').append('<option' + (thermostat == thermostatId
-                                                ? ' selected="selected"' : '')
-                                   + '>' + thermostat + '</option>');
-        });
-        $('#thermostats').change(function() {
-          window.location.search = '?thermostat='
-                                   + $(this).find('option:selected').text();
-        });
-        if (1 < data.thermostats.length) $('#thermostats').parent().show();
-
-        // Add the data to the chart
-        prefixChartData(data);
-
-        // Default to showing the recent data
-        if (!thermostatTemperatures.length) return;
-        var xMax = thermostatTemperatures[thermostatTemperatures.length - 1][0];
-        var xMin = Math.max(thermostatTemperatures[0][0],
-                            xMax - 1000 * 60 * 60 * 24 * showInitDays);
-        chart.xAxis[0].setExtremes(xMin, xMax);
-      }
-
-      // Update the chart with older data
-      function prefixChartData(data)
-      {
-        // Prefix the new data to that already fetched
-        thermostatTemperatures = data.temperatures.concat(thermostatTemperatures);
-        thermostatWeather = data.weather.concat(thermostatWeather);
-        thermostatHeating = data.heating.concat(thermostatHeating);
-        thermostatTarget = data.target.concat(thermostatTarget);
-        thermostatHotWater = data.hotwater.concat(thermostatHotWater);
-
-        // Unpack the temperature data
-        var seriesData = [[], [], [], [], [], []];
-        $.each(thermostatTemperatures, function(i, row) {
-          seriesData[0].push([row[0], row[1]]);
-          seriesData[1].push([row[0], row[2]]);
-          seriesData[2].push([row[0], row[3]]);
-        });
-        $.each(thermostatWeather, function(i, row) {
-          seriesData[3].push([row[0], row[1]]);
-        });
-
-        // Create flags for changes to the target temperature and hot water
-        $.each(thermostatTarget, function(i, row) {
-          var flag = createTargetFlag(row);
-          if (flag != null) seriesData[4].push(flag);
-        });
-        $.each(thermostatHotWater, function(i, row) {
-          var flag = createHotWaterFlag(row);
-          if (flag != null) seriesData[5].push(flag);
-        });
-
-        // Replace the existing chart data (if any)
-        $.each(seriesData, function(i, data) {
-          chart.series[i].setData(data, true);
-        });
-
-        // Create and replace the existing heating bands (if any)
-        rebuildHeatingBands();
-      }
-
-      // Update the chart with newer data
-      function postfixChartData(data)
-      {
-        // Record the previous chart position
-        var maxTime = thermostatTemperatures[thermostatTemperatures.length - 1][0];
-        var extremes = chart.xAxis[0].getExtremes();
-        var timeRange = extremes.max - extremes.min;
-        var autoScroll = (maxTime - timeRange * autoScrollPercent / 100)
-                         < extremes.max;
-
-        // Add the new temperature data to the chart
-        $.each(data.temperatures, function(i, row) {
-          if (thermostatTemperatures[thermostatTemperatures.length - 1][0]
-              < row[0]) {
-            thermostatTemperatures.push(row);
-            chart.series[0].addPoint([row[0], row[1]], false);
-            chart.series[1].addPoint([row[0], row[2]], false);
-            chart.series[2].addPoint([row[0], row[3]], false);
-          }
-        });
-        $.each(data.weather, function(i, row) {
-          if (!thermostatWeather.length || (thermostatWeather[thermostatWeather.length - 1][0] < row[0])) {
-            thermostatWeather.push(row);
-            chart.series[3].addPoint([row[0], row[1]], false);
-          }
-        });
-
-        // Add flags for changes to the target temperature and hot water
-        $.each(data.target, function(i, row) {
-          if (!thermostatTarget.length || (thermostatTarget[thermostatTarget.length - 1][0] < row[0])) {
-            thermostatTarget.push(row);
-            var flag = createTargetFlag(row);
-            if (flag != null) chart.series[4].addPoint(flag, false);
-          }
-        });
-        $.each(data.hotwater, function(i, row) {
-          if (!thermostatHotWater.length || (thermostatHotWater[thermostatHotWater.length - 1][0] < row[0])) {
-            thermostatHotWater.push(row);
-            var flag = createHotWaterFlag(row);
-            if (flag != null) chart.series[5].addPoint(flag, false);
-          }
-        });
-
-        // Rebuild heating bands if any changes are required
-        var rebuild = false;
-        $.each(data.heating, function(i, row) {
-          if (!thermostatHeating.length || (thermostatHeating[thermostatHeating.length - 1][0] < row[0])) {
-            thermostatHeating.push(row);
-            rebuild = true;
-          }
-        });
-        if (rebuild) rebuildHeatingBands();
-
-        // Scroll the chart if it was previously showing the latest data
-        if (autoScroll)
+        
+        .slider {
+            left: -30px;
+            position: absolute;
+            top: 0px;
+            
+            -webkit-transition: left .25s ease-out;
+            -moz-transition: left .25s ease-out;
+            -o-transition: left .25s ease-out;
+            -ms-transition: left .25s ease-out;
+            transition: left .25s ease-out;
+        }
+        
+        .sliderOn,.sliderBlock,.sliderOff {
+            display: block;
+            font-family: arial, verdana, sans-serif;
+            font-weight: bold;
+            height: 15px;
+            line-height: 15px;
+            position: absolute;
+            text-align: center;
+            top: 0px;
+        }
+        
+        .sliderOn {
+            background: #3269aa;
+            
+            background: -webkit-linear-gradient(top, #3269aa 0%, #82b3f4 100%);
+            background: -moz-linear-gradient(top, #3269aa 0%, #82b3f4 100%);
+            background: -o-linear-gradient(top, #3269aa 0%, #82b3f4 100%);
+            background: -ms-linear-gradient(top, #3269aa 0%, #82b3f4 100%);
+            background: linear-gradient(top, #3269aa 0%, #82b3f4 100%);
+            color: white;
+            left: 0px;
+            width: 32px;
+        }
+        
+        .sliderBlock {
+            background: #d9d9d8;
+            
+            background: -webkit-linear-gradient(top, #d9d9d8 0%, #fcfcfc 100%);
+            background: -moz-linear-gradient(top, #d9d9d8 0%, #fcfcfc 100%);
+            background: -o-linear-gradient(top, #d9d9d8 0%, #fcfcfc 100%);
+            background: -ms-linear-gradient(top, #d9d9d8 0%, #fcfcfc 100%);
+            background: linear-gradient(top, #d9d9d8 0%, #fcfcfc 100%);
+            border: 1px solid #a2a2a2;
+            
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+            height: 15px;
+            left: 29px;
+            top:-1px;
+            width: 20px;
+        }
+        
+        .sliderOff {
+            background: #f2f3f2;
+            
+            background: -webkit-linear-gradient(top, #8b8c8b 0%, #f2f3f2 50%);
+            background: -moz-linear-gradient(top, #8b8c8b 0%, #f2f3f2 50%);
+            background: -o-linear-gradient(top, #8b8c8b 0%, #f2f3f2 50%);
+            background: -ms-linear-gradient(top, #8b8c8b 0%, #f2f3f2 50%);
+            background: linear-gradient(top, #8b8c8b 0%, #f2f3f2 50%);
+            color: #8b8b8b;
+            left: 46px;
+            width: 34px;
+        }
+        
+        .ctrl { /* general styles for button & circular menu */
+            position: relative;
+            top: 50%; left: 50%;
+            font: 1.5em/1.13 Verdana, sans-serif;
+            transition: .5s;
+        }
+        /* generic styles for links */
+        a.ctrl, .ctrl a {
+            display: block;
+            opacity: .56;
+            background: #3c3c3c;
+            color: #7a8092;
+            text-align: center;
+            text-decoration: none;
+            text-shadow: 0 -1px dimgrey;
+        }
+        a.ctrl:hover, .ctrl a:hover, a.ctrl:focus, .ctrl a:focus { opacity: 1; }
+        a.ctrl:focus, .ctrl a:focus { outline: none; }
+        .button {
+            z-index: 2;
+            margin: -.625em;
+            width: 1.25em; height: 1.25em;
+            border-radius: 50%;
+            box-shadow: 0 0 3px 1px white;
+        }
+        /* circular menu */
+        .tip {
+            z-index: 3;
+            /*outline: dotted 1px red;*/
+            margin:-3.5em -3.0em  ;
+            width: 6em; height: 6em;
+            -webkit-transform: scale(.001);
+            list-style: none;
+            opacity: 0;
+        }
+        .button:focus + .tip {
+            -webkit-transform: scale(1);
+            opacity: 1;
+        }
+        /* slices of the circular menu */
+        .slice {
+            overflow: hidden;
+            position: absolute;
+            left:-1.0em;
+            /*outline: dotted 1px yellow;*/
+            width: 50%; height: 50%;
+            -webkit-transform-origin: 100% 100%;
+        }
+        /*
+         * rotate each slice at the right angle = (A/2)� + (k - (n+1)/2)*A�
+         * where A is the angle of 1 slice (30� in this case)
+         * k is the number of the slice (in {1,2,3,4,5} here)
+         * and n is the number of slices (5 in this case)
+         * formula works for odd number of slices (n odd)
+         * for even number of slices (n even) the rotation angle is (k - n/2)*A�
+         *
+         * after rotating, skew on Y by 90�-A�; here A� = the angle for 1 slice = 30�
+         */
+        .slice:first-child { -webkit-transform: rotate(90deg) skewY(60deg); }
+        .slice:nth-child(2) { -webkit-transform: rotate(120deg) skewY(60deg); }
+        .slice:nth-child(3) { -webkit-transform: rotate(150deg) skewY(60deg); }
+        .slice:nth-child(4) { -webkit-transform: rotate(180deg) skewY(60deg); }
+        .slice:last-child { -webkit-transform: rotate(210deg) skewY(60deg); }
+        
+        /* menu links */
+        .slice a {
+            width: 200%; height: 200%;
+            top:110%;
+            border-radius: 80%;
+            box-shadow: 0 0 13px dimgrey, inset 0 0 1px #3c3c3c;
+            /* "unskew" & rotate by -A�/2 */
+            -webkit-transform: skewY(-60deg) rotate(-15deg);
+            background: linear-gradient(75deg,
+            transparent 50%, grey 50%, transparent 54%) no-repeat 36.5% 0,
+            linear-gradient(-75deg,
+            transparent 50%, grey 50%, transparent 54%) no-repeat 63.5% 0,
+            radial-gradient(rgba(127,127,127,0) 32%,
+            rgba(255,255,255,.7) 33%, #3c3c3c 34%);
+            background-size: 15% 15%, 15% 15%, cover;
+            line-height: 1.4;
+        }
+        
+            </style>
+        
+        <script src="jquery-2.0.2.min.js" type="text/javascript"></script>
+        <script src="raphael.2.1.0.min.js"></script>
+        <script src="justgage.1.0.1.min.js"></script>
+        <script src="jquery.knob.js"></script>
+        <script src="highstock.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            <!--
+            // URL for server side script
+            var url = "/cgi-bin/heatmiser/ajax.pl";
+            
+            var setUrl ="/cgi-bin/heatmiser/post_ajax.pl";
+            
+            // Amount of data to fetch and display
+            var fetchInitDays = 7;
+            var fetchExtraDays = 30;
+            var fetchFinalDays = 365 * 2;
+            var fetchExtraDelayMilliseconds = 100;
+            var fetchRetryDelaySeconds = 10;
+            var fetchPollTimeoutSeconds = 90;
+            var showInitDays = 2;
+            var autoScrollPercent = 5;
+            
+            // Thermostat data
+            var thermostatId = '';
+            var thermostatName = '';
+            var thermostatUnits = '';
+            var thermostatTemperatures = [];
+            var thermostatWeather = [];
+            var thermostatHeating = [];
+            var thermostatTarget = [];
+            var thermostatHotWater = [];
+            var thermostatDays = 0;
+            
+            // Global chart
+            var chart;
+            
+            // global guage
+            var tempGuage;
+            var externalTempGuage;
+            var comfortTempGuage;
+            var heatingGuage;
+            var hotWaterGuage;
+            
+            var comfortTemp;
+            var waterState;
+            
+            // Distinguish between AJAX errors and the user navigating away
+            var running = true;
+            
+            // Don't do anything until the page has finshed loading
+            $(document).ready(function() {
+                              
+                              // Decode any URL parameters
+                              $.each(window.location.search.substring(1).split('&'), function(i, pair) {
+                                     var s = pair.split('=');
+                                     if (s[0] == 'thermostat') thermostatId = s[1];
+                                     });
+                              
+                              // Hide unused parts of the page
+                              $('#thermostats').parent().hide();
+                              
+                              // Warn if the version of the Highstock JS library is too old
+                              if (Highcharts.version < '1.3.2') alert('This web page is designed to work with Highstock JS version 1.3.2, but the currently installed version is ' + Highcharts.version + '.\nDownload the latest version from http://www.highcharts.com/download\n');
+                              
+                              // Create an empty chart
+                              chart = new Highcharts.StockChart({
+                                                                chart: {
+                                                                renderTo: 'chart',
+                                                                zoomType: 'x'
+                                                                },
+                                                                credits: {
+                                                                enabled: false
+                                                                },
+                                                                rangeSelector : {
+                                                                buttons: [{ type: 'all',              text: 'All' },
+                                                                          { type: 'month', count: 1,  text: 'Mn' },
+                                                                          { type: 'week',  count: 1,  text: 'Wk' },
+                                                                          { type: 'day',   count: 2,  text: '2Dy' },
+                                                                          { type: 'day',   count: 1,  text: '1Dy' },
+                                                                          { type: 'hour',  count: 12, text: '½Dy' }],
+                                                                inputDateFormat: '%e %b %Y'
+                                                                },
+                                                                xAxis: {
+                                                                maxZoom: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
+                                                                ordinal: false
+                                                                },
+                                                                yAxis: {
+                                                                labels: {
+                                                                align: 'right',
+                                                                x: -2,
+                                                                y: 3
+                                                                },
+                                                                tickInterval: 1,
+                                                                title: { text: 'Temperature' }
+                                                                },
+                                                                title: { text: '© 2011, 2012, 2013 Alexander Thoukydides' },
+                                                                subtitle: { text: document.title },
+                                                                series: [
+                                                                         // Normal chart data
+                                                                         {
+                                                                         name: 'Current temperature',
+                                                                         type: 'areaspline',
+                                                                         threshold: null,
+                                                                         zIndex: 2,
+                                                                         color: 'rgba(255, 0, 0, 1)',
+                                                                         fillColor: {
+                                                                         linearGradient: [0, 0, 0, 400],
+                                                                         stops: [[0,   'rgba(255, 0, 0, 0.5)'],
+                                                                                 [0.5, 'rgba(255, 255, 255, 0.3)'],
+                                                                                 [1,   'rgba(100, 100, 255, 0.3)']]
+                                                                         },
+                                                                         lineWidth: 1,
+                                                                         states: { hover: { lineWidth: 1 } },
+                                                                         tooltip : { valueDecimals : 1 },
+                                                                         data: [[]]
+                                                                         },{
+                                                                         name: 'Target temperature',
+                                                                         id: 'target',
+                                                                         color: 'rgba(0, 0, 255, 1)',
+                                                                         dashStyle: 'ShortDot',
+                                                                         step: true,
+                                                                         dataGrouping: { approximation: 'high' }
+                                                                         },{
+                                                                         name: 'Comfort level',
+                                                                         color: 'rgba(0, 0, 255, 1)',
+                                                                         step: true,
+                                                                         dataGrouping: { approximation: 'high' }
+                                                                         },{
+                                                                         name: 'External temperature',
+                                                                         type: 'spline',
+                                                                         color: 'rgba(0, 0, 0, 1)',
+                                                                         lineWidth: 1,
+                                                                         dashStyle: 'Dash',
+                                                                         states: { hover: { lineWidth: 1 } },
+                                                                         tooltip : { valueDecimals : 1 }
+                                                                         },{
+                                                                         name: 'Flags',
+                                                                         type: 'flags',
+                                                                         onSeries: 'target',
+                                                                         shape: 'circlepin',
+                                                                         shadow: true,
+                                                                         width: 16,
+                                                                         zIndex: 3,
+                                                                         dataGrouping: { groupPixelWidth: 2 }
+                                                                         },{
+                                                                         name: 'Hot Water',
+                                                                         type: 'flags',
+                                                                         shape: 'squarepin',
+                                                                         shadow: true,
+                                                                         width: 16,
+                                                                         zIndex: 3,
+                                                                         dataGrouping: { groupPixelWidth: 2 }
+                                                                         }
+                                                                         ]
+                                                                });
+                              chart.series[3].noSharedTooltip = true;
+                              
+                              // Hide the URL bar when the page is first loaded
+                              updateOrientation();
+                              
+                              // Show a message while waiting for the data to be fetched
+                              chart.showLoading();
+                              
+                              // Ensure that AJAX errors are always reported properly
+                              $(window).bind('beforeunload', function() { running = false; });
+                              $(window).bind('unload', function() { running = false; });
+                              
+                              tempGuage = new JustGage({
+                                                       id: "currentTempGuage",
+                                                       value: 0,
+                                                       min: 0,
+                                                       max: 28,
+                                                       title: "Temperature"
+                                                       });
+                              externalTempGuage= new JustGage({
+                                                              id: "externalTempGuage",
+                                                              value: 0,
+                                                              min: -10,
+                                                              max: 40,
+                                                              title: "External Temperature"
+                                                              });
+                              comfortTempGuage=new JustGage({
+                                                            id: "comfortTempGuage",
+                                                            value: 0,
+                                                            min: 0,
+                                                            max: 28,
+                                                            title: "Comfort Level"
+                                                            });
+                              hotWaterGuage= new JustGage({
+                                                          id: "hotWaterGuage",
+                                                          value: 0,
+                                                          min: 0,
+                                                          max: 1,
+                                                          title: "Hot Water"
+                                                          });
+                              heatingGuage= new JustGage({
+                                                         id: "heatingGuage",
+                                                         value: 0,
+                                                         min: 0,
+                                                         max: 1,
+                                                         title: "Heating"
+                                                         });
+                              
+                              $("#setTemp").knob({
+                                                 'release' : function (v) {
+                                                 hideComfortLevel();
+                                                 console.log("set temp to "+v);
+                                                 var data = { thermostat: thermostatId, type: 'temperature', value: v };
+                                                 $.post(url, data, function(response) { console.log('success '+response); }, 'json');}
+                                                 });
+                              
+                              // Fetch the recent temperature data
+                              $.ajaxSetup({ cache: false });
+                              fetchData();
+                              });
+                              
+                              // Use AJAX to retrieve temperature data from the server
+                              function fetchData()
+                              {
+                                  // Give up if the user has navigated away from the page
+                                  if (!running) return;
+                                  
+                                  // Choose the query parameters
+                                  var data = { thermostat: thermostatId, type: 'log' };
+                                  if (thermostatDays == 0) {
+                                      // First fetch retrieves thermostat's information and recent data
+                                      data.days = fetchInitDays;
+                                  } else if (!thermostatTemperatures.length) {
+                                      // Give up if no data was retrieved by the initial fetch
+                                      return;
+                                  } else if (thermostatDays < fetchFinalDays) {
+                                      // Incrementally fetch older data
+                                      data.days = thermostatDays + fetchExtraDays;
+                                      data.to = thermostatTemperatures[0][0];
+                                      if (thermostatWeather.length) data.wto = thermostatWeather[0][0];
+                                  } else {
+                                      // Poll for newer data
+                                      data.from = thermostatTemperatures[thermostatTemperatures.length - 1][0];
+                                      if (thermostatWeather.length) data.wfrom = thermostatWeather[thermostatWeather.length - 1][0];
+                                      data.timeout = fetchPollTimeoutSeconds;
+                                  }
+                                  
+                                  // Issue the request
+                                  $.getJSON(url, data, fetchDataSuccess).error(fetchDataError);
+                              }
+        
+        // Data has been successfully retrieved from the server
+        function fetchDataSuccess(data)
         {
-          var newMaxTime = thermostatTemperatures[thermostatTemperatures.length - 1][0];
-          chart.xAxis[0].setExtremes(newMaxTime - timeRange, newMaxTime, false);
-          chart.redraw();
+            // Dispatch the fetched data and update the number of days fetched
+            if (thermostatDays == 0) {
+                // First fetch
+                thermostatDays = fetchInitDays;
+                initialiseChartData(data);
+            } else if (thermostatDays < fetchFinalDays) {
+                // Incrementally fetched older data
+                thermostatDays = data.temperatures.length
+                ? thermostatDays + fetchExtraDays : fetchFinalDays;
+                prefixChartData(data);
+            } else {
+                // Newer data
+                postfixChartData(data);
+            }
+            
+            // Set the chart's subtitle to hide any previous error report
+            chart.hideLoading();
+            chart.setTitle({ text: thermostatName }, { text: document.title });
+            
+            // Fetch additional data after a short delay
+            setTimeout("fetchData()", fetchExtraDelayMilliseconds);
         }
-      }
-
-      // Create a flag for a change to the target temperature
-      function createTargetFlag(event)
-      {
-        // Map the event to a display format
-        var flagTypes = {
-          // Thermostat off
-          off:          ['-', 'Thermostat off',   'rgba(0, 0, 0, 1)'],
-          // Frost protection
-          holiday:      ['H*', 'Holiday (frost)', 'rgba(0, 255, 255, 1)'],
-          away:         ['S*', 'Summer (frost)',  'rgba(0, 255, 255, 1)'],
-          // Normal (suppress normal programmed comfort levels)
-          hold:         ['H', 'Hold',             'rgba(0, 255, 0, 1)'],
-          manual:       ['M', 'Manual',           'rgba(0, 255, 0, 1)']
-          //comfortlevel: ['C', 'Comfort level',    'rgba(0, 0, 255, 1)'],
-          //optimumstart: ['P', 'Optimum start',    'rgba(0, 0, 255, 1)']
-        };
-        var type = flagTypes[event[1]];
-        if (type == null) return null;
-
-        // Construct a flag for this event
-        return {
-          x: event[0],
-          title: type[0],
-          text: type[1] + " " + event[2] + thermostatUnits,
-          color: type[2],
-          states: { hover: { fillColor: type[2] } }
-        };
-      }
-
-      // Create a flag for a change to the hot water
-      function createHotWaterFlag(event)
-      {
-        // Map the event to a display format
-        var flagTypes = {
-          // Thermostat off
-          off:      ['-', '-', 'thermostat off'],
-          // Hot water disabled
-          holiday:  ['H', 'h', 'holiday'],
-          away:     ['A', 'a', 'away'],
-          // Normal (includes overrides)
-          timer:    ['T', 't', 'timer program'],
-          boost:    ['B', 'b', 'manual boost'],
-          override: ['M', 'm', 'manual override']
-        };
-        var type = flagTypes[event[1]];
-        if (type == null) return null;
-
-        // Construct a flag for this event
-        var colour = event[2] ? 'rgba(255, 0, 0, 1)' : 'rgba(0, 0, 0, 1)';
-        return {
-          x: event[0],
-          title: type[event[2] ? 0 : 1],
-          text: "Hot water " + (event[2] ? 'ON' : 'OFF') + " (" + type[2] + ")",
-          color: colour,
-          fillColor: colour,
-          style: { color: 'white' },
-          states: { hover: { color: 'white', fillColor: colour } }
-        };
-      }
-
-      // Rebuild the chart from the cached data
-      function rebuildHeatingBands()
-      {
-        // Convert heating periods to plot bands
-        var plotBands = [];
-        var currentBand = null;
-        $.each(thermostatHeating, function(i, row) {
-          if (row[1]) {
-            if (currentBand == null)
-              currentBand = {
-                 id: 'heating',
-                 color: {
-                  linearGradient: [0, 0, 0, 400],
-                  stops: [[0, 'rgba(255,255,0,0.3)'],
-                          [1, 'rgba(255,0,0,0.3)']]
-               },
-               zIndex: 0,
-               from: row[0]
-             };
-          } else if (currentBand != null) {
-            currentBand.to = row[0];
-            plotBands.push(currentBand);
-            currentBand = null;
-          }
-        });
-        if (currentBand != null)
+        
+        // Failed to retrieve data from the server
+        function fetchDataError(jqXHR, textStatus, errorThrown)
         {
-          currentBand.to = Number.MAX_VALUE;
-          plotBands.push(currentBand);
+            // Convert the error into a friendly description
+            var msg;
+            if (!running && (jqXHR.readyState == 0 || jqXHR.status === 0)) {
+                return; // Page is probably being reloaded
+            } else if (jqXHR.status === 0) {
+                msg = 'Could not connect to server; verify network connection';
+            } else if (jqXHR.status == 404) {
+                msg = 'CGI script not found on server (has it been installed?)';
+            } else if (jqXHR.status == 500) {
+                msg = 'Server returned an error';
+                if (errorThrown != null) msg += ': ' + errorThrown;
+            } else if (textStatus === 'parsererror') {
+                msg = 'Response from server was not in JSON format';
+            } else if (textStatus === 'timeout') {
+                msg = 'No response received from server';
+            } else if (textStatus === 'abort') {
+                msg = 'AJAX request was aborted';
+            } else {
+                var response = $(jqXHR.responseText).text();
+                if (response == '') response = jqXHR.responseText;
+                msg = 'Unexpected error: ' + response.trim().replace(/\n+/g, ', ');
+            }
+            
+            // Display the error description as the chart's subtitle
+            chart.hideLoading();
+            chart.setTitle({ text: thermostatName },
+                           { text: msg, style: { color: 'rgba(255, 0, 0, 1)' }});
+                           
+                           // Retry the request after a short delay
+                           setTimeout("fetchData()", fetchRetryDelaySeconds * 1000);
         }
-
-        // Replace the existing chart data (if any)
-        chart.xAxis[0].removePlotBand('heating');
-        $.each(plotBands, function(i, plotBand) {
-          chart.xAxis[0].addPlotBand(plotBand);
-        });
-      }
-
-      // Hide the URL bar when iOS devices are rotated
-      function updateOrientation()
-      {
-        window.scrollTo(0, 1);
-      }
-    -->
-    </script>
-  </head>
-  <body onorientationchange="updateOrientation();">
-
-    <!-- Warn users if JavaScript is disabled in their browser -->
-    <noscript>
-      <h1>JavaScript is Disabled</h1>
-      This page requires JavaScript; please enable scripting in your browser.
-    </noscript>
-
-    <!-- This is where the chart will appear -->
-    <div id="chart" style="width: 100%; height: 540px"></div>
-
-    <!-- This is where a list of thermostats may be created -->
-    <div style="text-align:center">
-      <label>Thermostat:</label>
-      <select id="thermostats" />
-    </div>
-
-  </body>
+        
+        // Initialise the chart when thermostat's information has been received
+        function initialiseChartData(data)
+        {
+            // Extract interesting settings
+            thermostatName = data.settings.vendor + ' ' + data.settings.model
+            + ' (' + data.settings.host + ')';
+            thermostatUnits = '°' + data.settings.units;
+            $.each(chart.series, function(i, series) {
+                   series.tooltipOptions.valueSuffix = thermostatUnits;
+                   });
+                   
+                   // Construct a list of thermostats (when there is more than one)
+                   if (thermostatId == '') thermostatId = data.settings.host;
+                   $.each(data.thermostats, function(i, thermostat) {
+                          $('#thermostats').append('<option' + (thermostat == thermostatId
+                                                                ? ' selected="selected"' : '')
+                                                   + '>' + thermostat + '</option>');
+                          });
+                          $('#thermostats').change(function() {
+                                                   window.location.search = '?thermostat='
+                                                   + $(this).find('option:selected').text();
+                                                   });
+                                                   if (1 < data.thermostats.length) $('#thermostats').parent().show();
+                                                   
+                                                   // Add the data to the chart
+                                                   prefixChartData(data);
+                                                   
+                                                   // Default to showing the recent data
+                                                   if (!thermostatTemperatures.length) return;
+                                                   var xMax = thermostatTemperatures[thermostatTemperatures.length - 1][0];
+                                                   var xMin = Math.max(thermostatTemperatures[0][0],
+                                                                       xMax - 1000 * 60 * 60 * 24 * showInitDays);
+                                                                       chart.xAxis[0].setExtremes(xMin, xMax);
+        }
+        
+        // Update the chart with older data
+        function prefixChartData(data)
+        {
+            // Prefix the new data to that already fetched
+            thermostatTemperatures = data.temperatures.concat(thermostatTemperatures);
+            thermostatWeather = data.weather.concat(thermostatWeather);
+            thermostatHeating = data.heating.concat(thermostatHeating);
+            thermostatTarget = data.target.concat(thermostatTarget);
+            thermostatHotWater = data.hotwater.concat(thermostatHotWater);
+            
+            // Unpack the temperature data
+            var seriesData = [[], [], [], [], [], []];
+            $.each(thermostatTemperatures, function(i, row) {
+                   seriesData[0].push([row[0], row[1]]);
+                   seriesData[1].push([row[0], row[2]]);
+                   seriesData[2].push([row[0], row[3]]);
+                   if (i===thermostatTemperatures.length-1)
+                   {
+                   console.log("setting thermostat guage");
+                   tempGuage.refresh(row[1]);
+                   comfortTempGuage.refresh(row[2]);
+                   comfortTemp=row[2];
+                   }
+                   });
+                   $.each(thermostatWeather, function(i, row) {
+                          seriesData[3].push([row[0], row[1]]);
+                          if (i===thermostatWeather.length-1)
+                          {
+                          console.log("setting external guage "+row[1]);
+                          externalTempGuage.refresh(row[1]);
+                          }
+                          });
+                          
+                          // Create flags for changes to the target temperature and hot water
+                          $.each(thermostatTarget, function(i, row) {
+                                 var flag = createTargetFlag(row);
+                                 if (flag != null) seriesData[4].push(flag);
+                                 });
+                                 $.each(thermostatHotWater, function(i, row) {
+                                        var flag = createHotWaterFlag(row);
+                                        
+                                        if (flag != null) seriesData[5].push(flag);
+                                        if (i===thermostatHotWater.length-1)
+                                        {
+                                        console.log("hotWater "+row[2]+"@"+i);
+                                        hotWaterGuage.refresh(row[2]);
+                                        waterState=row[2];
+                                        }
+                                        });
+                                        
+                                        // Replace the existing chart data (if any)
+                                        $.each(seriesData, function(i, data) {
+                                               chart.series[i].setData(data, true);
+                                               });
+                                               
+                                               // Create and replace the existing heating bands (if any)
+                                               rebuildHeatingBands();
+        }
+        
+        // Update the chart with newer data
+        function postfixChartData(data)
+        {
+            // Record the previous chart position
+            var maxTime = thermostatTemperatures[thermostatTemperatures.length - 1][0];
+            var extremes = chart.xAxis[0].getExtremes();
+            var timeRange = extremes.max - extremes.min;
+            var autoScroll = (maxTime - timeRange * autoScrollPercent / 100)
+            < extremes.max;
+            
+            // Add the new temperature data to the chart
+            $.each(data.temperatures, function(i, row) {
+                   if (thermostatTemperatures[thermostatTemperatures.length - 1][0]
+                       < row[0]) {
+                   thermostatTemperatures.push(row);
+                   chart.series[0].addPoint([row[0], row[1]], false);
+                   chart.series[1].addPoint([row[0], row[2]], false);
+                   chart.series[2].addPoint([row[0], row[3]], false);
+                   console.log("setting current thermostat guages "+row[2]+" "+i+" "+data.temperatures.length);
+                   if (i===data.temperatures.length - 1)
+                   {
+                   console.log("setting current thermostat guages "+row[2]);
+                   tempGuage.refresh(row[1]);
+                   comfortTempGuage.refresh(row[2]);
+                   comfortTemp=row[2];
+                   }
+                   }
+                   });
+                   $.each(data.weather, function(i, row) {
+                          if (!thermostatWeather.length || (thermostatWeather[thermostatWeather.length - 1][0] < row[0])) {
+                          thermostatWeather.push(row);
+                          chart.series[3].addPoint([row[0], row[1]], false);
+                          if (i===data.weather.length - 1)
+                          {
+                          externalTempGuage.refresh(row[1]);
+                          }
+                          }
+                          });
+                          
+                          // Add flags for changes to the target temperature and hot water
+                          $.each(data.target, function(i, row) {
+                                 if (!thermostatTarget.length || (thermostatTarget[thermostatTarget.length - 1][0] < row[0])) {
+                                 thermostatTarget.push(row);
+                                 var flag = createTargetFlag(row);
+                                 if (flag != null) chart.series[4].addPoint(flag, false);
+                                 
+                                 }
+                                 });
+                                 console.log("hotWater ");
+                                 $.each(data.hotwater, function(i, row) {
+                                        
+                                        if (!thermostatHotWater.length || (thermostatHotWater[thermostatHotWater.length - 1][0] < row[0])) {
+                                        thermostatHotWater.push(row);
+                                        
+                                        var flag = createHotWaterFlag(row);
+                                        if (flag != null) chart.series[5].addPoint(flag, false);
+                                        // the last point must be the current state
+                                        
+                                        if (i===data.hotwater.length - 1)
+                                        {
+                                        if (row!=null)
+                                        {
+                                        console.log("hotWater "+ row[2]);
+                                        hotWaterGuage.refresh(row[2]);
+                                        waterState=row[2];
+                                        }
+                                        }
+                                        }
+                                        });
+                                        
+                                        // Rebuild heating bands if any changes are required
+                                        var rebuild = false;
+                                        $.each(data.heating, function(i, row) {
+                                               if (!thermostatHeating.length || (thermostatHeating[thermostatHeating.length - 1][0] < row[0])) {
+                                               thermostatHeating.push(row);
+                                               
+                                               rebuild = true;
+                                               }
+                                               });
+                                               if (rebuild) rebuildHeatingBands();
+                                               
+                                               // Scroll the chart if it was previously showing the latest data
+                                               if (autoScroll)
+                                               {
+                                                   var newMaxTime = thermostatTemperatures[thermostatTemperatures.length - 1][0];
+                                                   chart.xAxis[0].setExtremes(newMaxTime - timeRange, newMaxTime, false);
+                                                   chart.redraw();
+                                               }
+        }
+        
+        // Create a flag for a change to the target temperature
+        function createTargetFlag(event)
+        {
+            // Map the event to a display format
+            var flagTypes = {
+                // Thermostat off
+                off:          ['-', 'Thermostat off',   'rgba(0, 0, 0, 1)'],
+                // Frost protection
+                holiday:      ['H*', 'Holiday (frost)', 'rgba(0, 255, 255, 1)'],
+                away:         ['S*', 'Summer (frost)',  'rgba(0, 255, 255, 1)'],
+                // Normal (suppress normal programmed comfort levels)
+                hold:         ['H', 'Hold',             'rgba(0, 255, 0, 1)'],
+                manual:       ['M', 'Manual',           'rgba(0, 255, 0, 1)']
+                //comfortlevel: ['C', 'Comfort level',    'rgba(0, 0, 255, 1)'],
+                //optimumstart: ['P', 'Optimum start',    'rgba(0, 0, 255, 1)']
+            };
+            var type = flagTypes[event[1]];
+            if (type == null) return null;
+            
+            // Construct a flag for this event
+            return {
+                x: event[0],
+                title: type[0],
+                text: type[1] + " " + event[2] + thermostatUnits,
+                color: type[2],
+                states: { hover: { fillColor: type[2] } }
+            };
+        }
+        
+        // Create a flag for a change to the hot water
+        function createHotWaterFlag(event)
+        {
+            // Map the event to a display format
+            var flagTypes = {
+                // Thermostat off
+                off:      ['-', '-', 'thermostat off'],
+                // Hot water disabled
+                holiday:  ['H', 'h', 'holiday'],
+                away:     ['A', 'a', 'away'],
+                // Normal (includes overrides)
+                timer:    ['T', 't', 'timer program'],
+                boost:    ['B', 'b', 'manual boost'],
+                override: ['M', 'm', 'manual override']
+            };
+            var type = flagTypes[event[1]];
+            if (type == null) return null;
+            
+            // Construct a flag for this event
+            var colour = event[2] ? 'rgba(255, 0, 0, 1)' : 'rgba(0, 0, 0, 1)';
+            return {
+                x: event[0],
+                title: type[event[2] ? 0 : 1],
+                text: "Hot water " + (event[2] ? 'ON' : 'OFF') + " (" + type[2] + ")",
+                color: colour,
+                fillColor: colour,
+                style: { color: 'white' },
+                states: { hover: { color: 'white', fillColor: colour } }
+            };
+        }
+        
+        // Rebuild the chart from the cached data
+        function rebuildHeatingBands()
+        {
+            // Convert heating periods to plot bands
+            var plotBands = [];
+            var currentBand = null;
+            $.each(thermostatHeating, function(i, row) {
+                   if (row[1]) {
+                   if (currentBand == null)
+                   currentBand = {
+                   id: 'heating',
+                   color: {
+                   linearGradient: [0, 0, 0, 400],
+                   stops: [[0, 'rgba(255,255,0,0.3)'],
+                           [1, 'rgba(255,0,0,0.3)']]
+                   },
+                   zIndex: 0,
+                   from: row[0]
+                   };
+                   } else if (currentBand != null) {
+                   currentBand.to = row[0];
+                   plotBands.push(currentBand);
+                   currentBand = null;
+                   }
+                   });
+                   if (currentBand != null)
+                   {
+                       currentBand.to = Number.MAX_VALUE;
+                       plotBands.push(currentBand);
+                       
+                       // if we currently have a band teh heating must be on
+                       console.log("heating on");
+                       heatingGuage.refresh(1);
+                       
+                   }
+                   else
+                   {
+                       console.log("heating off");
+                       heatingGuage.refresh(0);
+                   }
+                   
+                   // Replace the existing chart data (if any)
+                   chart.xAxis[0].removePlotBand('heating');
+                   $.each(plotBands, function(i, plotBand) {
+                          chart.xAxis[0].addPlotBand(plotBand);
+                          });
+        }
+        
+        function showComfortLevel()
+        {
+            $('#settings').fadeOut(500, function(){console.log("show Tempeature");
+                                   $('#setTempContainer').fadeIn(500, function(){$('#setTemp').val(comfortTemp).trigger('change');});window.setTimeout(hideComfortLevel,10000);});
+                                   
+        }
+        function hideComfortLevel()
+        {
+            $('#setTempContainer').fadeOut(500, function(){console.log("hide Tempeature");
+                                           $('#settings').fadeIn(500)});
+                                           
+        }
+        function showWater()
+        {
+            console.log('setting not water state to '+(waterState===1));
+            $('#water').prop('checked',waterState===1);
+            $('#settings').fadeOut(500, function(){console.log("show hotWater");
+                                   $('#setHotWater').fadeIn(500);window.setTimeout(hideWater,5000);});
+        }
+        function hideWater()
+        {
+            $('#setHotWater').fadeOut(500, function(){console.log("hide hotWater");
+                                      $('#settings').fadeIn(500)});
+        }
+        function setHotWater(element)
+        {
+            hideWater();
+            console.log('setting water to'+ element.checked);
+            var data = { thermostat: thermostatId, type: 'water', value: element.checked?1:0 };
+            $.post(url, data, function(response) { console.log('success '+response); }, 'json');
+        }
+        
+        // Hide the URL bar when iOS devices are rotated
+        function updateOrientation()
+        {
+            window.scrollTo(0, 1);
+        }
+        -->
+            </script>
+    </head>
+    <body onorientationchange="updateOrientation();">
+        
+        <!-- Warn users if JavaScript is disabled in their browser -->
+        <noscript>
+            <h1>JavaScript is Disabled</h1>
+            This page requires JavaScript; please enable scripting in your browser.
+        </noscript>
+        
+        <div style="width:100%;height:80px;">
+            <div style="display:inline-block;width: 120px;height: 80px;">
+                <div id="setTempContainer" style="display:none">
+                    
+                    <input type="text" id="setTemp" class='dial' data-min="10" data-max="30" data-width="80" data-thickness='.3' data-displayPrevious=true data-angleArc=250     data-angleOffset=-125        />
+                </div>
+                <div id="setHotWater" style="display:none" class="slider">
+                    
+                    <label class="sliderLabel">
+                        <input id="water" type="checkbox" onchange="setHotWater(this)"/>
+                        <span class="slider">
+                            <span class="sliderOn">ON</span>
+                            <span class="sliderOff">OFF</span>
+                            <span class="sliderBlock"></span>
+                        </span>
+                    </label>
+                </div>
+                <a id="settings" class='button ctrl' href='#' tabindex='1'><img src="settings.png" style="position:absolute;width:24px;height24px;left:3px;bottom:3px"></a>
+                <ul class='tip ctrl'>
+                    <li class='slice'><a href='#' onclick='showComfortLevel()'><img src="temperature.PNG" style="width:24px;height24px;"></a></li>
+                    <li class='slice'><a href='#' onClick='showWater()'><img src="water.PNG" style="width:24px;height24px;"></a></li>
+                    <li class='slice'><a href='#'><img src="away.PNG" style="width:24px;height24px;"></a></li>
+                    <li class='slice'><a href='#'><img src="summer.PNG" style="width:24px;height24px;"></a></li>
+                    <li class='slice'><a href='#'><img src="lock.PNG" style="width:24px;height24px;"></a></li>
+                </ul>
+                
+            </div>
+            <div id="currentTempGuage" style="width: 120px;height: 80px; display:inline-block"></div>
+            <div id="externalTempGuage" style="width: 120px;height: 80px;display:inline-block"></div>
+            <div id="heatingGuage" style="width: 120px;height: 80px;display:inline-block"></div>
+            <div id="hotWaterGuage" style="width: 120px;height: 80px;display:inline-block"></div>
+            
+            <div id="comfortTempGuage" style="width: 120px;height: 80px;display:inline-block;position:relative;top:0px;"></div>
+            <div>
+                <label>Thermostat:</label>
+            </div>
+        </div>
+        
+        <!-- This is where the chart will appear -->
+        <div id="chart" style="width: 100%; height: 540px"></div>
+        
+        <!-- This is where a list of thermostats may be created -->
+        <div style="text-align:center">
+            <label>Thermostat:</label>
+            <select id="thermostats" />
+        </div>
+        
+    </body>
 </html>
