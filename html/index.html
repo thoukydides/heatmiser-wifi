@@ -5,11 +5,10 @@ Heatmiser's range of Wi-Fi enabled thermostats. A symbolic link to this file
 should be created from a suitable public_html directory or subdirectory.
 
 The jQuery JavaScript library from <http://code.jquery.com/jquery-2.0.2.min.js>
-should be placed in the same directory,
-as should the "highstock.js" file from the "js" subdirectory of
-<http://www.highcharts.com/downloads/zips/Highstock-1.3.2.zip>.
+and Highstock library from <http://code.highcharts.com/stock/1.3.2/highstock.js>
+should be placed in the same directory.
 
-Copyright © 2011, 2012, 2013 Alexander Thoukydides
+Copyright © 2011, 2012, 2013, 2014 Alexander Thoukydides
 
 This file is part of the Heatmiser Wi-Fi project.
 <http://code.google.com/p/heatmiser-wifi/>
@@ -123,7 +122,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
             tickInterval: 1,
             title: { text: 'Temperature' }
           },
-          title: { text: '© 2011, 2012, 2013 Alexander Thoukydides' },
+          title: { text: '© 2011, 2012, 2013, 2014 Alexander Thoukydides' },
           subtitle: { text: document.title },
           series: [
             // Normal chart data
@@ -171,7 +170,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
               shadow: true,
               width: 16,
               zIndex: 3,
-              dataGrouping: { groupPixelWidth: 2 }
+              dataGrouping: { enabled: false }
             },{
               name: 'Hot Water',
               type: 'flags',
@@ -179,7 +178,7 @@ along with Heatmiser Wi-Fi. If not, see <http://www.gnu.org/licenses/>.
               shadow: true,
               width: 16,
               zIndex: 3,
-              dataGrouping: { groupPixelWidth: 2 }
+              dataGrouping: { enabled: false }
             }
           ]
         });
