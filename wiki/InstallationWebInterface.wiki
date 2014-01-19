@@ -124,10 +124,6 @@ QUIT;</code>
 
 By default the daemon logs the temperature every 60 seconds. This can be changed by adding a `LOGSECONDS` entry to the `/etc/heatmiser.conf` file specifying the interval in seconds between successive values.
 
-Configure the daemon to start automatically when the computer is booted using:
-<code language="sh">
-sudo update-rc.d heatmiser_daemon defaults</code>
-
 = Plot Charts =
 
 The final step of the installation is to set up a web page to plot charts of the temperature. The following instructions are for the default option of Apache; there are alternative instructions for [InstallationWebInterfaceNginx Nginx Installation].
