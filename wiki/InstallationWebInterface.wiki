@@ -141,7 +141,7 @@ sudo a2enmod userdir</code>
 
 Additional configuration is likely to be required if the `root` user is used; this is not recommended.
 
-Ensure that the web server accepts symbolic links for running cgi-bin scripts. This involves editing `/etc/apache2/sites-available/default` and replacing `+SymLinksIfOwnerMatch` by `+FollowSymLinks`. There will probably be a section of the file that resembles:
+Ensure that the web server accepts symbolic links for running cgi-bin scripts. This involves editing `/etc/apache2/sites-available/default` and replacing `+SymLinksIfOwnerMatch` by `-SymLinksIfOwnerMatch +FollowSymLinks`. There will probably be a section of the file that resembles:
 <pre>
         ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
         <Directory "/usr/lib/cgi-bin">
@@ -155,7 +155,7 @@ This should be changed to:
         ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
         <Directory "/usr/lib/cgi-bin">
                 AllowOverride None
-                Options +ExecCGI -MultiViews +FollowSymLinks
+                Options +ExecCGI -MultiViews -SymLinksIfOwnerMatch +FollowSymLinks
                 Order allow,deny
                 Allow from all
         </Directory></pre>
