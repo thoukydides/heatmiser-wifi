@@ -13,3 +13,6 @@ This project comprises a suite of [Perl](http://www.perl.org/) libraries for com
 This software has been developed on Ubuntu Linux versions 10.04.3 LTS and 12.04 LTS with Heatmiser PRT-TS WiFi and PRTHW-TS WiFi RF thermostats. It should work with most other Linux distributions (including Debian Raspbian "wheezy" on the [Raspberry Pi](http://www.raspberrypi.org/)) and any mixture of Heatmiser Wi-Fi thermostat models (PRT-TS WiFi, PRT-TS WiFi RF, PRTHW-TS WiFi, PRTHW-TS WiFi RF and PRT-ETS WiFi). It does **not** support hot-water only models (DT-TS WiFi or DT-TS WiFi RF), the newer Neo models, or any of the wired variants (including Multi-Link or Netmonitor).
 
 ![](https://raw.githubusercontent.com/wiki/thoukydides/heatmiser-wifi/chart-ipad-with-siri.png)
+
+***
+<sup>© Copyright 2011-2015 Alexander Thoukydides</sup>
