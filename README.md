@@ -7,7 +7,7 @@ This project comprises a suite of [Perl](http://www.perl.org/) libraries for com
   **Note: SiriProxy does not currently work with iOS 7 or 8; see [SiriProxy issue 542](https://github.com/plamoni/SiriProxy/issues/542) for details.**
 * A utility to keep the thermostats' clocks synchronised, including summer time (daylight saving time) changes.
 
-**Read the [Installation Instructions](https://github.com/thoukydides/heatmiser-wifi/wiki/Installation) to get started.**
+**Read the [Installation Instructions](https://github.com/thoukydides/heatmiser-wifi/wiki/Home) to get started.**
 
 ![](https://raw.githubusercontent.com/wiki/thoukydides/heatmiser-wifi/architecture.png) 
 
