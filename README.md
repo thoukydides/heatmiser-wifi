@@ -3,7 +3,8 @@
 This project comprises a suite of [Perl](http://www.perl.org/) libraries for communicating with [Heatmiser Wi-Fi thermostats](http://www.heatmiser.co.uk/web/index.php/wifi-thermostats) together with a collection of optional clients:
 * A daemon for logging the temperature and activity of the thermostat(s) to a [MySQL](http://dev.mysql.com/) database. This can optionally also record external temperatures obtained from an online weather service ([UK Met Office](http://www.metoffice.gov.uk/datapoint), [Weather Underground](http://www.wunderground.com/weather/api) or [Yahoo! Weather](http://developer.yahoo.com/weather)).
 * A web interface for generating charts of the logged temperature, heating and hot water activity.
-* A plugin for [SiriProxy](https://github.com/plamoni/SiriProxy) that allows voice control of the thermostat(s) from iPhone and iPad devices.<br>**Note: SiriProxy does not currently work with iOS 7 or 8; see [SiriProxy issue 542](https://github.com/plamoni/SiriProxy/issues/542) for details.**
+* A plugin for [SiriProxy](https://github.com/plamoni/SiriProxy) that allows voice control of the thermostat(s) from iPhone and iPad devices.  
+  **Note: SiriProxy does not currently work with iOS 7 or 8; see [SiriProxy issue 542](https://github.com/plamoni/SiriProxy/issues/542) for details.**
 * A utility to keep the thermostats' clocks synchronised, including summer time (daylight saving time) changes.
 
 **Read the [Installation Instructions](https://github.com/thoukydides/heatmiser-wifi/wiki/Installation) to get started.**
