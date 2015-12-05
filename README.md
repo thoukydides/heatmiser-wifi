@@ -1,5 +1,8 @@
 # Heatmiser Wi-Fi #
 
+:warning: **This project is no longer maintained.** :warning:<br>
+**Due to Heatmiser's lack of support for their pre-Neo models I have replaced mine with a Nest Learning Thermostat (3rd generation).**
+
 This project comprises a suite of [Perl](http://www.perl.org/) libraries for communicating with [Heatmiser Wi-Fi thermostats](http://www.heatmiser.co.uk/web/index.php/wifi-thermostats) together with a collection of optional clients:
 * A daemon for logging the temperature and activity of the thermostat(s) to a [MySQL](http://dev.mysql.com/) database. This can optionally also record external temperatures obtained from an online weather service ([UK Met Office](http://www.metoffice.gov.uk/datapoint), [Weather Underground](http://www.wunderground.com/weather/api) or [Yahoo! Weather](http://developer.yahoo.com/weather)).
 * A web interface for generating charts of the logged temperature, heating and hot water activity.
